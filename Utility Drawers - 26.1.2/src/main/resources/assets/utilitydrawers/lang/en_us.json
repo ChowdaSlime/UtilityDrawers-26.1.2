@@ -1,0 +1,13 @@
+{
+  "itemGroup.utilitydrawers": "Example Mod Tab",
+  "block.utilitydrawers.example_block": "Example Block",
+  "item.utilitydrawers.example_item": "Example Item",
+
+  "utilitydrawers.configuration.title": "Utility Drawers Configs",
+  "utilitydrawers.configuration.section.utilitydrawers.common.toml": "Utility Drawers Configs",
+  "utilitydrawers.configuration.section.utilitydrawers.common.toml.title": "Utility Drawers Configs",
+  "utilitydrawers.configuration.items": "Item List",
+  "utilitydrawers.configuration.logDirtBlock": "Log Dirt Block",
+  "utilitydrawers.configuration.magicNumberIntroduction": "Magic Number Text",
+  "utilitydrawers.configuration.magicNumber": "Magic Number"
+}
