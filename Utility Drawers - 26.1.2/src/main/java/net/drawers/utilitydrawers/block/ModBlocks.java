@@ -1,6 +1,7 @@
 package net.drawers.utilitydrawers.block;
 
 import net.drawers.utilitydrawers.UtilityDrawers;
+import net.drawers.utilitydrawers.item.DrawerBlockItem;
 import net.drawers.utilitydrawers.item.ModItems;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.block.Block;
@@ -8,6 +9,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import net.drawers.utilitydrawers.block.DrawerBlock;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -40,80 +42,60 @@ public class ModBlocks {
         WARPED
     }
 
+
     private static final Map<WoodType, Map<Integer, DeferredBlock<Block>>> DRAWERS =
             new EnumMap<>(WoodType.class);
 
     static {
         for (WoodType wood : WoodType.values()) {
-
             Map<Integer, DeferredBlock<Block>> slots = new java.util.HashMap<>();
-
             for (int slotCount = 1; slotCount <= 4; slotCount++) {
-
-                String name =
-                        wood.name().toLowerCase() + "_drawer_" + slotCount;
-
+                String name = wood.name().toLowerCase() + "_drawer_" + slotCount;
                 final int sc = slotCount;
-
-                DeferredBlock<Block> block = registerBlock(
-                        name,
-                        properties -> new DrawerBlock(
-                                properties.strength(2.5f),
-                                sc
-                        )
-                );
-
+                DeferredBlock<Block> block = registerDrawerBlock(name,
+                        properties -> new DrawerBlock(properties.strength(2.5f), sc));
                 slots.put(slotCount, block);
             }
-
             DRAWERS.put(wood, slots);
         }
     }
 
-    public static DeferredBlock<Block> getDrawer(
-            WoodType wood,
-            int slotCount) {
-
+    public static DeferredBlock<Block> getDrawer(WoodType wood, int slotCount) {
         return DRAWERS.get(wood).get(slotCount);
     }
 
     public static List<Block> getAllDrawerBlocks() {
-
         List<Block> list = new ArrayList<>();
-
         for (Map<Integer, DeferredBlock<Block>> slots : DRAWERS.values()) {
-
             for (DeferredBlock<Block> block : slots.values()) {
                 list.add(block.get());
             }
         }
-
         return list;
+    }
+
+    private static <T extends Block> DeferredBlock<T> registerDrawerBlock(
+            String name,
+            Function<BlockBehaviour.Properties, T> function) {
+        DeferredBlock<T> toReturn = BLOCKS.registerBlock(name, function);
+        ModItems.ITEMS.registerItem(name,
+                properties -> new DrawerBlockItem(toReturn.get(), properties.useBlockDescriptionPrefix()));
+        return toReturn;
     }
 
     private static <T extends Block> DeferredBlock<T> registerBlock(
             String name,
             Function<BlockBehaviour.Properties, T> function) {
-
-        DeferredBlock<T> toReturn =
-                BLOCKS.registerBlock(name, function);
-
+        DeferredBlock<T> toReturn = BLOCKS.registerBlock(name, function);
         registerBlockItem(name, toReturn);
-
         return toReturn;
     }
 
     private static <T extends Block> void registerBlockItem(
             String name,
             DeferredBlock<T> block) {
-
-        ModItems.ITEMS.registerItem(
-                name,
-                properties -> new BlockItem(
-                        block.get(),
-                        properties.useBlockDescriptionPrefix()
-                )
-        );
+        ModItems.ITEMS.registerItem(name,
+                properties -> new BlockItem(block.get(), properties.useBlockDescriptionPrefix()));
     }
 
     public static void register(IEventBus eventBus) {
