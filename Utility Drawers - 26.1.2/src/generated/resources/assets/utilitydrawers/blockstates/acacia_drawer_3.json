@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "utilitydrawers:block/acacia_drawer_3"
+    },
+    "facing=north": {
+      "model": "utilitydrawers:block/acacia_drawer_3",
+      "y": 270
+    },
+    "facing=south": {
+      "model": "utilitydrawers:block/acacia_drawer_3",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "utilitydrawers:block/acacia_drawer_3",
+      "y": 180
+    }
+  }
+}
