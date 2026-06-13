@@ -15,28 +15,27 @@ import java.util.List;
 @EventBusSubscriber(modid = UtilityDrawers.MODID)
 public class UtilityDrawersDataGen {
 
-        @SubscribeEvent
-        public static void gatherClientData(GatherDataEvent.Client event) {
-                DataGenerator generator = event.getGenerator();
-                PackOutput packOutput = generator.getPackOutput();
+    @SubscribeEvent
+    public static void gatherClientData(GatherDataEvent.Client event) {
+        DataGenerator generator = event.getGenerator();
+        PackOutput packOutput = generator.getPackOutput();
+        generator.addProvider(true, new ModModelProvider(packOutput));
+    }
 
-                generator.addProvider(true, new ModModelProvider(packOutput));
-        }
+    @SubscribeEvent
+    public static void gatherServerData(GatherDataEvent.Server event) {
+        DataGenerator generator = event.getGenerator();
+        PackOutput packOutput = generator.getPackOutput();
+        var lookupProvider = event.getLookupProvider();
 
-        @SubscribeEvent
-        public static void gatherServerData(GatherDataEvent.Server event) {
-                DataGenerator generator = event.getGenerator();
-                PackOutput packOutput = generator.getPackOutput();
-                var lookupProvider = event.getLookupProvider();
+        generator.addProvider(true, new ModRecipeProvider.Runner(packOutput, lookupProvider));
+        generator.addProvider(true, new ModBlockTagsProvider(packOutput, lookupProvider));
 
-                generator.addProvider(true, new ModRecipeProvider.Runner(packOutput, lookupProvider));
-                generator.addProvider(true, new ModBlockTagsProvider(packOutput, lookupProvider));
-
-                generator.addProvider(true, new LootTableProvider(
-                        packOutput,
-                        Collections.emptySet(),
-                        List.of(new LootTableProvider.SubProviderEntry(ModBlockLootTableProvider::new, LootContextParamSets.BLOCK)),
-                        lookupProvider
-                ));
-        }
+        generator.addProvider(true, new LootTableProvider(
+                packOutput,
+                Collections.emptySet(),
+                List.of(new LootTableProvider.SubProviderEntry(ModBlockLootTableProvider::new, LootContextParamSets.BLOCK)),
+                lookupProvider
+        ));
+    }
 }

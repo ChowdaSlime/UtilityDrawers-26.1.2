@@ -4,10 +4,13 @@ import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.SlotCountProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -18,9 +21,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.BlockHitResult;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock {
@@ -184,9 +190,7 @@ public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock
                 }
 
                 return InteractionResult.CONSUME;
-            }
-
-            else if (!handStack.isEmpty()) {
+            } else if (!handStack.isEmpty()) {
 
                 ItemStack remainder =
                         drawer.insertItem(handStack, false);
@@ -203,4 +207,29 @@ public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock
         return InteractionResult.SUCCESS;
     }
 
+    @Override
+    public List<ItemStack> getDrops(BlockState state, LootParams.Builder builder) {
+        ItemStack dropStack = new ItemStack(this);
+        BlockEntity blockEntity = builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
+
+        if (blockEntity instanceof DrawerBlockEntity drawerEntity) {
+            CompoundTag tag = drawerEntity.saveDrawerData(builder.getLevel().registryAccess());
+
+            dropStack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        }
+        return List.of(dropStack);
+    }
+
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, net.minecraft.world.entity.LivingEntity placer, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, placer, stack);
+
+        var customData = stack.get(DataComponents.CUSTOM_DATA);
+        if (customData != null) {
+            BlockEntity blockEntity = level.getBlockEntity(pos);
+            if (blockEntity instanceof DrawerBlockEntity drawerEntity) {
+                drawerEntity.loadContentsFromTag(customData.copyTag());
+            }
+        }
+    }
 }

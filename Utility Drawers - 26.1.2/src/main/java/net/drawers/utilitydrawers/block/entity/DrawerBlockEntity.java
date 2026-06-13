@@ -2,14 +2,15 @@ package net.drawers.utilitydrawers.block.entity;
 
 import net.drawers.utilitydrawers.block.DrawerBlock;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.item.component.CustomData;
+import net.minecraft.nbt.NbtOps;
+
 
 public class DrawerBlockEntity extends BlockEntity {
 
@@ -138,21 +139,7 @@ public class DrawerBlockEntity extends BlockEntity {
         }
     }
 
-    public CompoundTag saveContentsToTag() {
-        CompoundTag tag = new CompoundTag();
 
-        for (int i = 0; i < slotCount; i++) {
-            if (!storedStacks[i].isEmpty() && storedCounts[i] > 0) {
-                CompoundTag slotTag = new CompoundTag();
-                slotTag.store("Item", ItemStack.CODEC, storedStacks[i]);
-                slotTag.putLong("Count", storedCounts[i]);
-                tag.put("Slot" + i, slotTag);
-            }
-        }
-
-        tag.putInt("SlotCount", slotCount);
-        return tag;
-    }
 
     public void loadContentsFromTag(CompoundTag tag) {
         for (int i = 0; i < slotCount; i++) {
@@ -167,6 +154,20 @@ public class DrawerBlockEntity extends BlockEntity {
         }
 
         setChanged();
+    }
+
+    public CompoundTag saveDrawerData(HolderLookup.Provider provider) {
+        CompoundTag tag = new CompoundTag();
+        for (int i = 0; i < slotCount; i++) {
+            if (!storedStacks[i].isEmpty() && storedCounts[i] > 0) {
+                CompoundTag slotTag = new CompoundTag();
+                // Use the provider to save the ItemStack using the new Codec system
+                slotTag.put("Item", ItemStack.CODEC.encodeStart(provider.createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), storedStacks[i]).getOrThrow().copy());
+                slotTag.putLong("Count", storedCounts[i]);
+                tag.put("Slot" + i, slotTag);
+            }
+        }
+        return tag;
     }
 
 }
