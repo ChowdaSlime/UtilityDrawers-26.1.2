@@ -1,6 +1,7 @@
 package net.drawers.utilitydrawers.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -18,9 +19,11 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.common.EventBusSubscriber;
 
 import javax.annotation.Nullable;
-
+@EventBusSubscriber(modid = UtilityDrawers.MODID, value = Dist.CLIENT)
 public class DrawerRenderer implements BlockEntityRenderer<DrawerBlockEntity, DrawerRenderer.DrawerRenderState> {
 
     private final ItemModelResolver itemModelResolver;

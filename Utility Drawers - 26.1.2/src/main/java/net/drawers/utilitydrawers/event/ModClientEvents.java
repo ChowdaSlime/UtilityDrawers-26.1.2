@@ -1,5 +1,6 @@
 package net.drawers.utilitydrawers.event;
 
+import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.entity.ModBlockEntities;
 import net.drawers.utilitydrawers.client.DrawerRenderer;
 import net.neoforged.api.distmarker.Dist;
@@ -7,7 +8,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 
-@EventBusSubscriber(modid = "utilitydrawers", value = Dist.CLIENT)
+@EventBusSubscriber(modid = UtilityDrawers.MODID, value = Dist.CLIENT)
 public class ModClientEvents {
 
     @SubscribeEvent

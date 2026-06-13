@@ -2,8 +2,8 @@ package net.drawers.utilitydrawers.block.entity;
 
 import net.drawers.utilitydrawers.block.DrawerBlock;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -173,7 +173,7 @@ public class DrawerBlockEntity extends BlockEntity {
             if (!storedStacks[i].isEmpty() && storedCounts[i] > 0) {
                 CompoundTag slotTag = new CompoundTag();
                 // Use the provider to save the ItemStack using the new Codec system
-                slotTag.put("Item", ItemStack.CODEC.encodeStart(provider.createSerializationContext(net.minecraft.nbt.NbtOps.INSTANCE), storedStacks[i]).getOrThrow().copy());
+                slotTag.put("Item", ItemStack.CODEC.encodeStart(provider.createSerializationContext(NbtOps.INSTANCE), storedStacks[i]).getOrThrow().copy());
                 slotTag.putLong("Count", storedCounts[i]);
                 tag.put("Slot" + i, slotTag);
             }
@@ -193,7 +193,7 @@ public class DrawerBlockEntity extends BlockEntity {
     }
 
     @Override
-    public void onDataPacket(net.minecraft.network.Connection connection, net.minecraft.world.level.storage.ValueInput input) {
+    public void onDataPacket(Connection connection, ValueInput input) {
         super.onDataPacket(connection, input);
 
         if (this.level != null && this.level.isClientSide()) {

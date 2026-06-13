@@ -10,6 +10,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -223,7 +224,7 @@ public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock
     }
 
     @Override
-    public void setPlacedBy(Level level, BlockPos pos, BlockState state, net.minecraft.world.entity.LivingEntity placer, ItemStack stack) {
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
         super.setPlacedBy(level, pos, state, placer, stack);
 
         var customData = stack.get(DataComponents.CUSTOM_DATA);
@@ -234,4 +235,5 @@ public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock
             }
         }
     }
+
 }
