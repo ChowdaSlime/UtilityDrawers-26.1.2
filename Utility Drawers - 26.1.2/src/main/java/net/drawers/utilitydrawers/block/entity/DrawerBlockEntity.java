@@ -2,7 +2,11 @@ package net.drawers.utilitydrawers.block.entity;
 
 import net.drawers.utilitydrawers.block.DrawerBlock;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -84,6 +88,9 @@ public class DrawerBlockEntity extends BlockEntity {
             }
             storedCounts[slot] += toInsert;
             setChanged();
+            if (this.level != null && !this.level.isClientSide()) {
+                this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+            }
         }
 
         int remainder = stack.getCount() - toInsert;
@@ -108,11 +115,15 @@ public class DrawerBlockEntity extends BlockEntity {
                 storedCounts[slot] = 0;
             }
             setChanged();
+            if (this.level != null && !this.level.isClientSide()) {
+                this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+            }
         }
 
         return result;
     }
 
+    //Save and Load Contents
     @Override
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
@@ -168,6 +179,26 @@ public class DrawerBlockEntity extends BlockEntity {
             }
         }
         return tag;
+    }
+
+    //Renderer
+    @Override
+    public CompoundTag getUpdateTag(HolderLookup.Provider provider) {
+        return this.saveDrawerData(provider);
+    }
+
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public void onDataPacket(net.minecraft.network.Connection connection, net.minecraft.world.level.storage.ValueInput input) {
+        super.onDataPacket(connection, input);
+
+        if (this.level != null && this.level.isClientSide()) {
+            this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+        }
     }
 
 }

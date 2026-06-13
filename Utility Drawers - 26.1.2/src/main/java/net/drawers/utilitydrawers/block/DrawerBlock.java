@@ -6,6 +6,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -182,8 +184,8 @@ public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock
                     level.playSound(
                             null,
                             pos,
-                            net.minecraft.sounds.SoundEvents.ITEM_PICKUP,
-                            net.minecraft.sounds.SoundSource.BLOCKS,
+                            SoundEvents.ITEM_PICKUP,
+                            SoundSource.BLOCKS,
                             0.2f,
                             1.0f
                     );
