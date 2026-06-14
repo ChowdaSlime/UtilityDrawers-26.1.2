@@ -18,7 +18,15 @@ import net.minecraft.nbt.NbtOps;
 
 public class DrawerBlockEntity extends BlockEntity {
 
-    private static final long DEFAULT_MAX_CAPACITY = 64L * 32L;
+    private static long getCapacityForSlotCount(int slotCount) {
+        return switch (slotCount) {
+            case 1 -> 2048L;
+            case 2 -> 1024L;
+            case 3 -> 682L; // 2048 / 3 rounded up
+            case 4 -> 512L;
+            default -> 2048L;
+        };
+    }
 
     private final int slotCount;
     private final ItemStack[] storedStacks;
@@ -34,7 +42,7 @@ public class DrawerBlockEntity extends BlockEntity {
         for (int i = 0; i < slotCount; i++) {
             storedStacks[i] = ItemStack.EMPTY;
             storedCounts[i] = 0L;
-            maxCapacities[i] = DEFAULT_MAX_CAPACITY;
+            maxCapacities[i] = getCapacityForSlotCount(slotCount);
         }
     }
 
@@ -95,6 +103,15 @@ public class DrawerBlockEntity extends BlockEntity {
 
         int remainder = stack.getCount() - toInsert;
         return remainder <= 0 ? ItemStack.EMPTY : stack.copyWithCount(remainder);
+    }
+
+    public ItemStack insertItemIntoSlot(int slot, ItemStack stack, boolean simulate) {
+        if (slot < 0 || slot >= slotCount) return stack;
+        if (stack.isEmpty()) return ItemStack.EMPTY;
+        if (!storedStacks[slot].isEmpty() && !ItemStack.isSameItemSameComponents(storedStacks[slot], stack)) {
+            return stack; // slot occupied by different item
+        }
+        return insertIntoSlot(slot, stack, simulate);
     }
 
     public ItemStack extractItem(int slot, int amount, boolean simulate) {

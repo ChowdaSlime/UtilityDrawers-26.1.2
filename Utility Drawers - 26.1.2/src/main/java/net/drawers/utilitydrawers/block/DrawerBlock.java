@@ -27,6 +27,7 @@ import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.HashMap;
 import java.util.List;
@@ -126,82 +127,44 @@ public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock
         if (level.getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
 
             long currentTime = System.currentTimeMillis();
-            long lastClick =
-                    LAST_CLICK_TIME.getOrDefault(player.getUUID(), 0L);
-
-            boolean isDoubleClick =
-                    (currentTime - lastClick) < 300;
-
+            long lastClick = LAST_CLICK_TIME.getOrDefault(player.getUUID(), 0L);
+            boolean isDoubleClick = (currentTime - lastClick) < 300;
             LAST_CLICK_TIME.put(player.getUUID(), currentTime);
 
-            if (isDoubleClick) {
+            int targetSlot = getTargetSlot(hit.getLocation(), state, drawer.getSlotCount());
 
+            if (isDoubleClick) {
                 boolean insertedAny = false;
 
                 for (int j = 0; j < 36; j++) {
-
-                    ItemStack invStack =
-                            player.getInventory().getItem(j);
-
+                    ItemStack invStack = player.getInventory().getItem(j);
                     if (invStack.isEmpty()) continue;
 
-                    boolean matchesExisting = false;
-
                     for (int i = 0; i < drawer.getSlotCount(); i++) {
-
-                        ItemStack storedStack =
-                                drawer.getStoredItem(i);
-
-                        if (!storedStack.isEmpty()
-                                && ItemStack.isSameItem(storedStack, invStack)) {
-
-                            matchesExisting = true;
+                        ItemStack storedStack = drawer.getStoredItem(i);
+                        if (!storedStack.isEmpty() && ItemStack.isSameItem(storedStack, invStack)) {
+                            int startingCount = invStack.getCount();
+                            invStack = drawer.insertItemIntoSlot(i, invStack, false);
+                            if (invStack.getCount() != startingCount) {
+                                player.getInventory().setItem(j, invStack);
+                                insertedAny = true;
+                            }
                             break;
-                        }
-                    }
-
-                    if (matchesExisting) {
-
-                        int startingCount =
-                                invStack.getCount();
-
-                        ItemStack remainder =
-                                drawer.insertItem(invStack, false);
-
-                        if (remainder.getCount() != startingCount) {
-
-                            player.getInventory()
-                                    .setItem(j, remainder);
-
-                            insertedAny = true;
                         }
                     }
                 }
 
                 if (insertedAny) {
-
                     player.inventoryMenu.broadcastChanges();
-
-                    level.playSound(
-                            null,
-                            pos,
-                            SoundEvents.ITEM_PICKUP,
-                            SoundSource.BLOCKS,
-                            0.2f,
-                            1.0f
-                    );
+                    level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.BLOCKS, 0.2f, 1.0f);
                 }
 
                 return InteractionResult.CONSUME;
+
             } else if (!handStack.isEmpty()) {
-
-                ItemStack remainder =
-                        drawer.insertItem(handStack, false);
-
+                ItemStack remainder = drawer.insertItemIntoSlot(targetSlot, handStack, false);
                 if (remainder.getCount() != handStack.getCount()) {
-
                     player.setItemInHand(hand, remainder);
-
                     return InteractionResult.CONSUME;
                 }
             }
@@ -234,6 +197,40 @@ public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock
                 drawerEntity.loadContentsFromTag(customData.copyTag());
             }
         }
+    }
+
+    public int getTargetSlot(Vec3 hitPos, BlockState state, int slotCount) {
+        if (slotCount == 1) return 0;
+        Direction facing = state.getValue(FACING);
+
+        double u, v;
+        switch (facing) {
+            case NORTH -> {
+                u = 1.0 - (hitPos.x - Math.floor(hitPos.x));
+                v = 1.0 - (hitPos.y - Math.floor(hitPos.y));
+            }
+            case SOUTH -> {
+                u = hitPos.x - Math.floor(hitPos.x);
+                v = 1.0 - (hitPos.y - Math.floor(hitPos.y));
+            }
+            case WEST -> {
+                u = hitPos.z - Math.floor(hitPos.z);
+                v = 1.0 - (hitPos.y - Math.floor(hitPos.y));
+            }
+            case EAST -> {
+                u = 1.0 - (hitPos.z - Math.floor(hitPos.z));
+                v = 1.0 - (hitPos.y - Math.floor(hitPos.y));
+            }
+            default -> {
+                return 0;
+            }
+        }
+        return switch (slotCount) {
+            case 2 -> v < 0.5 ? 0 : 1;
+            case 3 -> v < 0.5 ? 0 : (u < 0.5 ? 1 : 2);
+            case 4 -> v < 0.5 ? (u < 0.5 ? 0 : 1) : (u < 0.5 ? 2 : 3);
+            default -> 0;
+        };
     }
 
 }

@@ -22,7 +22,7 @@ public class ModCreativeTabs {
                     .displayItems((itemDisplayParameters, output) -> {
                         output.accept(ModItems.TEST_ITEM.get());
                         output.accept(ModBlocks.TEST_BLOCK.get());
-                        output.accept(ModBlocks.getDrawer(ModBlocks.WoodType.OAK,1).get());
+                        ModBlocks.getAllDrawerBlocks().forEach(output::accept);
                     })
                     .build());
 }

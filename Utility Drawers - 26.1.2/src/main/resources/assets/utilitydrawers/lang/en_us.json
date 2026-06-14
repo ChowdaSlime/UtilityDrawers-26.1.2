@@ -1,6 +1,61 @@
 {
   "item.utilitydrawers.test_item": "Test Item",
   "block.utilitydrawers.test_block": "Test Block",
-  "block.utilitydrawers.oak_drawer_1": "Oak Drawer 1x1",
+
+  "block.utilitydrawers.oak_drawer_1": "Oak Drawer 1x",
+  "block.utilitydrawers.oak_drawer_2": "Oak Drawer 2x",
+  "block.utilitydrawers.oak_drawer_3": "Oak Drawer 3x",
+  "block.utilitydrawers.oak_drawer_4": "Oak Drawer 4x",
+
+  "block.utilitydrawers.spruce_drawer_1": "Spruce Drawer 1x",
+  "block.utilitydrawers.spruce_drawer_2": "Spruce Drawer 2x",
+  "block.utilitydrawers.spruce_drawer_3": "Spruce Drawer 3x",
+  "block.utilitydrawers.spruce_drawer_4": "Spruce Drawer 4x",
+
+  "block.utilitydrawers.birch_drawer_1": "Birch Drawer 1x",
+  "block.utilitydrawers.birch_drawer_2": "Birch Drawer 2x",
+  "block.utilitydrawers.birch_drawer_3": "Birch Drawer 3x",
+  "block.utilitydrawers.birch_drawer_4": "Birch Drawer 4x",
+
+  "block.utilitydrawers.jungle_drawer_1": "Jungle Drawer 1x",
+  "block.utilitydrawers.jungle_drawer_2": "Jungle Drawer 2x",
+  "block.utilitydrawers.jungle_drawer_3": "Jungle Drawer 3x",
+  "block.utilitydrawers.jungle_drawer_4": "Jungle Drawer 4x",
+
+  "block.utilitydrawers.acacia_drawer_1": "Acacia Drawer 1x",
+  "block.utilitydrawers.acacia_drawer_2": "Acacia Drawer 2x",
+  "block.utilitydrawers.acacia_drawer_3": "Acacia Drawer 3x",
+  "block.utilitydrawers.acacia_drawer_4": "Acacia Drawer 4x",
+
+  "block.utilitydrawers.dark_oak_drawer_1": "Dark Oak Drawer 1x",
+  "block.utilitydrawers.dark_oak_drawer_2": "Dark Oak Drawer 2x",
+  "block.utilitydrawers.dark_oak_drawer_3": "Dark Oak Drawer 3x",
+  "block.utilitydrawers.dark_oak_drawer_4": "Dark Oak Drawer 4x",
+
+  "block.utilitydrawers.mangrove_drawer_1": "Mangrove Drawer 1x",
+  "block.utilitydrawers.mangrove_drawer_2": "Mangrove Drawer 2x",
+  "block.utilitydrawers.mangrove_drawer_3": "Mangrove Drawer 3x",
+  "block.utilitydrawers.mangrove_drawer_4": "Mangrove Drawer 4x",
+
+  "block.utilitydrawers.cherry_drawer_1": "Cherry Drawer 1x",
+  "block.utilitydrawers.cherry_drawer_2": "Cherry Drawer 2x",
+  "block.utilitydrawers.cherry_drawer_3": "Cherry Drawer 3x",
+  "block.utilitydrawers.cherry_drawer_4": "Cherry Drawer 4x",
+
+  "block.utilitydrawers.bamboo_drawer_1": "Bamboo Drawer 1x",
+  "block.utilitydrawers.bamboo_drawer_2": "Bamboo Drawer 2x",
+  "block.utilitydrawers.bamboo_drawer_3": "Bamboo Drawer 3x",
+  "block.utilitydrawers.bamboo_drawer_4": "Bamboo Drawer 4x",
+
+  "block.utilitydrawers.crimson_drawer_1": "Crimson Drawer 1x",
+  "block.utilitydrawers.crimson_drawer_2": "Crimson Drawer 2x",
+  "block.utilitydrawers.crimson_drawer_3": "Crimson Drawer 3x",
+  "block.utilitydrawers.crimson_drawer_4": "Crimson Drawer 4x",
+
+  "block.utilitydrawers.warped_drawer_1": "Warped Drawer 1x",
+  "block.utilitydrawers.warped_drawer_2": "Warped Drawer 2x",
+  "block.utilitydrawers.warped_drawer_3": "Warped Drawer 3x",
+  "block.utilitydrawers.warped_drawer_4": "Warped Drawer 4x",
+
   "creativetab.utility_drawers_tab": "Utility Drawers"
 }
