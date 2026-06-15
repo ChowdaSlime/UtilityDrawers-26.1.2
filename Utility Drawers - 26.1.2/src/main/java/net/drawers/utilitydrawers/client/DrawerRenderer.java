@@ -1,6 +1,7 @@
 package net.drawers.utilitydrawers.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
 import net.minecraft.client.gui.Font;
@@ -18,11 +19,13 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.EventBusSubscriber;
 
 import javax.annotation.Nullable;
+
 @EventBusSubscriber(modid = UtilityDrawers.MODID, value = Dist.CLIENT)
 public class DrawerRenderer implements BlockEntityRenderer<DrawerBlockEntity, DrawerRenderer.DrawerRenderState> {
 
@@ -63,6 +66,7 @@ public class DrawerRenderer implements BlockEntityRenderer<DrawerBlockEntity, Dr
             ItemStack stack = blockEntity.getStoredItem(i);
             state.counts[i] = blockEntity.getStoredCount(i);
             if (!stack.isEmpty()) {
+                // CHANGED: Switched from GUI to FIXED so blocks render flat and reliably in physical space.
                 this.itemModelResolver.updateForTopItem(state.itemStates[i], stack, ItemDisplayContext.FIXED, blockEntity.getLevel(), null, (int) blockEntity.getBlockPos().asLong());
             } else {
                 state.itemStates[i].clear();
@@ -85,66 +89,101 @@ public class DrawerRenderer implements BlockEntityRenderer<DrawerBlockEntity, Dr
             int slotCount = state.itemStates.length;
 
             float[][] slotOffsets = switch (slotCount) {
-                case 1 -> new float[][] {
-                        {0.0f, 0.0f}           // single slot
-                };
-                case 2 -> new float[][] {
-                        {0.0f, 0.28f},         // slot 0
-                        {0.0f, -0.18f}         // slot 1
-                };
-                case 3 -> new float[][] {
-                        {0.0f, 0.28f},         // slot 0
-                        {-0.24f, -0.21f},      // slot 1
-                        {0.24f, -0.21f}       // slot 2
-                };
-                case 4 -> new float[][] {
-                        {-0.24f, 0.28f},       // slot 0
-                        {0.24f, 0.28f},        // slot 1
-                        {-0.24f, -0.21f},      // slot 2
-                        {0.24f, -0.21f}        // slot 3
-                };
-                default -> new float[][] {{0.0f, 0.0f}};
+                case 1 -> new float[][]{{0.0f, 0.0f, 0.4f}};
+                case 2 -> new float[][]{{0.0f, 0.26f, 0.4f}, {0.0f, -0.18f, 0.4f}};
+                case 3 -> new float[][]{{0.0f, 0.26f, 0.4f}, {-0.24f, -0.18f, 0.4f}, {0.24f, -0.18f, 0.4f}};
+                case 4 -> new float[][]{{-0.24f, 0.26f, 0.4f}, {0.24f, 0.26f, 0.4f}, {-0.24f, -0.18f, 0.4f}, {0.24f, -0.18f, 0.4f}};
+                default -> new float[][]{{0.0f, 0.0f, 0.4f}};
             };
 
-            // Scale of each item render
             float[] itemScales = switch (slotCount) {
-                case 1 -> new float[] {0.75f};
-                case 2 -> new float[] {0.55f, 0.55f};
-                case 3 -> new float[] {0.45f, 0.4f, 0.4f};
-                case 4 -> new float[] {0.4f, 0.4f, 0.4f, 0.4f};
-                default -> new float[] {0.75f};
+                case 1 -> new float[]{0.75f};
+                case 2 -> new float[]{0.45f, 0.45f};
+                case 3 -> new float[]{0.45f, 0.45f, 0.45f};
+                case 4 -> new float[]{0.45f, 0.45f, 0.45f, 0.45f};
+                default -> new float[]{0.75f};
             };
+
 
             for (int i = 0; i < slotCount; i++) {
                 if (state.itemStates[i] == null || state.itemStates[i].isEmpty()) continue;
 
-                float ox = slotOffsets[i][0]; // horizontal position on face
-                float oy = slotOffsets[i][1]; // vertical position on face
-                float scale = itemScales[i];  // item render size
+                float ox = slotOffsets[i][0];
+                float oy = slotOffsets[i][1];
+                float oz = slotOffsets[i][2];
+                float baseScale = itemScales[i];
+                float itemScale = baseScale;
+                boolean isFlatItem = false;
 
-                // Render the item model
-                // translate Z (0.35D) pushes item out toward the front face surface
-                poseStack.pushPose();
-                poseStack.translate(ox, oy, 0.35D);
-                poseStack.scale(scale, scale, scale);
-                state.itemStates[i].submit(poseStack, submitNodeCollector, 15728880, OverlayTexture.NO_OVERLAY, 0);
-                poseStack.popPose();
+                AABB box = state.itemStates[i].getModelBoundingBox();
+                if (box != null) {
+                    double zThickness = box.maxZ - box.minZ;
+                    if (zThickness < 0.25) {
+                        isFlatItem = true;
+                        oz += 0.05f;
 
-                // Render the count text below the item
-                // Z (0.501D) pushes text slightly in front of the face to avoid z-fighting
-                // scale Y is negative to flip text right-side up (block space is Y-flipped vs screen space)
-                // 0.009f scale converts from font pixel units to block units
-                if (state.counts != null && state.counts.length > i && state.counts[i] > 0) {
+                        switch (slotCount) {
+                            case 1 -> itemScale *= 0.70f;
+                            case 2 -> itemScale *= 0.65f;
+                            case 3 -> itemScale *= 0.65f;
+                            case 4 -> itemScale *= 0.65f;
+                        }
+                    }
+                    float itemOx = ox;
+                    if (isFlatItem && slotCount == 1) {
+                        itemOx -= 0.015f;
+                    } if (isFlatItem && slotCount == 2) {
+                        itemOx -= 0.015f;
+                    }
+
                     poseStack.pushPose();
-                    poseStack.translate(ox, oy - (scale * 0.3f), 0.501D); // (scale * 0.55f) offsets text below item center
-                    poseStack.scale(0.009f, -0.009f, 0.009f);
-                    String text = String.valueOf(state.counts[i]);
-                    float textWidth = this.font.width(text); // measure text width for centering
-                    submitNodeCollector.submitText(
-                            poseStack, -textWidth / 2.0f, 0.0f, // negative half-width centers text horizontally
-                            Component.literal(text).getVisualOrderText(),
-                            false, Font.DisplayMode.NORMAL, 15728880, 0xFFFFFFFF, 0, 0);
+                    poseStack.translate(itemOx, oy, oz);
+                    poseStack.mulPose(Axis.YP.rotationDegrees(180f));
+                    poseStack.scale(itemScale, itemScale, itemScale);
+
+                    if (box != null) {
+                        double offsetX = -(box.maxX + box.minX) / 2.0;
+                        double offsetY = -(box.maxY + box.minY) / 2.0;
+                        double offsetZ = -(box.maxZ + box.minZ) / 2.0;
+                        poseStack.translate(offsetX, offsetY, offsetZ);
+                    }
+
+                    state.itemStates[i].submit(poseStack, submitNodeCollector, 15728880, OverlayTexture.NO_OVERLAY, 0);
                     poseStack.popPose();
+
+                    if (state.counts != null && state.counts.length > i && state.counts[i] > 0) {
+                        poseStack.pushPose();
+                        float textOx = ox;
+                        if (isFlatItem) {
+                            if (ox < 0.0f) {
+                                textOx += 0.005f;
+                            } else if (ox > 0.0f) {
+                                textOx -= 0.005f;
+                            }
+                        } else {
+                            if (ox < 0.0f) {
+                                textOx -= 0.01f;
+                            } else if (ox > 0.0f) {
+                                textOx += 0.01f;
+                            }
+                        }
+                        float textOy = oy;
+                        if (slotCount == 1) {
+                            textOy -= 0.1f;
+                        } if (slotCount != 1) {
+                            textOy -= 0.015f;
+                        }
+
+                        poseStack.translate(textOx, textOy - (baseScale * 0.3f), 0.4376D);
+                        poseStack.scale(0.009f, -0.009f, 0.009f);
+                        String text = String.valueOf(state.counts[i]);
+                        float textWidth = this.font.width(text);
+                        submitNodeCollector.submitText(
+                                poseStack, -textWidth / 2.0f, 0.0f,
+                                Component.literal(text).getVisualOrderText(),
+                                false, Font.DisplayMode.NORMAL, 15728880, 0xFFFFFFFF, 0, 0);
+                        poseStack.popPose();
+                    }
                 }
             }
         } finally {

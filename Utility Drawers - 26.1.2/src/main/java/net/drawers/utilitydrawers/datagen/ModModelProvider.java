@@ -36,11 +36,10 @@ public class ModModelProvider extends ModelProvider {
             blockModels.blockStateOutput.accept(
                     MultiVariantGenerator.dispatch(drawer, BlockModelGenerators.plainVariant(modelLoc))
                             .with(PropertyDispatch.modify(DrawerBlock.FACING)
-                                    .select(Direction.NORTH, BlockModelGenerators.Y_ROT_270)
-                                    .select(Direction.EAST,  v -> v)
-                                    .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_90)
-                                    .select(Direction.WEST,  BlockModelGenerators.Y_ROT_180)
-                            )
+                                    .select(Direction.NORTH, v -> v)
+                                    .select(Direction.EAST,  BlockModelGenerators.Y_ROT_90)
+                                    .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
+                                    .select(Direction.WEST,  BlockModelGenerators.Y_ROT_270))
             );
         }
     }
