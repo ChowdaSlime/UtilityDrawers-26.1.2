@@ -1,6 +1,8 @@
 package net.drawers.utilitydrawers.block.entity;
 
 import net.drawers.utilitydrawers.block.DrawerBlock;
+import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
+import net.drawers.utilitydrawers.item.VoidUpgradeItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.network.Connection;
@@ -15,23 +17,16 @@ import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 
-
 public class DrawerBlockEntity extends BlockEntity {
-
-    private static long getCapacityForSlotCount(int slotCount) {
-        return switch (slotCount) {
-            case 1 -> 2048L;
-            case 2 -> 1024L;
-            case 3 -> 682L; // 2048 / 3 rounded up
-            case 4 -> 512L;
-            default -> 2048L;
-        };
-    }
 
     private final int slotCount;
     private final ItemStack[] storedStacks;
     private final long[] storedCounts;
     private final long[] maxCapacities;
+
+    private final ItemStack[] upgradeSlots = new ItemStack[]{
+            ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY
+    };
 
     public DrawerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.DRAWER_BLOCK_ENTITY.get(), pos, state);
@@ -39,11 +34,22 @@ public class DrawerBlockEntity extends BlockEntity {
         this.storedStacks = new ItemStack[slotCount];
         this.storedCounts = new long[slotCount];
         this.maxCapacities = new long[slotCount];
+
         for (int i = 0; i < slotCount; i++) {
             storedStacks[i] = ItemStack.EMPTY;
             storedCounts[i] = 0L;
-            maxCapacities[i] = getCapacityForSlotCount(slotCount);
+            maxCapacities[i] = (long) getBaseStackMultiplier() * 64;
         }
+    }
+
+    public int getBaseStackMultiplier() {
+        return switch (this.slotCount) {
+            case 1 -> 32;
+            case 2 -> 16;
+            case 3 -> 10;
+            case 4 -> 8;
+            default -> 32;
+        };
     }
 
     public int getSlotCount() {
@@ -58,35 +64,28 @@ public class DrawerBlockEntity extends BlockEntity {
         return storedCounts[slot];
     }
 
-    public long getMaxCapacity(int slot) {
-        return maxCapacities[slot];
-    }
 
     public boolean isSlotEmpty(int slot) {
         return storedStacks[slot].isEmpty() || storedCounts[slot] <= 0;
     }
 
-    public ItemStack insertItem(ItemStack stack, boolean simulate) {
-        if (stack.isEmpty()) return ItemStack.EMPTY;
 
-        for (int i = 0; i < slotCount; i++) {
-            if (!storedStacks[i].isEmpty() && ItemStack.isSameItemSameComponents(storedStacks[i], stack)) {
-                return insertIntoSlot(i, stack, simulate);
+    public boolean hasVoidUpgrade() {
+        for (ItemStack upgrade : upgradeSlots) {
+            if (upgrade.getItem() instanceof VoidUpgradeItem) {
+                return true;
             }
         }
-
-        for (int i = 0; i < slotCount; i++) {
-            if (storedStacks[i].isEmpty()) {
-                return insertIntoSlot(i, stack, simulate);
-            }
-        }
-
-        return stack;
+        return false;
     }
 
     private ItemStack insertIntoSlot(int slot, ItemStack stack, boolean simulate) {
+        if (storedStacks[slot].isEmpty()) {
+            maxCapacities[slot] = (long) getBaseStackMultiplier() * stack.getMaxStackSize() * getUpgradeMultiplier();
+        }
+
         long space = maxCapacities[slot] - storedCounts[slot];
-        if (space <= 0) return stack;
+        if (space <= 0) return hasVoidUpgrade() ? ItemStack.EMPTY : stack;
 
         int toInsert = (int) Math.min(stack.getCount(), space);
 
@@ -102,6 +101,9 @@ public class DrawerBlockEntity extends BlockEntity {
         }
 
         int remainder = stack.getCount() - toInsert;
+        if (remainder > 0 && hasVoidUpgrade()) {
+            return ItemStack.EMPTY;
+        }
         return remainder <= 0 ? ItemStack.EMPTY : stack.copyWithCount(remainder);
     }
 
@@ -109,7 +111,7 @@ public class DrawerBlockEntity extends BlockEntity {
         if (slot < 0 || slot >= slotCount) return stack;
         if (stack.isEmpty()) return ItemStack.EMPTY;
         if (!storedStacks[slot].isEmpty() && !ItemStack.isSameItemSameComponents(storedStacks[slot], stack)) {
-            return stack; // slot occupied by different item
+            return stack;
         }
         return insertIntoSlot(slot, stack, simulate);
     }
@@ -130,6 +132,7 @@ public class DrawerBlockEntity extends BlockEntity {
             if (storedCounts[slot] <= 0) {
                 storedStacks[slot] = ItemStack.EMPTY;
                 storedCounts[slot] = 0;
+                maxCapacities[slot] = (long) getBaseStackMultiplier() * 64 * getUpgradeMultiplier();
             }
             setChanged();
             if (this.level != null && !this.level.isClientSide()) {
@@ -140,7 +143,72 @@ public class DrawerBlockEntity extends BlockEntity {
         return result;
     }
 
-    //Save and Load Contents
+    // Upgrades
+    public ItemStack getUpgradeSlot(int slot) {
+        return upgradeSlots[slot];
+    }
+
+    public boolean insertUpgrade(ItemStack upgrade) {
+        for (int i = 0; i < 4; i++) {
+            if (upgradeSlots[i].isEmpty()) {
+                upgradeSlots[i] = upgrade.copyWithCount(1);
+                recalculateCapacities();
+                setChanged();
+                if (this.level != null && !this.level.isClientSide()) {
+                    this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean canRemoveUpgrade(int upgradeSlot) {
+        if (upgradeSlots[upgradeSlot].isEmpty()) return false;
+        int newMultiplier = 1;
+        for (int i = 0; i < 4; i++) {
+            if (i == upgradeSlot) continue;
+            if (!upgradeSlots[i].isEmpty() && upgradeSlots[i].getItem() instanceof DrawerUpgradeItem upgrade) {
+                newMultiplier *= upgrade.getMultiplier();
+            }
+        }
+        for (int i = 0; i < slotCount; i++) {
+            if (!storedStacks[i].isEmpty()) {
+                long newCapacity = (long) getBaseStackMultiplier() * storedStacks[i].getMaxStackSize() * newMultiplier;
+                if (storedCounts[i] > newCapacity) return false;
+            }
+        }
+        return true;
+    }
+
+
+    public int getUpgradeMultiplier() {
+        int multiplier = 1;
+        for (ItemStack upgrade : upgradeSlots) {
+            if (!upgrade.isEmpty() && upgrade.getItem() instanceof DrawerUpgradeItem upgradeItem) {
+                multiplier *= upgradeItem.getMultiplier();
+            }
+        }
+        return multiplier;
+    }
+
+    private void recalculateCapacities() {
+        for (int i = 0; i < slotCount; i++) {
+            int stackSize = storedStacks[i].isEmpty() ? 64 : storedStacks[i].getMaxStackSize();
+            maxCapacities[i] = (long) getBaseStackMultiplier() * stackSize * getUpgradeMultiplier();
+        }
+    }
+
+    public void setUpgradeSlot(int slot, ItemStack stack) {
+        this.upgradeSlots[slot] = stack;
+        recalculateCapacities();
+        setChanged();
+        if (this.level != null && !this.level.isClientSide()) {
+            this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+        }
+    }
+
+    // Save and Load
     @Override
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
@@ -149,6 +217,12 @@ public class DrawerBlockEntity extends BlockEntity {
             if (!storedStacks[i].isEmpty()) {
                 slotOutput.store("Item", ItemStack.CODEC, storedStacks[i]);
                 slotOutput.putLong("Count", storedCounts[i]);
+            }
+        }
+        for (int i = 0; i < 4; i++) {
+            ValueOutput upgradeOutput = output.child("Upgrade" + i);
+            if (!upgradeSlots[i].isEmpty()) {
+                upgradeOutput.store("Item", ItemStack.CODEC, upgradeSlots[i]);
             }
         }
     }
@@ -165,22 +239,34 @@ public class DrawerBlockEntity extends BlockEntity {
                 storedCounts[slot] = slotInput.getLongOr("Count", 0L);
             });
         }
+        for (int i = 0; i < 4; i++) {
+            final int upgradeIndex = i;
+            upgradeSlots[upgradeIndex] = ItemStack.EMPTY;
+            input.child("Upgrade" + upgradeIndex).ifPresent(upgradeInput -> {
+                upgradeSlots[upgradeIndex] = upgradeInput.read("Item", ItemStack.CODEC).orElse(ItemStack.EMPTY);
+            });
+        }
+        recalculateCapacities();
     }
-
-
 
     public void loadContentsFromTag(CompoundTag tag) {
         for (int i = 0; i < slotCount; i++) {
             storedStacks[i] = ItemStack.EMPTY;
             storedCounts[i] = 0L;
-
             if (tag.getCompound("Slot" + i).isPresent()) {
                 CompoundTag slotTag = tag.getCompound("Slot" + i).orElseThrow();
                 storedStacks[i] = slotTag.read("Item", ItemStack.CODEC).orElse(ItemStack.EMPTY);
                 storedCounts[i] = slotTag.getLongOr("Count", 0L);
             }
         }
-
+        for (int i = 0; i < 4; i++) {
+            upgradeSlots[i] = ItemStack.EMPTY;
+            if (tag.getCompound("Upgrade" + i).isPresent()) {
+                CompoundTag upgradeTag = tag.getCompound("Upgrade" + i).orElseThrow();
+                upgradeSlots[i] = upgradeTag.read("Item", ItemStack.CODEC).orElse(ItemStack.EMPTY);
+            }
+        }
+        recalculateCapacities();
         setChanged();
     }
 
@@ -189,16 +275,22 @@ public class DrawerBlockEntity extends BlockEntity {
         for (int i = 0; i < slotCount; i++) {
             if (!storedStacks[i].isEmpty() && storedCounts[i] > 0) {
                 CompoundTag slotTag = new CompoundTag();
-                // Use the provider to save the ItemStack using the new Codec system
                 slotTag.put("Item", ItemStack.CODEC.encodeStart(provider.createSerializationContext(NbtOps.INSTANCE), storedStacks[i]).getOrThrow().copy());
                 slotTag.putLong("Count", storedCounts[i]);
                 tag.put("Slot" + i, slotTag);
             }
         }
+        for (int i = 0; i < 4; i++) {
+            if (!upgradeSlots[i].isEmpty()) {
+                CompoundTag upgradeTag = new CompoundTag();
+                upgradeTag.put("Item", ItemStack.CODEC.encodeStart(provider.createSerializationContext(NbtOps.INSTANCE), upgradeSlots[i]).getOrThrow().copy());
+                tag.put("Upgrade" + i, upgradeTag);
+            }
+        }
         return tag;
     }
 
-    //Renderer
+    // Renderer
     @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider provider) {
         return this.saveDrawerData(provider);
@@ -212,10 +304,8 @@ public class DrawerBlockEntity extends BlockEntity {
     @Override
     public void onDataPacket(Connection connection, ValueInput input) {
         super.onDataPacket(connection, input);
-
         if (this.level != null && this.level.isClientSide()) {
             this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
         }
     }
-
 }

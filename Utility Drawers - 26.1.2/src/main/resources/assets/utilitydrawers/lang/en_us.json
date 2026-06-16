@@ -57,5 +57,12 @@
   "block.utilitydrawers.warped_drawer_3": "Warped Drawer 3x",
   "block.utilitydrawers.warped_drawer_4": "Warped Drawer 4x",
 
+  "item.utilitydrawers.drawer_upgrade_t1": "Iron Upgrade",
+  "item.utilitydrawers.drawer_upgrade_t2": "Gold Upgrade",
+  "item.utilitydrawers.drawer_upgrade_t3": "Diamond Upgrade",
+  "item.utilitydrawers.drawer_upgrade_t4": "Netherite Upgrade",
+  "item.utilitydrawers.void_upgrade": "Void Upgrade",
+
+
   "creativetab.utility_drawers_tab": "Utility Drawers"
 }

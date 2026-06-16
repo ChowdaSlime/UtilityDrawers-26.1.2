@@ -23,8 +23,13 @@ public class ModModelProvider extends ModelProvider {
 
     @Override
     protected void registerModels(BlockModelGenerators blockModels, ItemModelGenerators itemModels) {
-        // 1. Register test items/blocks
         itemModels.generateFlatItem(ModItems.TEST_ITEM.get(), ModelTemplates.FLAT_ITEM);
+        itemModels.generateFlatItem(ModItems.DRAWER_UPGRADE_T1.get(), ModelTemplates.FLAT_ITEM);
+        itemModels.generateFlatItem(ModItems.DRAWER_UPGRADE_T2.get(), ModelTemplates.FLAT_ITEM);
+        itemModels.generateFlatItem(ModItems.DRAWER_UPGRADE_T3.get(), ModelTemplates.FLAT_ITEM);
+        itemModels.generateFlatItem(ModItems.DRAWER_UPGRADE_T4.get(), ModelTemplates.FLAT_ITEM);
+        itemModels.generateFlatItem(ModItems.VOID_UPGRADE.get(), ModelTemplates.FLAT_ITEM);
+
         blockModels.createTrivialCube(ModBlocks.TEST_BLOCK.get());
 
         for (Block drawer : ModBlocks.getAllDrawerBlocks()) {

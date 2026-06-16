@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "utilitydrawers:item/void_upgrade"
+  }
+}

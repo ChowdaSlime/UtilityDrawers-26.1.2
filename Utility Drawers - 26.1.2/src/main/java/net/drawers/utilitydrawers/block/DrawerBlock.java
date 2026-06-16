@@ -2,19 +2,28 @@ package net.drawers.utilitydrawers.block;
 
 import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.SlotCountProvider;
+import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
+import net.drawers.utilitydrawers.item.VoidUpgradeItem;
+import net.drawers.utilitydrawers.menu.DrawerMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
@@ -32,6 +41,8 @@ import net.minecraft.world.phys.Vec3;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static net.minecraft.world.item.Item.getPlayerPOVHitResult;
 
 public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock {
 
@@ -116,8 +127,38 @@ public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock
             ItemStack handStack,
             InteractionHand hand) {
 
+        if (!handStack.isEmpty() && handStack.getItem() instanceof DrawerUpgradeItem || handStack.getItem() instanceof VoidUpgradeItem) {
+            if (level.getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
+                if (drawer.insertUpgrade(handStack)) {
+                    if (!level.isClientSide() && !player.isCreative()) {
+                        handStack.shrink(1);
+                    }
+                    level.playSound(null, pos, SoundEvents.ITEM_FRAME_ADD_ITEM, SoundSource.BLOCKS, 1.0f, 1.0f);
+
+                    return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
+                }
+            }
+        }
+
         if (hit.getDirection() != state.getValue(FACING)) {
-            return InteractionResult.PASS;
+            if (!level.isClientSide()) {
+                BlockEntity be = level.getBlockEntity(pos);
+                if (be instanceof DrawerBlockEntity && player instanceof ServerPlayer serverPlayer) {
+                    Component title = Component.literal("Drawer");
+                    serverPlayer.openMenu(new MenuProvider() {
+                        @Override
+                        public Component getDisplayName() {
+                            return title;
+                        }
+
+                        @Override
+                        public AbstractContainerMenu createMenu(int id, Inventory inv, Player p) {
+                            return new DrawerMenu(id, inv, be);
+                        }
+                    }, buf -> buf.writeBlockPos(pos));
+                }
+            }
+            return InteractionResult.SUCCESS;
         }
 
         if (level.isClientSide()) {
@@ -125,7 +166,6 @@ public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock
         }
 
         if (level.getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
-
             long currentTime = System.currentTimeMillis();
             long lastClick = LAST_CLICK_TIME.getOrDefault(player.getUUID(), 0L);
             boolean isDoubleClick = (currentTime - lastClick) < 300;
@@ -135,7 +175,6 @@ public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock
 
             if (isDoubleClick) {
                 boolean insertedAny = false;
-
                 for (int j = 0; j < 36; j++) {
                     ItemStack invStack = player.getInventory().getItem(j);
                     if (invStack.isEmpty()) continue;
@@ -158,7 +197,6 @@ public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock
                     player.inventoryMenu.broadcastChanges();
                     level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.BLOCKS, 0.2f, 1.0f);
                 }
-
                 return InteractionResult.CONSUME;
 
             } else if (!handStack.isEmpty()) {

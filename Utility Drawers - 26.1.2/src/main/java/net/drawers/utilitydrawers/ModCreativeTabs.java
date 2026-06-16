@@ -20,8 +20,12 @@ public class ModCreativeTabs {
                     .icon(() -> new ItemStack(ModItems.TEST_ITEM.get()))
                     .title(Component.translatable("creativetab.utility_drawers_tab"))
                     .displayItems((itemDisplayParameters, output) -> {
-                        output.accept(ModItems.TEST_ITEM.get());
-                        output.accept(ModBlocks.TEST_BLOCK.get());
+                        output .accept(ModItems.DRAWER_UPGRADE_T1.get());
+                        output .accept(ModItems.DRAWER_UPGRADE_T2.get());
+                        output .accept(ModItems.DRAWER_UPGRADE_T3.get());
+                        output .accept(ModItems.DRAWER_UPGRADE_T4.get());
+                        output .accept(ModItems.VOID_UPGRADE.get());
+
                         ModBlocks.getAllDrawerBlocks().forEach(output::accept);
                     })
                     .build());

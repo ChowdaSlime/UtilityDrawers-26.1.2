@@ -3,6 +3,7 @@ package net.drawers.utilitydrawers;
 import net.drawers.utilitydrawers.block.ModBlocks;
 import net.drawers.utilitydrawers.block.entity.ModBlockEntities;
 import net.drawers.utilitydrawers.item.ModItems;
+import net.drawers.utilitydrawers.menu.ModMenuTypes;
 import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 import net.neoforged.bus.api.IEventBus;
@@ -24,6 +25,7 @@ public class UtilityDrawers {
         ModBlocks.register(modEventBus);
         ModCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);
         ModBlockEntities.register(modEventBus);
+        ModMenuTypes.register(modEventBus);
 
         NeoForge.EVENT_BUS.register(this);
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
