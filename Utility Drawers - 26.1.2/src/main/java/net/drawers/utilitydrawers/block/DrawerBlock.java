@@ -3,6 +3,7 @@ package net.drawers.utilitydrawers.block;
 import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.SlotCountProvider;
 import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
+import net.drawers.utilitydrawers.item.StorageRemoteItem;
 import net.drawers.utilitydrawers.item.VoidUpgradeItem;
 import net.drawers.utilitydrawers.menu.DrawerMenu;
 import net.minecraft.core.BlockPos;
@@ -23,7 +24,6 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
@@ -42,7 +42,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static net.minecraft.world.item.Item.getPlayerPOVHitResult;
 
 public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock {
 
@@ -127,6 +126,10 @@ public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock
             ItemStack handStack,
             InteractionHand hand) {
 
+        if (handStack.getItem() instanceof StorageRemoteItem) {
+            return InteractionResult.PASS;
+        }
+
         if (!handStack.isEmpty() && handStack.getItem() instanceof DrawerUpgradeItem || handStack.getItem() instanceof VoidUpgradeItem) {
             if (level.getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
                 if (drawer.insertUpgrade(handStack)) {
@@ -200,6 +203,9 @@ public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock
                 return InteractionResult.CONSUME;
 
             } else if (!handStack.isEmpty()) {
+                if (drawer.isLocked() && !drawer.hasTemplate(targetSlot)) {
+                    drawer.setTemplate(targetSlot, handStack);
+                }
                 ItemStack remainder = drawer.insertItemIntoSlot(targetSlot, handStack, false);
                 if (remainder.getCount() != handStack.getCount()) {
                     player.setItemInHand(hand, remainder);

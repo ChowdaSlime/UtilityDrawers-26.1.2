@@ -5,9 +5,13 @@ import net.drawers.utilitydrawers.item.DrawerBlockItem;
 import net.drawers.utilitydrawers.item.ModItems;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
+import net.minecraft.world.level.material.MapColor;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
+import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.drawers.utilitydrawers.block.DrawerBlock;
 
@@ -26,6 +30,11 @@ public class ModBlocks {
             "test_block",
             properties -> new Block(properties.strength(4f))
     );
+
+    public static final DeferredBlock<Block> STORAGE_INTERFACE = registerBlock(
+            "storage_interface",
+            properties -> new StorageInterfaceBlock(
+                    properties.strength(3.0F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
 
     public enum WoodType {
         OAK,
@@ -53,7 +62,7 @@ public class ModBlocks {
                 String name = wood.name().toLowerCase() + "_drawer_" + slotCount;
                 final int sc = slotCount;
                 DeferredBlock<Block> block = registerDrawerBlock(name,
-                        properties -> new DrawerBlock(properties.strength(2.5f), sc));
+                        properties -> new DrawerBlock(properties.strength(1.5f), sc));
                 slots.put(slotCount, block);
             }
             DRAWERS.put(wood, slots);
@@ -66,9 +75,12 @@ public class ModBlocks {
 
     public static List<Block> getAllDrawerBlocks() {
         List<Block> list = new ArrayList<>();
-        for (Map<Integer, DeferredBlock<Block>> slots : DRAWERS.values()) {
-            for (DeferredBlock<Block> block : slots.values()) {
-                list.add(block.get());
+        for (Map.Entry<WoodType, Map<Integer, DeferredBlock<Block>>> woodEntry : DRAWERS.entrySet()) {
+            for (Map.Entry<Integer, DeferredBlock<Block>> slotEntry : woodEntry.getValue().entrySet()) {
+                Block block = slotEntry.getValue().get();
+                UtilityDrawers.LOGGER.info("Drawer block registered: {} -> {}",
+                        woodEntry.getKey().name() + "_" + slotEntry.getKey(), block);
+                list.add(block);
             }
         }
         return list;
@@ -79,7 +91,7 @@ public class ModBlocks {
             Function<BlockBehaviour.Properties, T> function) {
         DeferredBlock<T> toReturn = BLOCKS.registerBlock(name, function);
         ModItems.ITEMS.registerItem(name,
-                properties -> new DrawerBlockItem(toReturn.get(), properties.useBlockDescriptionPrefix()));
+                properties -> new DrawerBlockItem(toReturn.value(), properties.useBlockDescriptionPrefix()));
         return toReturn;
     }
 
@@ -95,7 +107,7 @@ public class ModBlocks {
             String name,
             DeferredBlock<T> block) {
         ModItems.ITEMS.registerItem(name,
-                properties -> new BlockItem(block.get(), properties.useBlockDescriptionPrefix()));
+                properties -> new BlockItem(block.value(), properties.useBlockDescriptionPrefix()));
     }
 
     public static void register(IEventBus eventBus) {

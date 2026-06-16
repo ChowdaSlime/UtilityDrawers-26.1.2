@@ -16,20 +16,14 @@ import java.util.List;
 public class UtilityDrawersDataGen {
 
     @SubscribeEvent
-    public static void gatherClientData(GatherDataEvent.Client event) {
-        DataGenerator generator = event.getGenerator();
-        PackOutput packOutput = generator.getPackOutput();
-        generator.addProvider(true, new ModModelProvider(packOutput));
-    }
-
-    @SubscribeEvent
-    public static void gatherServerData(GatherDataEvent.Server event) {
+    public static void gatherData(GatherDataEvent.Client event) {
         DataGenerator generator = event.getGenerator();
         PackOutput packOutput = generator.getPackOutput();
         var lookupProvider = event.getLookupProvider();
 
-        generator.addProvider(true, new ModRecipeProvider.Runner(packOutput, lookupProvider));
+        generator.addProvider(true, new ModModelProvider(packOutput));
         generator.addProvider(true, new ModBlockTagsProvider(packOutput, lookupProvider));
+        // generator.addProvider(true, new ModRecipeProvider.Runner(packOutput, lookupProvider));
 
         generator.addProvider(true, new LootTableProvider(
                 packOutput,
@@ -37,5 +31,7 @@ public class UtilityDrawersDataGen {
                 List.of(new LootTableProvider.SubProviderEntry(ModBlockLootTableProvider::new, LootContextParamSets.BLOCK)),
                 lookupProvider
         ));
+
+
     }
 }

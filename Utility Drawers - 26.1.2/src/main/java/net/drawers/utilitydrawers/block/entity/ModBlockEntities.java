@@ -16,10 +16,20 @@ public class ModBlockEntities {
             DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, UtilityDrawers.MODID);
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<DrawerBlockEntity>> DRAWER_BLOCK_ENTITY =
-            BLOCK_ENTITIES.register("drawer_block_entity", () -> new BlockEntityType<>(
-                    DrawerBlockEntity::new,
-                    Set.copyOf(ModBlocks.getAllDrawerBlocks())
-            ));
+            BLOCK_ENTITIES.register("drawer_block_entity", () -> {
+                return new BlockEntityType<>(
+                        DrawerBlockEntity::new,
+                        Set.copyOf(ModBlocks.getAllDrawerBlocks()));
+            });
+
+
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StorageInterfaceBlockEntity>> STORAGE_INTERFACE_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("storage_interface_entity", () ->
+                    new BlockEntityType<>(
+                            StorageInterfaceBlockEntity::new, Set.of(ModBlocks.STORAGE_INTERFACE.get())));
+
+
 
     public static void register(IEventBus eventBus) {
         BLOCK_ENTITIES.register(eventBus);

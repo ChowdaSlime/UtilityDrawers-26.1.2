@@ -10,12 +10,15 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -41,6 +44,7 @@ public class DrawerRenderer implements BlockEntityRenderer<DrawerBlockEntity, Dr
         public ItemStackRenderState[] itemStates = new ItemStackRenderState[0];
         public long[] counts = new long[0];
         public Direction facing = Direction.NORTH;
+        public boolean locked;
     }
 
     @Override
@@ -52,6 +56,7 @@ public class DrawerRenderer implements BlockEntityRenderer<DrawerBlockEntity, Dr
     public void extractRenderState(DrawerBlockEntity blockEntity, DrawerRenderState state, float partialTick, Vec3 cameraPos, @Nullable ModelFeatureRenderer.CrumblingOverlay crumblingOverlay) {
         BlockEntityRenderer.super.extractRenderState(blockEntity, state, partialTick, cameraPos, crumblingOverlay);
         state.facing = blockEntity.getBlockState().getValue(BlockStateProperties.HORIZONTAL_FACING);
+        state.locked = blockEntity.isLocked();
         int slotCount = blockEntity.getSlotCount();
 
         if (state.itemStates.length != slotCount) {
@@ -66,13 +71,15 @@ public class DrawerRenderer implements BlockEntityRenderer<DrawerBlockEntity, Dr
             ItemStack stack = blockEntity.getStoredItem(i);
             state.counts[i] = blockEntity.getStoredCount(i);
             if (!stack.isEmpty()) {
-                // CHANGED: Switched from GUI to FIXED so blocks render flat and reliably in physical space.
                 this.itemModelResolver.updateForTopItem(state.itemStates[i], stack, ItemDisplayContext.FIXED, blockEntity.getLevel(), null, (int) blockEntity.getBlockPos().asLong());
             } else {
                 state.itemStates[i].clear();
             }
         }
     }
+
+    private static final Identifier LOCK_TEXTURE =
+            Identifier.fromNamespaceAndPath(UtilityDrawers.MODID, "textures/gui/lock.png");
 
     @Override
     public void submit(DrawerRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
@@ -84,7 +91,7 @@ public class DrawerRenderer implements BlockEntityRenderer<DrawerBlockEntity, Dr
             poseStack.translate(0.5D, 0.5D, 0.5D);
 
             Direction facing = state.facing != null ? state.facing : Direction.NORTH;
-            poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(-facing.toYRot()));
+            poseStack.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
 
             int slotCount = state.itemStates.length;
 
@@ -128,7 +135,10 @@ public class DrawerRenderer implements BlockEntityRenderer<DrawerBlockEntity, Dr
                             case 3 -> itemScale *= 0.65f;
                             case 4 -> itemScale *= 0.65f;
                         }
+                    } else {
+                        oz -= 0.06f;
                     }
+
                     float itemOx = ox;
                     if (isFlatItem && slotCount == 1) {
                         itemOx -= 0.015f;
@@ -186,8 +196,33 @@ public class DrawerRenderer implements BlockEntityRenderer<DrawerBlockEntity, Dr
                     }
                 }
             }
-        } finally {
+            if (state.locked) {
+                poseStack.pushPose();
+                float lockOx = 0.0f;
+                float lockOy = 0.46875f;
+                float lockOz = 0.501f;
+                float lockScale = 0.0625f;
+
+                poseStack.translate(lockOx, lockOy, lockOz);
+                poseStack.scale(lockScale, lockScale, 1.0f);
+
+                RenderType renderType = RenderTypes.entityCutout(LOCK_TEXTURE);
+
+                submitNodeCollector.submitCustomGeometry(poseStack, renderType, (pose, consumer) -> {
+                    var matrix = pose.pose();
+
+                    consumer.addVertex(matrix, -0.5f, -0.5f, 0.0f).setColor(0xFFFFFFFF).setUv(0.0f, 1.0f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0.0f, 0.0f, 1.0f);
+                    consumer.addVertex(matrix,  0.5f, -0.5f, 0.0f).setColor(0xFFFFFFFF).setUv(1.0f, 1.0f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0.0f, 0.0f, 1.0f);
+                    consumer.addVertex(matrix,  0.5f,  0.5f, 0.0f).setColor(0xFFFFFFFF).setUv(1.0f, 0.0f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0.0f, 0.0f, 1.0f);
+                    consumer.addVertex(matrix, -0.5f,  0.5f, 0.0f).setColor(0xFFFFFFFF).setUv(0.0f, 0.0f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0.0f, 0.0f, 1.0f);
+                });
+
+                poseStack.popPose();
+            }
+        }
+        finally {
             poseStack.popPose();
         }
     }
+
 }

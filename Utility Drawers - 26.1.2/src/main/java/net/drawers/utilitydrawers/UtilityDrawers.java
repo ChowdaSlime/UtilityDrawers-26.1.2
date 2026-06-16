@@ -2,8 +2,11 @@ package net.drawers.utilitydrawers;
 
 import net.drawers.utilitydrawers.block.ModBlocks;
 import net.drawers.utilitydrawers.block.entity.ModBlockEntities;
+import net.drawers.utilitydrawers.data.ModDataComponents;
 import net.drawers.utilitydrawers.item.ModItems;
 import net.drawers.utilitydrawers.menu.ModMenuTypes;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 import net.neoforged.bus.api.IEventBus;
@@ -21,11 +24,13 @@ public class UtilityDrawers {
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public UtilityDrawers(IEventBus modEventBus, ModContainer modContainer) {
-        ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
-        ModCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);
         ModBlockEntities.register(modEventBus);
+        ModItems.register(modEventBus);
+        ModDataComponents.register(modEventBus);
+        ModCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);
         ModMenuTypes.register(modEventBus);
+
 
         NeoForge.EVENT_BUS.register(this);
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
@@ -34,4 +39,5 @@ public class UtilityDrawers {
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
     }
+
 }

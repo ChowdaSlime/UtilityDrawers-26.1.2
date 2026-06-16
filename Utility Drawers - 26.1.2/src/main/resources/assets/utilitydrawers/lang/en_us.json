@@ -63,6 +63,9 @@
   "item.utilitydrawers.drawer_upgrade_t4": "Netherite Upgrade",
   "item.utilitydrawers.void_upgrade": "Void Upgrade",
 
+  "item.utilitydrawers.storage_remote": "Storage Remote",
+
+  "block.utilitydrawers.storage_interface": "Storage Interface",
 
   "creativetab.utility_drawers_tab": "Utility Drawers"
 }

@@ -1,6 +1,8 @@
 package net.drawers.utilitydrawers.item;
 
 import net.drawers.utilitydrawers.UtilityDrawers;
+import net.drawers.utilitydrawers.block.ModBlocks;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -22,6 +24,8 @@ public class ModItems {
             ITEMS.registerItem("drawer_upgrade_t4", properties -> new DrawerUpgradeItem(properties, 4));
     public static final DeferredItem<VoidUpgradeItem> VOID_UPGRADE =
             ITEMS.registerItem("void_upgrade", properties -> new VoidUpgradeItem(properties));
+    public static final DeferredItem<StorageRemoteItem> STORAGE_REMOTE =
+            ITEMS.registerItem("storage_remote", properties -> new StorageRemoteItem(properties));
 
 
     public static void register(IEventBus eventBus) {

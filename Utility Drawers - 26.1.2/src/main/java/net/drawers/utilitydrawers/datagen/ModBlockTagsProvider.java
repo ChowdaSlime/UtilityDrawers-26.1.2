@@ -21,5 +21,10 @@ public class ModBlockTagsProvider extends BlockTagsProvider {
             this.tag(BlockTags.MINEABLE_WITH_AXE).add(drawer);
 
         }
+
+        this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ModBlocks.STORAGE_INTERFACE.get());
+
+        this.tag(BlockTags.NEEDS_STONE_TOOL).add(ModBlocks.STORAGE_INTERFACE.get());
     }
 }
+
