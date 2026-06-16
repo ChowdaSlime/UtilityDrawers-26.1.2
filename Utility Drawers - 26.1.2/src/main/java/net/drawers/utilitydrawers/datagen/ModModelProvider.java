@@ -32,6 +32,8 @@ public class ModModelProvider extends ModelProvider {
 
         blockModels.createTrivialCube(ModBlocks.TEST_BLOCK.get());
 
+
+
         for (Block drawer : ModBlocks.getAllDrawerBlocks()) {
 
             var modelLoc = ModelLocationUtils.getModelLocation(drawer);

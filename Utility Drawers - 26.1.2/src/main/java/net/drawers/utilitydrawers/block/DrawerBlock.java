@@ -3,6 +3,7 @@ package net.drawers.utilitydrawers.block;
 import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.SlotCountProvider;
 import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
+import net.drawers.utilitydrawers.item.StorageRemoteItem;
 import net.drawers.utilitydrawers.item.VoidUpgradeItem;
 import net.drawers.utilitydrawers.menu.DrawerMenu;
 import net.minecraft.core.BlockPos;
@@ -127,6 +128,10 @@ public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock
             ItemStack handStack,
             InteractionHand hand) {
 
+        if (handStack.getItem() instanceof StorageRemoteItem) {
+            return InteractionResult.PASS;
+        }
+
         if (!handStack.isEmpty() && handStack.getItem() instanceof DrawerUpgradeItem || handStack.getItem() instanceof VoidUpgradeItem) {
             if (level.getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
                 if (drawer.insertUpgrade(handStack)) {
@@ -200,6 +205,9 @@ public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock
                 return InteractionResult.CONSUME;
 
             } else if (!handStack.isEmpty()) {
+                if (drawer.isLocked() && !drawer.hasTemplate(targetSlot)) {
+                    drawer.setTemplate(targetSlot, handStack);
+                }
                 ItemStack remainder = drawer.insertItemIntoSlot(targetSlot, handStack, false);
                 if (remainder.getCount() != handStack.getCount()) {
                     player.setItemInHand(hand, remainder);

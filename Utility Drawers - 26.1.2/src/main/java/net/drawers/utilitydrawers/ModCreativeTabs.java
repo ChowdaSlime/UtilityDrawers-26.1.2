@@ -25,6 +25,7 @@ public class ModCreativeTabs {
                         output .accept(ModItems.DRAWER_UPGRADE_T3.get());
                         output .accept(ModItems.DRAWER_UPGRADE_T4.get());
                         output .accept(ModItems.VOID_UPGRADE.get());
+                        output .accept(ModItems.STORAGE_REMOTE.get());
 
                         ModBlocks.getAllDrawerBlocks().forEach(output::accept);
                     })
