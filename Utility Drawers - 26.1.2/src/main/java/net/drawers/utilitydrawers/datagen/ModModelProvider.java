@@ -2,6 +2,7 @@ package net.drawers.utilitydrawers.datagen;
 
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.DrawerBlock;
+import net.drawers.utilitydrawers.block.FluidDrawerBlock;
 import net.drawers.utilitydrawers.block.ModBlocks;
 import net.drawers.utilitydrawers.block.StorageInterfaceBlock;
 import net.drawers.utilitydrawers.item.ModItems;
@@ -52,6 +53,22 @@ public class ModModelProvider extends ModelProvider {
                                     .select(Direction.WEST,  BlockModelGenerators.Y_ROT_270))
             );
         }
+
+        for (Block fluidDrawer : ModBlocks.getAllFluidDrawerBlocks()) {
+            var modelLoc = ModelLocationUtils.getModelLocation(fluidDrawer);
+            MultiVariant baseVariant = BlockModelGenerators.plainVariant(modelLoc);
+
+            blockModels.blockStateOutput.accept(
+                    MultiVariantGenerator.dispatch(fluidDrawer, BlockModelGenerators.plainVariant(modelLoc))
+                            .with(PropertyDispatch.modify(FluidDrawerBlock.FACING)
+                                    .select(Direction.NORTH, v -> v)
+                                    .select(Direction.EAST,  BlockModelGenerators.Y_ROT_90)
+                                    .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
+                                    .select(Direction.WEST,  BlockModelGenerators.Y_ROT_270))
+            );
+        }
+
+
         Block storageInterface = ModBlocks.STORAGE_INTERFACE.get();
         Identifier unlockedModel = Identifier.fromNamespaceAndPath(UtilityDrawers.MODID, "block/storage_interface");
         Identifier lockedModel = Identifier.fromNamespaceAndPath(UtilityDrawers.MODID, "block/storage_interface_locked");

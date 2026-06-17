@@ -57,6 +57,11 @@
   "block.utilitydrawers.warped_drawer_3": "Warped Drawer 3x",
   "block.utilitydrawers.warped_drawer_4": "Warped Drawer 4x",
 
+  "block.utilitydrawers.fluid_drawer_1": "Fluid Drawer 1x",
+  "block.utilitydrawers.fluid_drawer_2": "Fluid Drawer 2x",
+  "block.utilitydrawers.fluid_drawer_3": "Fluid Drawer 3x",
+  "block.utilitydrawers.fluid_drawer_4": "Fluid Drawer 4x",
+
   "item.utilitydrawers.drawer_upgrade_t1": "Iron Upgrade",
   "item.utilitydrawers.drawer_upgrade_t2": "Gold Upgrade",
   "item.utilitydrawers.drawer_upgrade_t3": "Diamond Upgrade",

@@ -16,6 +16,9 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<DrawerMenu>> DRAWER_MENU =
             MENU_TYPES.register("drawer_menu",
                     () -> IMenuTypeExtension.create(DrawerMenu::new));
+    public static final DeferredHolder<MenuType<?>, MenuType<FluidDrawerMenu>> FLUID_DRAWER_MENU =
+            MENU_TYPES.register("fluid_drawer_menu",
+                    () -> IMenuTypeExtension.create(FluidDrawerMenu::new));
 
     public static void register(IEventBus eventBus) {
         MENU_TYPES.register(eventBus);

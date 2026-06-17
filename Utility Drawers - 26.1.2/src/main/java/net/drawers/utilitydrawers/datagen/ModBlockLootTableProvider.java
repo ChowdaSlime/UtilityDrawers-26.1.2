@@ -29,6 +29,9 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         for (Block drawer : ModBlocks.getAllDrawerBlocks()) {
             this.add(drawer, createDrawerDrop(drawer));
         }
+        for (Block fluidDrawer : ModBlocks.getAllFluidDrawerBlocks()) {
+            this.add(fluidDrawer, createDrawerDrop(fluidDrawer));
+        }
     }
 
     protected LootTable.Builder createDrawerDrop(Block block) {

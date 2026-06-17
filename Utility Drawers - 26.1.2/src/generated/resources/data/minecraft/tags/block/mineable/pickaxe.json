@@ -1,5 +1,9 @@
 {
   "values": [
+    "utilitydrawers:fluid_drawer_1",
+    "utilitydrawers:fluid_drawer_2",
+    "utilitydrawers:fluid_drawer_3",
+    "utilitydrawers:fluid_drawer_4",
     "utilitydrawers:storage_interface"
   ]
 }

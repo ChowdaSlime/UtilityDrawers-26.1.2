@@ -17,9 +17,11 @@ public class ModBlockEntities {
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<DrawerBlockEntity>> DRAWER_BLOCK_ENTITY =
             BLOCK_ENTITIES.register("drawer_block_entity", () -> {
-                return new BlockEntityType<>(
-                        DrawerBlockEntity::new,
-                        Set.copyOf(ModBlocks.getAllDrawerBlocks()));
+                return new BlockEntityType<>(DrawerBlockEntity::new, Set.copyOf(ModBlocks.getAllDrawerBlocks()));
+            });
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FluidDrawerBlockEntity>> FLUID_DRAWER_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("fluid_drawer_block_entity", () -> {
+                return new BlockEntityType<>(FluidDrawerBlockEntity::new, Set.copyOf(ModBlocks.getAllFluidDrawerBlocks()));
             });
 
 

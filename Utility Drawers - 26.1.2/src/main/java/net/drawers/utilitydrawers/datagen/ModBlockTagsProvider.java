@@ -19,7 +19,9 @@ public class ModBlockTagsProvider extends BlockTagsProvider {
     protected void addTags(HolderLookup.Provider provider) {
         for (Block drawer : ModBlocks.getAllDrawerBlocks()) {
             this.tag(BlockTags.MINEABLE_WITH_AXE).add(drawer);
-
+        }
+        for (Block fluidDrawer : ModBlocks.getAllFluidDrawerBlocks()) {
+            this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(fluidDrawer);
         }
 
         this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ModBlocks.STORAGE_INTERFACE.get());

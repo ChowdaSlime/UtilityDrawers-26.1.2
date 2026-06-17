@@ -5,8 +5,10 @@ import net.drawers.utilitydrawers.block.entity.ModBlockEntities;
 import net.drawers.utilitydrawers.client.ClientDrawerTooltipComponent;
 import net.drawers.utilitydrawers.client.DrawerRenderer;
 import net.drawers.utilitydrawers.client.DrawerTooltipComponent;
+import net.drawers.utilitydrawers.client.FluidDrawerRenderer;
 import net.drawers.utilitydrawers.item.StorageRemoteItem;
 import net.drawers.utilitydrawers.menu.DrawerScreen;
+import net.drawers.utilitydrawers.menu.FluidDrawerScreen;
 import net.drawers.utilitydrawers.menu.ModMenuTypes;
 import net.drawers.utilitydrawers.network.CycleRemoteModePayload;
 import net.minecraft.client.Minecraft;
@@ -23,6 +25,7 @@ public class ModClientEvents {
     @SubscribeEvent
     public static void registerBER(EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(ModBlockEntities.DRAWER_BLOCK_ENTITY.get(), DrawerRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.FLUID_DRAWER_BLOCK_ENTITY.get(), FluidDrawerRenderer::new);
     }
 
     @SubscribeEvent
@@ -33,6 +36,7 @@ public class ModClientEvents {
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(ModMenuTypes.DRAWER_MENU.get(), DrawerScreen::new);
+        event.register(ModMenuTypes.FLUID_DRAWER_MENU.get(), FluidDrawerScreen::new);
     }
 
     @SubscribeEvent
