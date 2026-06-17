@@ -30,6 +30,7 @@ public class UtilityDrawers {
         ModDataComponents.register(modEventBus);
         ModCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);
         ModMenuTypes.register(modEventBus);
+        ModDataComponents.register(modEventBus);
 
 
         NeoForge.EVENT_BUS.register(this);
