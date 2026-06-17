@@ -39,9 +39,20 @@ public class ModEvents {
         if (!(state.getBlock() instanceof DrawerBlock drawerBlock)) return;
         if (event.getFace() != state.getValue(DrawerBlock.FACING)) return;
 
-        event.setCanceled(true);
-
         BlockPos pos = event.getPos();
+
+        double reach = player.blockInteractionRange();
+        net.minecraft.world.phys.HitResult hitResult = player.pick(reach, 0, false);
+        int targetSlot = -1;
+        if (hitResult instanceof net.minecraft.world.phys.BlockHitResult blockHit) {
+            if (event.getLevel().getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
+                targetSlot = drawerBlock.getTargetSlot(blockHit.getLocation(), state, drawer.getSlotCount());
+            }
+        }
+
+        if (targetSlot < 0) return;
+
+        event.setCanceled(true);
 
         if (!event.getLevel().isClientSide()) {
             long currentTick = event.getLevel().getGameTime();
@@ -52,14 +63,6 @@ public class ModEvents {
                 lastClickTick.put(uuid, currentTick);
 
                 if (event.getLevel().getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
-                    double reach = player.blockInteractionRange();
-                    net.minecraft.world.phys.HitResult hitResult = player.pick(reach, 0, false);
-
-                    int targetSlot = 0;
-                    if (hitResult instanceof net.minecraft.world.phys.BlockHitResult blockHit) {
-                        targetSlot = drawerBlock.getTargetSlot(blockHit.getLocation(), state, drawer.getSlotCount());
-                    }
-
                     if (!drawer.isSlotEmpty(targetSlot)) {
                         int amount = player.isShiftKeyDown()
                                 ? drawer.getStoredItem(targetSlot).getMaxStackSize() : 1;

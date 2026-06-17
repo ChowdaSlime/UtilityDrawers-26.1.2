@@ -2,6 +2,7 @@
 	"format_version": "1.21.11",
 	"credit": "Made with Blockbench",
 	"textures": {
+		"particle": "utilitydrawers:block/storage_interface_locked",
 		"0": "utilitydrawers:block/storage_interface_locked"
 	},
 	"elements": [

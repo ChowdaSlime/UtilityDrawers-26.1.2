@@ -176,6 +176,25 @@ public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock
 
             int targetSlot = getTargetSlot(hit.getLocation(), state, drawer.getSlotCount());
 
+            if (targetSlot < 0) {
+                if (player instanceof ServerPlayer serverPlayer) {
+                    Component title = Component.literal("Drawer");
+                    serverPlayer.openMenu(new MenuProvider() {
+
+                        @Override
+                        public Component getDisplayName() {
+                            return title;
+                        }
+
+                        @Override
+                        public AbstractContainerMenu createMenu(int id, Inventory inv, Player p) {
+                            return new DrawerMenu(id, inv, drawer);
+                        }
+                    }, buf -> buf.writeBlockPos(pos));
+                }
+                return InteractionResult.SUCCESS;
+            }
+
             if (isDoubleClick) {
                 boolean insertedAny = false;
                 for (int j = 0; j < 36; j++) {
@@ -244,7 +263,6 @@ public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock
     }
 
     public int getTargetSlot(Vec3 hitPos, BlockState state, int slotCount) {
-        if (slotCount == 1) return 0;
         Direction facing = state.getValue(FACING);
 
         double u, v;
@@ -269,10 +287,43 @@ public class DrawerBlock extends Block implements SlotCountProvider, EntityBlock
                 return 0;
             }
         }
+
+        final double EDGE = 1.0 / 16.0;
+        final double TRIM = 1.0 / 16.0;
+
+        double halfLow = 0.5 - TRIM / 2.0;
+        double halfHigh = 0.5 + TRIM / 2.0;
+
+        boolean inTopZone = v >= EDGE && v < halfLow;
+        boolean inBottomZone = v > halfHigh && v <= (1.0 - EDGE);
+        boolean inLeftZone = u >= EDGE && u < halfLow;
+        boolean inRightZone = u > halfHigh && u <= (1.0 - EDGE);
+        boolean inUEdge = u >= EDGE && u <= (1.0 - EDGE);
+
         return switch (slotCount) {
-            case 2 -> v < 0.5 ? 0 : 1;
-            case 3 -> v < 0.5 ? 0 : (u < 0.5 ? 1 : 2);
-            case 4 -> v < 0.5 ? (u < 0.5 ? 0 : 1) : (u < 0.5 ? 2 : 3);
+            case 1 -> {
+                boolean inActive = u >= EDGE && u <= (1.0 - EDGE) && v >= EDGE && v <= (1.0 - EDGE);
+                yield inActive ? 0 : -1;
+            }
+            case 2 -> {
+                if (inTopZone && inUEdge) yield 0;
+                if (inBottomZone && inUEdge) yield 1;
+                yield -1;
+            }
+            case 3 -> {
+                boolean inFullWidthTop = inTopZone && u >= EDGE && u <= (1.0 - EDGE);
+                if (inFullWidthTop) yield 0;
+                if (inBottomZone && inLeftZone) yield 1;
+                if (inBottomZone && inRightZone) yield 2;
+                yield -1;
+            }
+            case 4 -> {
+                if (inTopZone && inLeftZone) yield 0;
+                if (inTopZone && inRightZone) yield 1;
+                if (inBottomZone && inLeftZone) yield 2;
+                if (inBottomZone && inRightZone) yield 3;
+                yield -1;
+            }
             default -> 0;
         };
     }

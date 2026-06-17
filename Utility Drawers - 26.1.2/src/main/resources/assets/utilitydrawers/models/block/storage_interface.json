@@ -3,6 +3,7 @@
 	"credit": "Made with Blockbench",
 	"texture_size": [64, 64],
 	"textures": {
+		"particle": "utilitydrawers:block/storage_interface",
 		"4": "utilitydrawers:block/storage_interface"
 	},
 	"elements": [

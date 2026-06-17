@@ -3,6 +3,7 @@
 	"credit": "Made with Blockbench",
 	"texture_size": [64, 64],
 	"textures": {
+		"particle": "utilitydrawers:block/acacia_drawer_3",
 		"0": "utilitydrawers:block/acacia_drawer_3"
 	},
 	"elements": [

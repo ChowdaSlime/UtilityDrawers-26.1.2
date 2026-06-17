@@ -3,6 +3,7 @@
 	"credit": "Made with Blockbench",
 	"texture_size": [64, 64],
 	"textures": {
+		"particle": "utilitydrawers:block/dark_oak_drawer_3",
 		"0": "utilitydrawers:block/dark_oak_drawer_3"
 	},
 	"elements": [
