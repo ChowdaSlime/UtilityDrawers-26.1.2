@@ -97,32 +97,52 @@ public class StorageRemoteItem extends Item {
 
         if (blockEntity instanceof DrawerBlockEntity drawer) {
             BlockPos boundPos = getBoundInterface(stack);
+
             if (boundPos == null) {
                 player.sendOverlayMessage(Component.literal("No Storage Interface bound!").withStyle(ChatFormatting.RED));
                 return InteractionResult.FAIL;
             }
 
-            // NEW: 16-block range check
             if (boundPos.distManhattan(pos) > 16) {
                 player.sendOverlayMessage(Component.literal("Drawer out of range! (Max 16 blocks)").withStyle(ChatFormatting.RED));
                 return InteractionResult.FAIL;
             }
 
-            if (level.getBlockEntity(boundPos) instanceof StorageInterfaceBlockEntity interfaceEntity) {
-                if (interfaceEntity.tryUnlinkDrawer(pos)) {
-                    player.sendOverlayMessage(Component.literal("Drawer unlinked!").withStyle(ChatFormatting.YELLOW));
-                } else {
-                    interfaceEntity.tryLinkDrawer(pos);
-                    player.sendOverlayMessage(Component.literal("Drawer linked!").withStyle(ChatFormatting.GREEN));
-                }
-                return InteractionResult.SUCCESS;
-            } else {
-                player.sendOverlayMessage(
-                        Component.literal("Bound Storage Interface no longer exists at " + boundPos.toShortString())
-                                .withStyle(ChatFormatting.RED));
+            if (!(level.getBlockEntity(boundPos)
+                    instanceof StorageInterfaceBlockEntity interfaceEntity)) {
+
+                player.sendOverlayMessage(Component.literal("Bound Storage Interface no longer exists at " + boundPos.toShortString()).withStyle(ChatFormatting.RED));
                 clearBoundInterface(stack);
                 return InteractionResult.FAIL;
             }
+            BlockPos currentInterface = drawer.getConnectedInterface();
+
+
+            if (currentInterface != null) {
+                BlockPos connectedPos = drawer.getConnectedInterface();
+
+                if (!(level.getBlockEntity(connectedPos)
+                        instanceof StorageInterfaceBlockEntity)) {
+
+                    drawer.clearConnectedInterface();
+
+                } else if (boundPos.equals(connectedPos)) {
+                    interfaceEntity.tryUnlinkDrawer(pos);
+
+                    player.sendOverlayMessage(Component.literal("Drawer unlinked!").withStyle(ChatFormatting.YELLOW));
+                    return InteractionResult.SUCCESS;
+
+                } else {
+                    player.sendOverlayMessage(Component.literal("Drawer already linked to another interface!").withStyle(ChatFormatting.RED));
+                    return InteractionResult.FAIL;
+                }
+            }
+
+            if (interfaceEntity.tryLinkDrawer(pos)) {
+                player.sendOverlayMessage(Component.literal("Drawer linked!").withStyle(ChatFormatting.GREEN));
+                return InteractionResult.SUCCESS;
+            }
+            return InteractionResult.FAIL;
         }
 
         return InteractionResult.PASS;

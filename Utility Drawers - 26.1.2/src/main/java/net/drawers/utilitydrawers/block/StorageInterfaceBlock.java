@@ -4,6 +4,7 @@ import net.drawers.utilitydrawers.block.entity.StorageInterfaceBlockEntity;
 import net.drawers.utilitydrawers.item.StorageRemoteItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -38,6 +39,7 @@ public class StorageInterfaceBlock extends Block implements EntityBlock {
     public StorageInterfaceBlock(BlockBehaviour.Properties properties) {
         super(properties);
         this.registerDefaultState(this.stateDefinition.any().setValue(LOCKED, false).setValue(FACING, Direction.NORTH));
+
     }
 
     @Override
@@ -54,6 +56,15 @@ public class StorageInterfaceBlock extends Block implements EntityBlock {
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new StorageInterfaceBlockEntity(pos, state);
+    }
+
+    @Override
+    public void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
+        super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
+
+        if (level.getBlockEntity(pos) instanceof StorageInterfaceBlockEntity interfaceEntity) {
+            interfaceEntity.unlinkAllDrawers();
+        }
     }
 
     @Override

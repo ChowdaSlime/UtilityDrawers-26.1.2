@@ -25,6 +25,7 @@ public class DrawerBlockEntity extends BlockEntity {
     private final long[] storedCounts;
     private final long[] maxCapacities;
     private boolean locked = false;
+    private BlockPos connectedInterface;
 
     private final ItemStack[] upgradeSlots = new ItemStack[]{
             ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY
@@ -42,6 +43,24 @@ public class DrawerBlockEntity extends BlockEntity {
             storedCounts[i] = 0L;
             maxCapacities[i] = (long) getBaseStackMultiplier() * 64;
         }
+    }
+
+    public boolean hasInterface() {
+        return connectedInterface != null;
+    }
+
+    public BlockPos getConnectedInterface() {
+        return connectedInterface;
+    }
+
+    public void setConnectedInterface(BlockPos pos) {
+        connectedInterface = pos;
+        setChanged();
+    }
+
+    public void clearConnectedInterface() {
+        connectedInterface = null;
+        setChanged();
     }
 
     public int getBaseStackMultiplier() {
@@ -297,14 +316,15 @@ public class DrawerBlockEntity extends BlockEntity {
             return;
         }
 
-        for (BlockPos checkPos : BlockPos.betweenClosed(
-                worldPosition.offset(-32, -32, -32),
-                worldPosition.offset(32, 32, 32))) {
-
-            if (level.getBlockEntity(checkPos) instanceof StorageInterfaceBlockEntity storage) {
-                storage.tryUnlinkDrawer(worldPosition);
-            }
+        if (connectedInterface == null) {
+            return;
         }
+
+        if (level.getBlockEntity(connectedInterface)
+                instanceof StorageInterfaceBlockEntity storage) {
+            storage.tryUnlinkDrawer(worldPosition);
+        }
+        connectedInterface = null;
     }
 
     // Save and Load

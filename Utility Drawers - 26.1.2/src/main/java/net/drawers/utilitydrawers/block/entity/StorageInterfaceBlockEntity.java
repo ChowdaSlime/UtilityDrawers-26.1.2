@@ -55,26 +55,65 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
     }
 
     public boolean tryLinkDrawer(BlockPos drawerPos) {
-        if (!connectedDrawers.contains(drawerPos)) {
-            connectedDrawers.add(drawerPos);
-            this.setChanged();
+        if (!(level.getBlockEntity(drawerPos) instanceof DrawerBlockEntity drawer)) {
+            return false;
+        }
+
+        if (drawer.hasInterface()) {
+            return false;
+        }
+
+        if (connectedDrawers.contains(drawerPos)) {
+            return false;
+        }
+        drawer.setConnectedInterface(worldPosition);
+        connectedDrawers.add(drawerPos);
+        setChanged();
+
+        if (level != null && !level.isClientSide()) {
+            level.sendBlockUpdated(
+                    getBlockPos(),
+                    getBlockState(),
+                    getBlockState(),
+                    3);
+        }
+        return true;
+    }
+
+    public boolean tryUnlinkDrawer(BlockPos drawerPos) {
+        if (connectedDrawers.remove(drawerPos)) {
+
+            if (level.getBlockEntity(drawerPos) instanceof DrawerBlockEntity drawer) {
+                drawer.clearConnectedInterface();
+            }
+            setChanged();
+
             if (level != null && !level.isClientSide()) {
-                level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
+                level.sendBlockUpdated(
+                        getBlockPos(),
+                        getBlockState(),
+                        getBlockState(),
+                        3
+                );
             }
             return true;
         }
         return false;
     }
 
-    public boolean tryUnlinkDrawer(BlockPos drawerPos) {
-        if (connectedDrawers.remove(drawerPos)) {
-            this.setChanged();
-            if (level != null && !level.isClientSide()) {
-                level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
-            }
-            return true;
+    public void unlinkAllDrawers() {
+        if (level == null) {
+            return;
         }
-        return false;
+
+        for (BlockPos drawerPos : connectedDrawers) {
+            if (level.getBlockEntity(drawerPos) instanceof DrawerBlockEntity drawer) {
+                drawer.clearConnectedInterface();
+            }
+        }
+
+        connectedDrawers.clear();
+        setChanged();
     }
 
     public ItemStack insertIntoNetwork(ItemStack stack) {
@@ -138,6 +177,7 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
             }
         });
     }
+
 
     @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider registries) { return saveWithoutMetadata(registries);
