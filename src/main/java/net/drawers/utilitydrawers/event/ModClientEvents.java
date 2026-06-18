@@ -1,0 +1,57 @@
+package net.drawers.utilitydrawers.event;
+
+import net.drawers.utilitydrawers.UtilityDrawers;
+import net.drawers.utilitydrawers.block.entity.ModBlockEntities;
+import net.drawers.utilitydrawers.client.*;
+import net.drawers.utilitydrawers.item.StorageRemoteItem;
+import net.drawers.utilitydrawers.menu.DrawerScreen;
+import net.drawers.utilitydrawers.menu.FluidDrawerScreen;
+import net.drawers.utilitydrawers.menu.ModMenuTypes;
+import net.drawers.utilitydrawers.network.CycleRemoteModePayload;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.*;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+
+@EventBusSubscriber(modid = UtilityDrawers.MODID, value = Dist.CLIENT)
+public class ModClientEvents {
+
+    @SubscribeEvent
+    public static void registerBER(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerBlockEntityRenderer(ModBlockEntities.DRAWER_BLOCK_ENTITY.get(), DrawerRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.FLUID_DRAWER_BLOCK_ENTITY.get(), FluidDrawerRenderer::new);
+    }
+
+    @SubscribeEvent
+    public static void registerTooltipFactories(RegisterClientTooltipComponentFactoriesEvent event) {
+        event.register(DrawerTooltipComponent.class, ClientDrawerTooltipComponent::new);
+        event.register(FluidDrawerTooltipComponent.class, ClientFluidDrawerTooltipComponent::new);
+    }
+
+    @SubscribeEvent
+    public static void registerScreens(RegisterMenuScreensEvent event) {
+        event.register(ModMenuTypes.DRAWER_MENU.get(), DrawerScreen::new);
+        event.register(ModMenuTypes.FLUID_DRAWER_MENU.get(), FluidDrawerScreen::new);
+    }
+
+    @SubscribeEvent
+    public static void onMouseScroll(InputEvent.MouseScrollingEvent event) {
+        Minecraft mc = Minecraft.getInstance();
+
+        if (mc.player == null || !mc.player.isShiftKeyDown()) {
+            return;
+        }
+        ItemStack stack = mc.player.getMainHandItem();
+
+        if (!(stack.getItem() instanceof StorageRemoteItem)) {
+            return;
+        }
+
+        ClientPacketDistributor.sendToServer(new CycleRemoteModePayload());
+        event.setCanceled(true);
+    }
+
+}
