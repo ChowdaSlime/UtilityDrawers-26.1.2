@@ -3,6 +3,7 @@ package net.drawers.utilitydrawers.event;
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.DrawerBlock;
 import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
+import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -89,6 +90,10 @@ public class ModEvents {
     @SubscribeEvent
     public static void onBreak(BreakBlockEvent event) {
         if (event.getLevel().getBlockEntity(event.getPos()) instanceof DrawerBlockEntity drawer) {
+            drawer.unlinkFromInterfaces();
+        }
+
+        if (event.getLevel().getBlockEntity(event.getPos()) instanceof FluidDrawerBlockEntity drawer) {
             drawer.unlinkFromInterfaces();
         }
     }

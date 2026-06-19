@@ -21,6 +21,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
@@ -37,6 +38,12 @@ public class FluidDrawerRenderer implements BlockEntityRenderer<FluidDrawerBlock
     private static final Identifier LOCK_TEXTURE =
             Identifier.fromNamespaceAndPath(UtilityDrawers.MODID, "textures/gui/lock.png");
 
+    // Slot zone constants — must match FluidDrawerBlock.getTargetSlot exactly
+    private static final float EDGE     = 1.0f / 16.0f;
+    private static final float TRIM     = 1.0f / 16.0f;
+    private static final float HALF_LOW  = 0.5f - TRIM / 2.0f; // 0.46875
+    private static final float HALF_HIGH = 0.5f + TRIM / 2.0f; // 0.53125
+
     public FluidDrawerRenderer(BlockEntityRendererProvider.Context context) {
         this.font = context.font();
     }
@@ -44,6 +51,7 @@ public class FluidDrawerRenderer implements BlockEntityRenderer<FluidDrawerBlock
     public static class FluidDrawerRenderState extends BlockEntityRenderState {
         public FluidStack[] fluids = new FluidStack[0];
         public long[] amounts = new long[0];
+        public long[] maxCapacities = new long[0];
         public Direction facing = Direction.NORTH;
         public boolean locked;
         public net.minecraft.world.level.Level level;
@@ -68,12 +76,37 @@ public class FluidDrawerRenderer implements BlockEntityRenderer<FluidDrawerBlock
             state.fluids = new FluidStack[slotCount];
             state.amounts = new long[slotCount];
         }
+        if (state.maxCapacities.length != slotCount) {
+            state.maxCapacities = new long[slotCount];
+        }
 
         for (int i = 0; i < slotCount; i++) {
             FluidStack stack = blockEntity.getStoredFluid(i);
             state.fluids[i] = stack.isEmpty() ? FluidStack.EMPTY : stack.copy();
             state.amounts[i] = blockEntity.getStoredAmount(i);
+            state.maxCapacities[i] = blockEntity.getMaxCapacity(i);
         }
+    }
+
+    private float[] getSlotUVBounds(int slot, int slotCount) {
+        return switch (slotCount) {
+            case 1 -> new float[]{ EDGE, 1f - EDGE, EDGE, 1f - EDGE };
+            case 2 -> slot == 0
+                    ? new float[]{ EDGE, 1f - EDGE, EDGE,      HALF_LOW }
+                    : new float[]{ EDGE, 1f - EDGE, HALF_HIGH, 1f - EDGE };
+            case 3 -> switch (slot) {
+                case 0  -> new float[]{ EDGE,      1f - EDGE, EDGE,      HALF_LOW  };
+                case 1  -> new float[]{ EDGE,      HALF_LOW,  HALF_HIGH, 1f - EDGE };
+                default -> new float[]{ HALF_HIGH, 1f - EDGE, HALF_HIGH, 1f - EDGE };
+            };
+            case 4 -> new float[]{
+                    (slot == 0 || slot == 2) ? EDGE      : HALF_HIGH,
+                    (slot == 0 || slot == 2) ? HALF_LOW  : 1f - EDGE,
+                    (slot == 0 || slot == 1) ? EDGE      : HALF_HIGH,
+                    (slot == 0 || slot == 1) ? HALF_LOW  : 1f - EDGE,
+            };
+            default -> new float[]{ EDGE, 1f - EDGE, EDGE, 1f - EDGE };
+        };
     }
 
     @Override
@@ -89,54 +122,42 @@ public class FluidDrawerRenderer implements BlockEntityRenderer<FluidDrawerBlock
             poseStack.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
 
             int slotCount = state.fluids.length;
-
-            float[][] slotOffsets = switch (slotCount) {
-                case 1 -> new float[][]{{0.0f, 0.0f, 0.435f}};
-                case 2 -> new float[][]{{0.0f, 0.26f, 0.435f}, {0.0f, -0.18f, 0.435f}};
-                case 3 -> new float[][]{{0.0f, 0.26f, 0.435f}, {-0.24f, -0.18f, 0.435f}, {0.24f, -0.18f, 0.435f}};
-                case 4 -> new float[][]{{-0.24f, 0.26f, 0.435f}, {0.24f, 0.26f, 0.435f}, {-0.24f, -0.18f, 0.435f}, {0.24f, -0.18f, 0.435f}};
-                default -> new float[][]{{0.0f, 0.0f, 0.435f}};
-            };
-
-            float[] fluidScales = switch (slotCount) {
-                case 1 -> new float[]{0.6f};
-                case 2 -> new float[]{0.25f, 0.25f};
-                case 3 -> new float[]{0.25f, 0.25f, 0.25f};
-                case 4 -> new float[]{0.25f, 0.25f, 0.25f, 0.25f};
-                default -> new float[]{0.6f};
-            };
+            final float oz = 0.435f;
+            final float bgZ   = 0.002f;
+            final float fillZ = 0.003f;
+            final float textZ = 0.440f;
 
             Minecraft mc = Minecraft.getInstance();
 
             for (int i = 0; i < slotCount; i++) {
-                if (state.fluids[i] == null || state.fluids[i].isEmpty() || state.amounts[i] <= 0) continue;
+                boolean hasFluid = state.fluids[i] != null && !state.fluids[i].isEmpty();
+                if (!hasFluid) continue;
 
-                float ox = slotOffsets[i][0];
-                float oy = slotOffsets[i][1];
-                float oz = slotOffsets[i][2];
+                float[] uvBounds = getSlotUVBounds(i, slotCount);
+                float uMin = uvBounds[0], uMax = uvBounds[1];
+                float vMin = uvBounds[2], vMax = uvBounds[3];
 
-                float halfSize = switch (slotCount) {
-                    case 1 -> 0.34f;
-                    case 2 -> 0.22f;
-                    default -> 0.20f;
-                };
+                float rLeft   =  (uMin - 0.5f);
+                float rRight  =  (uMax - 0.5f);
+                float rBottom = -(vMax - 0.5f);
+                float rTop    = -(vMin - 0.5f);
+                float rCenterX = (rLeft + rRight) / 2f;
+                float rCenterY = (rBottom + rTop) / 2f;
 
                 FluidStack stack = state.fluids[i];
 
-                net.minecraft.world.level.block.state.BlockState fluidState =
-                        stack.getFluid().defaultFluidState().createLegacyBlock();
-
+                BlockState fluidBlockState = stack.getFluid().defaultFluidState().createLegacyBlock();
                 TextureAtlasSprite sprite = mc.getModelManager()
                         .getBlockStateModelSet()
-                        .get(fluidState)
+                        .get(fluidBlockState)
                         .particleMaterial()
                         .sprite();
 
                 int tint = -1;
                 BlockColors blockColors = mc.getBlockColors();
-                BlockTintSource source = blockColors.getTintSource(fluidState, 0);
+                BlockTintSource source = blockColors.getTintSource(fluidBlockState, 0);
                 if (source != null && mc.level != null && state.pos != null) {
-                    tint = source.colorInWorld(fluidState, mc.level, state.pos);
+                    tint = source.colorInWorld(fluidBlockState, mc.level, state.pos);
                 }
 
                 int fluidColor = tint == -1
@@ -144,54 +165,61 @@ public class FluidDrawerRenderer implements BlockEntityRenderer<FluidDrawerBlock
                            ? 0xFF3F76E4 : 0xFFFFFFFF)
                         : (0xFF000000 | tint);
 
-                RenderType renderType = RenderTypes.entityCutout(sprite.atlasLocation());
+                float fillFraction = (state.maxCapacities[i] > 0 && state.amounts[i] > 0)
+                        ? (float) state.amounts[i] / state.maxCapacities[i]
+                        : 0f;
 
-                final float hs = halfSize;
+                RenderType bgRenderType = RenderTypes.entityTranslucent(sprite.atlasLocation());
+
                 poseStack.pushPose();
-                poseStack.translate(ox, oy, oz);
+                poseStack.translate(0f, 0f, oz);
 
-                submitNodeCollector.submitCustomGeometry(poseStack, renderType, (pose, consumer) -> {
+                submitNodeCollector.submitCustomGeometry(poseStack, bgRenderType, (pose, consumer) -> {
                     var matrix = pose.pose();
-                    consumer.addVertex(matrix, -hs, -hs, 0.0f).setColor(fluidColor).setUv(sprite.getU0(), sprite.getV1()).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0.0f, 0.0f, 1.0f);
-                    consumer.addVertex(matrix,  hs, -hs, 0.0f).setColor(fluidColor).setUv(sprite.getU1(), sprite.getV1()).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0.0f, 0.0f, 1.0f);
-                    consumer.addVertex(matrix,  hs,  hs, 0.0f).setColor(fluidColor).setUv(sprite.getU1(), sprite.getV0()).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0.0f, 0.0f, 1.0f);
-                    consumer.addVertex(matrix, -hs,  hs, 0.0f).setColor(fluidColor).setUv(sprite.getU0(), sprite.getV0()).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0.0f, 0.0f, 1.0f);
+                    int bgColor = 0x88111111;
+                    consumer.addVertex(matrix, rLeft,  rBottom, bgZ).setColor(bgColor).setUv(sprite.getU0(), sprite.getV1()).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0f, 0f, 1f);
+                    consumer.addVertex(matrix, rRight, rBottom, bgZ).setColor(bgColor).setUv(sprite.getU1(), sprite.getV1()).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0f, 0f, 1f);
+                    consumer.addVertex(matrix, rRight, rTop,    bgZ).setColor(bgColor).setUv(sprite.getU1(), sprite.getV0()).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0f, 0f, 1f);
+                    consumer.addVertex(matrix, rLeft,  rTop,    bgZ).setColor(bgColor).setUv(sprite.getU0(), sprite.getV0()).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0f, 0f, 1f);
                 });
-                poseStack.popPose();
 
-                poseStack.pushPose();
-                float textOy = oy;
-                if (slotCount == 1) {
-                    textOy -= 0.1f;
-                } else {
-                    textOy -= 0.015f;
+                if (fillFraction > 0f) {
+                    float slotHeight = rTop - rBottom;
+                    float fillTopY = rBottom + slotHeight * fillFraction;
+                    float vTop = sprite.getV0() + (sprite.getV1() - sprite.getV0()) * (1f - fillFraction);
+
+                    submitNodeCollector.submitCustomGeometry(poseStack, bgRenderType, (pose, consumer) -> {
+                        var matrix = pose.pose();
+                        consumer.addVertex(matrix, rLeft,  rBottom,  fillZ).setColor(fluidColor).setUv(sprite.getU0(), sprite.getV1()).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0f, 0f, 1f);
+                        consumer.addVertex(matrix, rRight, rBottom,  fillZ).setColor(fluidColor).setUv(sprite.getU1(), sprite.getV1()).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0f, 0f, 1f);
+                        consumer.addVertex(matrix, rRight, fillTopY, fillZ).setColor(fluidColor).setUv(sprite.getU1(), vTop).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0f, 0f, 1f);
+                        consumer.addVertex(matrix, rLeft,  fillTopY, fillZ).setColor(fluidColor).setUv(sprite.getU0(), vTop).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0f, 0f, 1f);
+                    });
                 }
 
-                poseStack.translate(ox, textOy - (halfSize * 0.6f), 0.4376D);
-                poseStack.scale(0.009f, -0.009f, 0.009f);
-
-                String text = String.valueOf(state.amounts[i]);
-                float textWidth = this.font.width(text);
-
-                submitNodeCollector.submitText(
-                        poseStack, -textWidth / 2.0f, 0.0f,
-                        Component.literal(text).getVisualOrderText(),
-                        false, Font.DisplayMode.NORMAL, 15728880, 0xFFFFFFFF, 0, 0);
                 poseStack.popPose();
+
+                if (state.amounts[i] > 0) {
+                    poseStack.pushPose();
+                    poseStack.translate(rCenterX, rCenterY + 0.2f, textZ);
+                    poseStack.scale(0.009f, -0.009f, 0.009f);
+
+                    String text = String.valueOf(state.amounts[i]);
+                    float textWidth = this.font.width(text);
+                    submitNodeCollector.submitText(
+                            poseStack, -textWidth / 2.0f, 0.0f,
+                            Component.literal(text).getVisualOrderText(),
+                            false, Font.DisplayMode.NORMAL, 15728880, 0xFFFFFFFF, 0, 0);
+                    poseStack.popPose();
+                }
             }
 
             if (state.locked) {
                 poseStack.pushPose();
-                float lockOx = 0.0f;
-                float lockOy = 0.46875f;
-                float lockOz = 0.501f;
-                float lockScale = 0.0625f;
-
-                poseStack.translate(lockOx, lockOy, lockOz);
-                poseStack.scale(lockScale, lockScale, 1.0f);
+                poseStack.translate(0.0f, 0.46875f, 0.501f);
+                poseStack.scale(0.0625f, 0.0625f, 1.0f);
 
                 RenderType renderType = RenderTypes.entityCutout(LOCK_TEXTURE);
-
                 submitNodeCollector.submitCustomGeometry(poseStack, renderType, (pose, consumer) -> {
                     var matrix = pose.pose();
                     consumer.addVertex(matrix, -0.5f, -0.5f, 0.0f).setColor(0xFFFFFFFF).setUv(0.0f, 1.0f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0.0f, 0.0f, 1.0f);
@@ -199,9 +227,9 @@ public class FluidDrawerRenderer implements BlockEntityRenderer<FluidDrawerBlock
                     consumer.addVertex(matrix,  0.5f,  0.5f, 0.0f).setColor(0xFFFFFFFF).setUv(1.0f, 0.0f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0.0f, 0.0f, 1.0f);
                     consumer.addVertex(matrix, -0.5f,  0.5f, 0.0f).setColor(0xFFFFFFFF).setUv(0.0f, 0.0f).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0.0f, 0.0f, 1.0f);
                 });
-
                 poseStack.popPose();
             }
+
         } finally {
             poseStack.popPose();
         }

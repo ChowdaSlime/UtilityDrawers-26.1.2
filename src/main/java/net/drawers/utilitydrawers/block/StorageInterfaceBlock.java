@@ -23,10 +23,15 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.BlockHitResult;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidUtil;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.capability.IFluidHandlerItem;
 import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 public class StorageInterfaceBlock extends Block implements EntityBlock {
@@ -39,7 +44,6 @@ public class StorageInterfaceBlock extends Block implements EntityBlock {
     public StorageInterfaceBlock(BlockBehaviour.Properties properties) {
         super(properties);
         this.registerDefaultState(this.stateDefinition.any().setValue(LOCKED, false).setValue(FACING, Direction.NORTH));
-
     }
 
     @Override
@@ -108,7 +112,16 @@ public class StorageInterfaceBlock extends Block implements EntityBlock {
             boolean isDoubleClick = (currentTime - lastClick) < 300;
             LAST_CLICK_TIME.put(player.getUUID(), currentTime);
 
-            if (isDoubleClick) {
+            boolean isFluidContainer = false;
+            if (!handStack.isEmpty()) {
+                Optional<IFluidHandlerItem> quickCheck = FluidUtil.getFluidHandler(handStack.copyWithCount(1));
+                if (quickCheck.isPresent()) {
+                    FluidStack simDrain = quickCheck.get().drain(1, IFluidHandler.FluidAction.SIMULATE);
+                    isFluidContainer = !simDrain.isEmpty();
+                }
+            }
+
+            if (isDoubleClick && !isFluidContainer) {
                 boolean insertedAny = false;
 
                 for (int j = 0; j < 36; j++) {
@@ -116,7 +129,6 @@ public class StorageInterfaceBlock extends Block implements EntityBlock {
                     if (invStack.isEmpty()) continue;
 
                     int startingCount = invStack.getCount();
-
                     ItemStack remainder = interfaceEntity.insertIntoNetwork(invStack);
 
                     if (remainder.getCount() < startingCount) {
@@ -132,6 +144,31 @@ public class StorageInterfaceBlock extends Block implements EntityBlock {
                 return InteractionResult.CONSUME;
 
             } else if (!handStack.isEmpty()) {
+                Optional<IFluidHandlerItem> fluidHandlerOpt =
+                        FluidUtil.getFluidHandler(handStack.copyWithCount(1));
+                if (fluidHandlerOpt.isPresent()) {
+                    IFluidHandlerItem handler = fluidHandlerOpt.get();
+                    FluidStack simDrain = handler.drain(Integer.MAX_VALUE, IFluidHandler.FluidAction.SIMULATE);
+                    if (!simDrain.isEmpty()) {
+                        FluidStack leftover = interfaceEntity.insertFluidIntoNetwork(simDrain);
+                        int inserted = simDrain.getAmount() - leftover.getAmount();
+                        if (inserted > 0) {
+                            handler.drain(inserted, IFluidHandler.FluidAction.EXECUTE);
+                            ItemStack container = handler.getContainer();
+                            if (!player.isCreative()) {
+                                handStack.shrink(1);
+                                if (handStack.isEmpty()) {
+                                    player.setItemInHand(hand, container);
+                                } else if (!player.getInventory().add(container)) {
+                                    player.drop(container, false);
+                                }
+                            }
+                            level.playSound(null, pos, SoundEvents.BUCKET_EMPTY, SoundSource.BLOCKS, 1.0f, 1.0f);
+                            return InteractionResult.CONSUME;
+                        }
+                    }
+                }
+
                 ItemStack remainder = interfaceEntity.insertIntoNetwork(handStack);
                 if (remainder.getCount() != handStack.getCount()) {
                     player.setItemInHand(hand, remainder);
@@ -142,5 +179,4 @@ public class StorageInterfaceBlock extends Block implements EntityBlock {
         }
         return InteractionResult.SUCCESS;
     }
-
 }

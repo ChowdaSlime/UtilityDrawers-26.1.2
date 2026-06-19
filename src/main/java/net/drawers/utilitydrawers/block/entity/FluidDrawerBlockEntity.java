@@ -32,7 +32,10 @@ public class FluidDrawerBlockEntity extends BlockEntity {
             ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY
     };
 
-    private static final int BASE_FLUID_CAPACITY = 64000;
+    private static final int BASE_FLUID_CAPACITY = 4000;
+    public long getMaxCapacity(int slot) {
+        return maxCapacities[slot];
+    }
 
     public FluidDrawerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.FLUID_DRAWER_BLOCK_ENTITY.get(), pos, state);
@@ -197,8 +200,6 @@ public class FluidDrawerBlockEntity extends BlockEntity {
         if (storedFluids[slot].isEmpty() || storedAmounts[slot] <= 0)
             return FluidStack.EMPTY;
 
-        // Fluids don't have a hard maximum stack size like items (64).
-        // We cap extraction by the requested amount or the total available.
         int toExtract = (int) Math.min(amount, storedAmounts[slot]);
 
         if (toExtract <= 0)

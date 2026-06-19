@@ -105,7 +105,21 @@ public class StorageInterfaceBlock extends Block implements EntityBlock {
         if (level.getBlockEntity(pos) instanceof StorageInterfaceBlockEntity interfaceEntity) {
             long currentTime = System.currentTimeMillis();
             long lastClick = LAST_CLICK_TIME.getOrDefault(player.getUUID(), 0L);
-            boolean isDoubleClick = (currentTime - lastClick) < 300;
+
+            boolean isFluidContainer = false;
+            if (!handStack.isEmpty()) {
+                Optional<IFluidHandlerItem> quickCheck = FluidUtil.getFluidHandler(handStack.copyWithCount(1));
+                if (quickCheck.isPresent()) {
+                    FluidStack simDrain = quickCheck.get().drain(1, IFluidHandler.FluidAction.SIMULATE);
+                    isFluidContainer = !simDrain.isEmpty();
+                }
+            }
+
+            if (!isFluidContainer) {
+                LAST_CLICK_TIME.put(player.getUUID(), currentTime);
+            }
+
+            boolean isDoubleClick = !isFluidContainer && (currentTime - lastClick) < 300;
             LAST_CLICK_TIME.put(player.getUUID(), currentTime);
 
             if (isDoubleClick) {

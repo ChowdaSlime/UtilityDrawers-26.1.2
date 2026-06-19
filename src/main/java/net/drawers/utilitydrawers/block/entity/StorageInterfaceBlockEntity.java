@@ -9,6 +9,7 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.fluids.FluidStack;
 
 import java.util.*;
 
@@ -24,8 +25,11 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
         Iterator<BlockPos> it = connectedDrawers.iterator();
         while (it.hasNext()) {
             BlockPos pos = it.next();
-            if (level.getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof DrawerBlockEntity drawer) {
                 drawer.setLocked(lockState);
+            } else if (be instanceof FluidDrawerBlockEntity fluidDrawer) {
+                fluidDrawer.setLocked(lockState);
             } else {
                 it.remove();
                 this.setChanged();
@@ -34,20 +38,15 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
     }
 
     public List<BlockPos> getConnectedDrawers() {
-        boolean removed = connectedDrawers.removeIf(
-                pos -> !(level.getBlockEntity(pos) instanceof DrawerBlockEntity)
-        );
+        boolean removed = connectedDrawers.removeIf(pos -> {
+            BlockEntity be = level.getBlockEntity(pos);
+            return !(be instanceof DrawerBlockEntity) && !(be instanceof FluidDrawerBlockEntity);
+        });
 
         if (removed) {
             setChanged();
-
             if (level != null && !level.isClientSide()) {
-                level.sendBlockUpdated(
-                        getBlockPos(),
-                        getBlockState(),
-                        getBlockState(),
-                        3
-                );
+                level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
             }
         }
 
@@ -55,46 +54,37 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
     }
 
     public boolean tryLinkDrawer(BlockPos drawerPos) {
-        if (!(level.getBlockEntity(drawerPos) instanceof DrawerBlockEntity drawer)) {
+        BlockEntity be = level.getBlockEntity(drawerPos);
+
+        if (be instanceof DrawerBlockEntity drawer) {
+            if (drawer.hasInterface() || connectedDrawers.contains(drawerPos)) return false;
+            drawer.setConnectedInterface(worldPosition);
+        } else if (be instanceof FluidDrawerBlockEntity fluidDrawer) {
+            if (fluidDrawer.hasInterface() || connectedDrawers.contains(drawerPos)) return false;
+            fluidDrawer.setConnectedInterface(worldPosition);
+        } else {
             return false;
         }
 
-        if (drawer.hasInterface()) {
-            return false;
-        }
-
-        if (connectedDrawers.contains(drawerPos)) {
-            return false;
-        }
-        drawer.setConnectedInterface(worldPosition);
         connectedDrawers.add(drawerPos);
         setChanged();
-
         if (level != null && !level.isClientSide()) {
-            level.sendBlockUpdated(
-                    getBlockPos(),
-                    getBlockState(),
-                    getBlockState(),
-                    3);
+            level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
         }
         return true;
     }
 
     public boolean tryUnlinkDrawer(BlockPos drawerPos) {
         if (connectedDrawers.remove(drawerPos)) {
-
-            if (level.getBlockEntity(drawerPos) instanceof DrawerBlockEntity drawer) {
+            BlockEntity be = level.getBlockEntity(drawerPos);
+            if (be instanceof DrawerBlockEntity drawer) {
                 drawer.clearConnectedInterface();
+            } else if (be instanceof FluidDrawerBlockEntity fluidDrawer) {
+                fluidDrawer.clearConnectedInterface();
             }
             setChanged();
-
             if (level != null && !level.isClientSide()) {
-                level.sendBlockUpdated(
-                        getBlockPos(),
-                        getBlockState(),
-                        getBlockState(),
-                        3
-                );
+                level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
             }
             return true;
         }
@@ -102,16 +92,15 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
     }
 
     public void unlinkAllDrawers() {
-        if (level == null) {
-            return;
-        }
-
+        if (level == null) return;
         for (BlockPos drawerPos : connectedDrawers) {
-            if (level.getBlockEntity(drawerPos) instanceof DrawerBlockEntity drawer) {
+            BlockEntity be = level.getBlockEntity(drawerPos);
+            if (be instanceof DrawerBlockEntity drawer) {
                 drawer.clearConnectedInterface();
+            } else if (be instanceof FluidDrawerBlockEntity fluidDrawer) {
+                fluidDrawer.clearConnectedInterface();
             }
         }
-
         connectedDrawers.clear();
         setChanged();
     }
@@ -119,13 +108,10 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
     public ItemStack insertIntoNetwork(ItemStack stack) {
         if (stack.isEmpty() || level == null) return ItemStack.EMPTY;
 
-        Iterator<BlockPos> it = connectedDrawers.iterator();
-        while (it.hasNext()) {
-            if (!(level.getBlockEntity(it.next()) instanceof DrawerBlockEntity)) {
-                it.remove();
-                this.setChanged();
-            }
-        }
+        connectedDrawers.removeIf(pos -> {
+            BlockEntity be = level.getBlockEntity(pos);
+            return !(be instanceof DrawerBlockEntity) && !(be instanceof FluidDrawerBlockEntity);
+        });
 
         ItemStack remainder = stack.copy();
         for (BlockPos pos : connectedDrawers) {
@@ -149,6 +135,50 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
                 }
             }
         }
+        return remainder;
+    }
+
+    public FluidStack insertFluidIntoNetwork(FluidStack stack) {
+        if (stack.isEmpty() || level == null) return stack;
+
+        FluidStack remainder = stack.copy();
+
+        for (BlockPos pos : connectedDrawers) {
+            if (level.getBlockEntity(pos) instanceof FluidDrawerBlockEntity fluidDrawer) {
+                for (int i = 0; i < fluidDrawer.getSlotCount(); i++) {
+                    FluidStack stored = fluidDrawer.getStoredFluid(i);
+                    if (!stored.isEmpty() && FluidStack.isSameFluidSameComponents(stored, remainder)) {
+                        remainder = fluidDrawer.insertFluidIntoSlot(i, remainder, false);
+                        if (remainder.isEmpty()) return FluidStack.EMPTY;
+                    }
+                }
+            }
+        }
+
+        for (BlockPos pos : connectedDrawers) {
+            if (level.getBlockEntity(pos) instanceof FluidDrawerBlockEntity fluidDrawer) {
+                for (int i = 0; i < fluidDrawer.getSlotCount(); i++) {
+                    if (fluidDrawer.isSlotEmpty(i) && fluidDrawer.isLocked() &&
+                            fluidDrawer.hasTemplate(i) &&
+                            FluidStack.isSameFluidSameComponents(fluidDrawer.getStoredFluid(i), remainder)) {
+                        remainder = fluidDrawer.insertFluidIntoSlot(i, remainder, false);
+                        if (remainder.isEmpty()) return FluidStack.EMPTY;
+                    }
+                }
+            }
+        }
+
+        for (BlockPos pos : connectedDrawers) {
+            if (level.getBlockEntity(pos) instanceof FluidDrawerBlockEntity fluidDrawer) {
+                for (int i = 0; i < fluidDrawer.getSlotCount(); i++) {
+                    if (fluidDrawer.isSlotEmpty(i) && !fluidDrawer.isLocked()) {
+                        remainder = fluidDrawer.insertFluidIntoSlot(i, remainder, false);
+                        if (remainder.isEmpty()) return FluidStack.EMPTY;
+                    }
+                }
+            }
+        }
+
         return remainder;
     }
 

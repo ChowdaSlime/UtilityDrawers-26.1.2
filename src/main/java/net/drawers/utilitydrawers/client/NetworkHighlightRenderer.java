@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
+import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.StorageInterfaceBlockEntity;
 import net.drawers.utilitydrawers.item.StorageRemoteItem;
 import net.minecraft.client.Minecraft;
@@ -61,7 +62,8 @@ public class NetworkHighlightRenderer {
         renderOutline(poseStack, consumer, blockShape, boundPos, cameraPos, color);
 
         for (BlockPos drawerPos : interfaceEntity.getConnectedDrawers()) {
-            if (mc.level.getBlockEntity(drawerPos) instanceof DrawerBlockEntity) {
+            if (mc.level.getBlockEntity(drawerPos) instanceof DrawerBlockEntity ||
+                    mc.level.getBlockEntity(drawerPos) instanceof FluidDrawerBlockEntity) {
                 renderOutline(poseStack, consumer, blockShape, drawerPos, cameraPos, color);
             }
         }
