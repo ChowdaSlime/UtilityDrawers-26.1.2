@@ -69,8 +69,11 @@
   "item.utilitydrawers.void_upgrade": "Void Upgrade",
 
   "item.utilitydrawers.storage_remote": "Storage Remote",
-
   "block.utilitydrawers.storage_interface": "Storage Interface",
+
+  "config.jade.plugin_utilitydrawers.drawer": "Drawer Contents",
+  "config.jade.plugin_utilitydrawers.fluid_drawer": "Fluid Drawer Contents",
+  "config.jade.plugin_utilitydrawers.storage_interface": "Storage Interface Info",
 
   "creativetab.utility_drawers_tab": "Utility Drawers"
 }

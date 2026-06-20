@@ -1,18 +1,26 @@
 package net.drawers.utilitydrawers.event;
 
+import appeng.api.AECapabilities;
+import net.drawers.utilitydrawers.ae2.DrawerMEStorage;
+import net.drawers.utilitydrawers.ae2.FluidDrawerMEStorage;
 import net.drawers.utilitydrawers.UtilityDrawers;
+import net.drawers.utilitydrawers.ae2.StorageInterfaceMEStorage;
 import net.drawers.utilitydrawers.block.DrawerBlock;
 import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
+import net.drawers.utilitydrawers.block.entity.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.level.block.BreakBlockEvent;
+import snownee.jade.addon.vanilla.ItemTooltipProvider;
+import snownee.jade.api.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -97,4 +105,26 @@ public class ModEvents {
             drawer.unlinkFromInterfaces();
         }
     }
+
+    @SubscribeEvent
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(
+                AECapabilities.ME_STORAGE,
+                ModBlockEntities.DRAWER_BLOCK_ENTITY.get(),
+                (drawer, side) -> new DrawerMEStorage(drawer)
+        );
+
+        event.registerBlockEntity(
+                AECapabilities.ME_STORAGE,
+                ModBlockEntities.FLUID_DRAWER_BLOCK_ENTITY.get(),
+                (drawer, side) -> new FluidDrawerMEStorage(drawer)
+        );
+
+        event.registerBlockEntity(
+                AECapabilities.ME_STORAGE,
+                ModBlockEntities.STORAGE_INTERFACE_BLOCK_ENTITY.get(),
+                (interfaceEntity, side) -> new StorageInterfaceMEStorage(interfaceEntity)
+        );
+    }
+
 }
