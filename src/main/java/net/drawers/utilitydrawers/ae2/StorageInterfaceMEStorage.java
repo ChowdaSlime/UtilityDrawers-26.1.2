@@ -60,7 +60,7 @@ public class StorageInterfaceMEStorage implements MEStorage {
                     for (int i = 0; i < fluidDrawer.getSlotCount(); i++) {
                         FluidStack stored = fluidDrawer.getStoredFluid(i);
                         if (!stored.isEmpty() && !fluidKey.matches(stored)) continue;
-                        if (stored.isEmpty()) continue; // handled in pass 2
+                        if (stored.isEmpty()) continue;
                         FluidStack toInsert = fluidKey.toStack((int) Math.min(amount - inserted, Integer.MAX_VALUE));
                         FluidStack remainder = fluidDrawer.insertFluidIntoSlot(i, toInsert, mode == Actionable.SIMULATE);
                         inserted += toInsert.getAmount() - remainder.getAmount();
