@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "minecraft:iron_ingot",
+    "B": "minecraft:ender_pearl",
+    "C": "minecraft:redstone",
+    "D": "utilitydrawers:drawer_base"
+  },
+  "pattern": [
+    "ABA",
+    "CDC",
+    "ABA"
+  ],
+  "result": {
+    "id": "utilitydrawers:storage_interface"
+  }
+}

@@ -23,23 +23,23 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.BlockHitResult;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.FluidUtil;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.IFluidHandlerItem;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.access.ItemAccess;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 public class StorageInterfaceBlock extends Block implements EntityBlock {
 
     private static final Map<UUID, Long> LAST_CLICK_TIME = new HashMap<>();
     public static final BooleanProperty LOCKED = BlockStateProperties.LOCKED;
-    public static final EnumProperty<Direction> FACING =
-            BlockStateProperties.HORIZONTAL_FACING;
+    public static final EnumProperty<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
 
     public StorageInterfaceBlock(BlockBehaviour.Properties properties) {
         super(properties);
@@ -65,7 +65,6 @@ public class StorageInterfaceBlock extends Block implements EntityBlock {
     @Override
     public void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
         super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
-
         if (level.getBlockEntity(pos) instanceof StorageInterfaceBlockEntity interfaceEntity) {
             interfaceEntity.unlinkAllDrawers();
         }
@@ -92,19 +91,6 @@ public class StorageInterfaceBlock extends Block implements EntityBlock {
 
         BlockState currentState = level.getBlockState(pos);
 
-        if (handStack.is(net.minecraft.world.item.Items.TRIPWIRE_HOOK)) {
-            boolean isCurrentlyLocked = currentState.getValue(LOCKED);
-            boolean newLockedState = !isCurrentlyLocked;
-
-            level.setBlock(pos, currentState.setValue(LOCKED, newLockedState), 3);
-
-            if (level.getBlockEntity(pos) instanceof StorageInterfaceBlockEntity interfaceEntity) {
-                interfaceEntity.toggleNetworkLock(newLockedState);
-            }
-
-            level.playSound(null, pos, SoundEvents.UI_BUTTON_CLICK.value(), SoundSource.BLOCKS, 0.5f, 1.0f);
-            return InteractionResult.CONSUME;
-        }
 
         if (level.getBlockEntity(pos) instanceof StorageInterfaceBlockEntity interfaceEntity) {
             long currentTime = System.currentTimeMillis();
@@ -114,29 +100,30 @@ public class StorageInterfaceBlock extends Block implements EntityBlock {
 
             boolean isFluidContainer = false;
             if (!handStack.isEmpty()) {
-                Optional<IFluidHandlerItem> quickCheck = FluidUtil.getFluidHandler(handStack.copyWithCount(1));
-                if (quickCheck.isPresent()) {
-                    FluidStack simDrain = quickCheck.get().drain(1, IFluidHandler.FluidAction.SIMULATE);
-                    isFluidContainer = !simDrain.isEmpty();
+                ItemAccess access = ItemAccess.forStack(handStack).oneByOne();
+                ResourceHandler<FluidResource> fluidHandler = access.getCapability(Capabilities.Fluid.ITEM);
+                if (fluidHandler != null) {
+                    try (Transaction tx = Transaction.openRoot()) {
+                        int simDrain = fluidHandler.extract(FluidResource.EMPTY, Integer.MAX_VALUE, tx);
+                        if (simDrain > 0) {
+                            isFluidContainer = true;
+                        }
+                    }
                 }
             }
 
             if (isDoubleClick && !isFluidContainer) {
                 boolean insertedAny = false;
-
                 for (int j = 0; j < 36; j++) {
                     ItemStack invStack = player.getInventory().getItem(j);
                     if (invStack.isEmpty()) continue;
-
                     int startingCount = invStack.getCount();
                     ItemStack remainder = interfaceEntity.insertIntoNetwork(invStack);
-
                     if (remainder.getCount() < startingCount) {
                         player.getInventory().setItem(j, remainder);
                         insertedAny = true;
                     }
                 }
-
                 if (insertedAny) {
                     player.inventoryMenu.broadcastChanges();
                     level.playSound(null, pos, SoundEvents.ITEM_PICKUP, SoundSource.BLOCKS, 0.2f, 1.0f);
@@ -144,24 +131,29 @@ public class StorageInterfaceBlock extends Block implements EntityBlock {
                 return InteractionResult.CONSUME;
 
             } else if (!handStack.isEmpty()) {
-                Optional<IFluidHandlerItem> fluidHandlerOpt =
-                        FluidUtil.getFluidHandler(handStack.copyWithCount(1));
-                if (fluidHandlerOpt.isPresent()) {
-                    IFluidHandlerItem handler = fluidHandlerOpt.get();
-                    FluidStack simDrain = handler.drain(Integer.MAX_VALUE, IFluidHandler.FluidAction.SIMULATE);
-                    if (!simDrain.isEmpty()) {
-                        FluidStack leftover = interfaceEntity.insertFluidIntoNetwork(simDrain);
-                        int inserted = simDrain.getAmount() - leftover.getAmount();
+                ItemAccess access = ItemAccess.forPlayerInteraction(player, hand).oneByOne();
+                ResourceHandler<FluidResource> fluidHandler = access.getCapability(Capabilities.Fluid.ITEM);
+                if (fluidHandler != null) {
+                    FluidResource resource = null;
+                    int totalAmount = 0;
+                    for (int i = 0; i < fluidHandler.size(); i++) {
+                        FluidResource r = fluidHandler.getResource(i);
+                        if (!r.isEmpty()) {
+                            resource = r;
+                            totalAmount += fluidHandler.getAmountAsInt(i);
+                        }
+                    }
+
+                    if (resource != null && totalAmount > 0) {
+                        FluidStack toInsert = resource.toStack(totalAmount);
+                        FluidStack leftover = interfaceEntity.insertFluidIntoNetwork(toInsert);
+                        int inserted = totalAmount - leftover.getAmount();
                         if (inserted > 0) {
-                            handler.drain(inserted, IFluidHandler.FluidAction.EXECUTE);
-                            ItemStack container = handler.getContainer();
-                            if (!player.isCreative()) {
-                                handStack.shrink(1);
-                                if (handStack.isEmpty()) {
-                                    player.setItemInHand(hand, container);
-                                } else if (!player.getInventory().add(container)) {
-                                    player.drop(container, false);
-                                }
+                            FluidResource res = resource;
+                            int toExtract = inserted;
+                            try (Transaction tx = Transaction.openRoot()) {
+                                fluidHandler.extract(res, toExtract, tx);
+                                tx.commit();
                             }
                             level.playSound(null, pos, SoundEvents.BUCKET_EMPTY, SoundSource.BLOCKS, 1.0f, 1.0f);
                             return InteractionResult.CONSUME;

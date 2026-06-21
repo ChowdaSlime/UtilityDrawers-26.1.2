@@ -18,6 +18,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
+import net.neoforged.neoforge.transfer.transaction.SnapshotJournal;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 
 public class FluidDrawerBlockEntity extends BlockEntity {
 
@@ -312,6 +316,9 @@ public class FluidDrawerBlockEntity extends BlockEntity {
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
         output.putBoolean("Locked", locked);
+        if (connectedInterface != null) {
+            output.putLong("ConnectedInterface", connectedInterface.asLong());
+        }
         for (int i = 0; i < slotCount; i++) {
             ValueOutput slotOutput = output.child("Slot" + i);
             if (!storedFluids[i].isEmpty()) {
@@ -331,6 +338,8 @@ public class FluidDrawerBlockEntity extends BlockEntity {
     protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
         locked = input.getBooleanOr("Locked", false);
+        long ifacePos = input.getLongOr("ConnectedInterface", Long.MIN_VALUE);
+        connectedInterface = (ifacePos != Long.MIN_VALUE) ? BlockPos.of(ifacePos) : null;
         for (int i = 0; i < slotCount; i++) {
             final int slot = i;
             storedFluids[slot] = FluidStack.EMPTY;
@@ -410,5 +419,80 @@ public class FluidDrawerBlockEntity extends BlockEntity {
         if (this.level != null && this.level.isClientSide()) {
             this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
         }
+    }
+
+    // New Fluid Handler
+    private final class FluidHandler extends SnapshotJournal<FluidHandler.Snapshot> implements ResourceHandler<FluidResource> {
+        record Snapshot(FluidStack[] fluids, long[] amounts) {}
+
+        @Override
+        public int size() { return slotCount; }
+
+        @Override
+        public FluidResource getResource(int slot) {
+            return FluidResource.of(storedFluids[slot]);
+        }
+
+        @Override
+        public long getAmountAsLong(int slot) {
+            return storedAmounts[slot];
+        }
+
+        @Override
+        public long getCapacityAsLong(int slot, FluidResource resource) {
+            return maxCapacities[slot];
+        }
+
+        @Override
+        public boolean isValid(int slot, FluidResource resource) {
+            if (resource.isEmpty()) return false;
+            if (storedFluids[slot].isEmpty()) return !locked;
+            return FluidResource.of(storedFluids[slot]).equals(resource);
+        }
+
+        @Override
+        public int insert(int slot, FluidResource resource, int amount, TransactionContext tx) {
+            if (resource.isEmpty() || amount <= 0) return 0;
+            updateSnapshots(tx);
+            FluidStack remainder = insertFluidIntoSlot(slot, resource.toStack(amount), false);
+            return amount - remainder.getAmount();
+        }
+
+        @Override
+        public int extract(int slot, FluidResource resource, int amount, TransactionContext tx) {
+            if (resource.isEmpty() || amount <= 0) return 0;
+            if (!FluidResource.of(storedFluids[slot]).equals(resource)) return 0;
+            updateSnapshots(tx);
+            return extractFluid(slot, amount, false).getAmount();
+        }
+
+        @Override
+        protected Snapshot createSnapshot() {
+            FluidStack[] fluidsCopy = new FluidStack[slotCount];
+            for (int i = 0; i < slotCount; i++) {
+                fluidsCopy[i] = storedFluids[i].copy();
+            }
+            return new Snapshot(fluidsCopy, storedAmounts.clone());
+        }
+
+        @Override
+        protected void revertToSnapshot(Snapshot snapshot) {
+            System.arraycopy(snapshot.amounts(), 0, storedAmounts, 0, slotCount);
+            for (int i = 0; i < slotCount; i++) {
+                storedFluids[i] = snapshot.fluids()[i].copy();
+            }
+        }
+
+        @Override
+        protected void onRootCommit(Snapshot originalState) {
+            setChanged();
+            if (level != null && !level.isClientSide()) {
+                level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
+            }
+        }
+    }
+
+    public ResourceHandler<FluidResource> createFluidHandler() {
+        return new FluidHandler();
     }
 }

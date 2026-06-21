@@ -17,6 +17,10 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.transaction.SnapshotJournal;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
+import net.neoforged.neoforge.transfer.item.ItemResource;
 
 public class DrawerBlockEntity extends BlockEntity {
 
@@ -332,6 +336,9 @@ public class DrawerBlockEntity extends BlockEntity {
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
         output.putBoolean("Locked", locked);
+        if (connectedInterface != null) {
+            output.putLong("ConnectedInterface", connectedInterface.asLong());
+        }
         for (int i = 0; i < slotCount; i++) {
             ValueOutput slotOutput = output.child("Slot" + i);
             if (!storedStacks[i].isEmpty()) {
@@ -351,6 +358,8 @@ public class DrawerBlockEntity extends BlockEntity {
     protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
         locked = input.getBooleanOr("Locked", false);
+        long ifacePos = input.getLongOr("ConnectedInterface", Long.MIN_VALUE);
+        connectedInterface = (ifacePos != Long.MIN_VALUE) ? BlockPos.of(ifacePos) : null;
         for (int i = 0; i < slotCount; i++) {
             final int slot = i;
             storedStacks[slot] = ItemStack.EMPTY;
@@ -430,5 +439,80 @@ public class DrawerBlockEntity extends BlockEntity {
         if (this.level != null && this.level.isClientSide()) {
             this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
         }
+    }
+
+    //New Item Handler
+    private final class ItemHandler extends SnapshotJournal<ItemHandler.Snapshot> implements ResourceHandler<ItemResource> {
+        record Snapshot(ItemStack[] stacks, long[] counts) {}
+
+        @Override
+        public int size() { return slotCount; }
+
+        @Override
+        public ItemResource getResource(int slot) {
+            return ItemResource.of(storedStacks[slot]);
+        }
+
+        @Override
+        public long getAmountAsLong(int slot) {
+            return storedCounts[slot];
+        }
+
+        @Override
+        public long getCapacityAsLong(int slot, ItemResource resource) {
+            return maxCapacities[slot];
+        }
+
+        @Override
+        public boolean isValid(int slot, ItemResource resource) {
+            if (resource.isEmpty()) return false;
+            if (storedStacks[slot].isEmpty()) return !locked;
+            return ItemResource.of(storedStacks[slot]).equals(resource);
+        }
+
+        @Override
+        public int insert(int slot, ItemResource resource, int amount, TransactionContext tx) {
+            if (resource.isEmpty() || amount <= 0) return 0;
+            updateSnapshots(tx);
+            ItemStack remainder = insertItemIntoSlot(slot, resource.toStack(amount), false);
+            return amount - remainder.getCount();
+        }
+
+        @Override
+        public int extract(int slot, ItemResource resource, int amount, TransactionContext tx) {
+            if (resource.isEmpty() || amount <= 0) return 0;
+            if (!ItemResource.of(storedStacks[slot]).equals(resource)) return 0;
+            updateSnapshots(tx);
+            return extractItem(slot, amount, false).getCount();
+        }
+
+        @Override
+        protected Snapshot createSnapshot() {
+            ItemStack[] stacksCopy = new ItemStack[slotCount];
+            for (int i = 0; i < slotCount; i++) {
+                stacksCopy[i] = storedStacks[i].copy();
+            }
+            return new Snapshot(stacksCopy, storedCounts.clone());
+        }
+
+        @Override
+        protected void revertToSnapshot(Snapshot snapshot) {
+            System.arraycopy(snapshot.counts(), 0, storedCounts, 0, slotCount);
+            for (int i = 0; i < slotCount; i++) {
+                storedStacks[i] = snapshot.stacks()[i].copy();
+            }
+        }
+
+        @Override
+        protected void onRootCommit(Snapshot originalState) {
+            setChanged();
+            if (level != null && !level.isClientSide()) {
+                level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
+            }
+        }
+    }
+
+    public ResourceHandler<ItemResource> createItemHandler() {
+        return new ItemHandler();
     }
 }

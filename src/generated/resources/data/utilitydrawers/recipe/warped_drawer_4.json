@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "minecraft:stripped_warped_stem",
+    "B": "utilitydrawers:drawer_base",
+    "C": "minecraft:chest"
+  },
+  "pattern": [
+    "CAC",
+    "ABA",
+    "CAC"
+  ],
+  "result": {
+    "id": "utilitydrawers:warped_drawer_4"
+  }
+}

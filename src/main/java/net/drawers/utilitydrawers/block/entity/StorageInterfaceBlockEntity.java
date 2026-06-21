@@ -16,6 +16,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 import snownee.jade.api.IBlockComponentProvider;
 
 import java.util.*;
@@ -224,6 +228,119 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
     public Packet<ClientGamePacketListener> getUpdatePacket() { return ClientboundBlockEntityDataPacket.create(this);
     }
 
+    // New Handlers
+    public ResourceHandler<ItemResource> createItemHandler() {
+        record SlotRef(DrawerBlockEntity drawer, int slot) {}
 
+        return new ResourceHandler<ItemResource>() {
+            private List<SlotRef> allSlots() {
+                List<SlotRef> slots = new ArrayList<>();
+                for (BlockPos pos : getConnectedDrawers()) {
+                    if (level != null && level.getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
+                        for (int i = 0; i < drawer.getSlotCount(); i++) slots.add(new SlotRef(drawer, i));
+                    }
+                }
+                return slots;
+            }
 
+            @Override
+            public int size() { return allSlots().size(); }
+
+            @Override
+            public ItemResource getResource(int index) {
+                var slots = allSlots();
+                if (index >= slots.size()) return ItemResource.EMPTY;
+                return ItemResource.of(slots.get(index).drawer().getStoredItem(slots.get(index).slot()));
+            }
+
+            @Override
+            public long getAmountAsLong(int index) {
+                var slots = allSlots();
+                if (index >= slots.size()) return 0;
+                return slots.get(index).drawer().getStoredCount(slots.get(index).slot());
+            }
+
+            @Override
+            public long getCapacityAsLong(int index, ItemResource resource) {
+                return Integer.MAX_VALUE;
+            }
+
+            @Override
+            public boolean isValid(int index, ItemResource resource) { return true; }
+
+            @Override
+            public int insert(int index, ItemResource resource, int amount, TransactionContext tx) {
+                if (resource.isEmpty() || amount <= 0) return 0;
+                ItemStack stack = resource.toStack(amount);
+                ItemStack remainder = insertIntoNetwork(stack.copy());
+                return amount - remainder.getCount();
+            }
+
+            @Override
+            public int extract(int index, ItemResource resource, int amount, TransactionContext tx) {
+                var slots = allSlots();
+                if (index >= slots.size()) return 0;
+                var ref = slots.get(index);
+                if (!ItemResource.of(ref.drawer().getStoredItem(ref.slot())).equals(resource)) return 0;
+                return ref.drawer().extractItem(ref.slot(), amount, false).getCount();
+            }
+        };
+    }
+
+    public ResourceHandler<FluidResource> createFluidHandler() {
+        record SlotRef(FluidDrawerBlockEntity drawer, int slot) {}
+
+        return new ResourceHandler<FluidResource>() {
+            private List<SlotRef> allSlots() {
+                List<SlotRef> slots = new ArrayList<>();
+                for (BlockPos pos : getConnectedDrawers()) {
+                    if (level != null && level.getBlockEntity(pos) instanceof FluidDrawerBlockEntity drawer) {
+                        for (int i = 0; i < drawer.getSlotCount(); i++) slots.add(new SlotRef(drawer, i));
+                    }
+                }
+                return slots;
+            }
+
+            @Override
+            public int size() { return allSlots().size(); }
+
+            @Override
+            public FluidResource getResource(int index) {
+                var slots = allSlots();
+                if (index >= slots.size()) return FluidResource.EMPTY;
+                return FluidResource.of(slots.get(index).drawer().getStoredFluid(slots.get(index).slot()));
+            }
+
+            @Override
+            public long getAmountAsLong(int index) {
+                var slots = allSlots();
+                if (index >= slots.size()) return 0;
+                return slots.get(index).drawer().getStoredAmount(slots.get(index).slot());
+            }
+
+            @Override
+            public long getCapacityAsLong(int index, FluidResource resource) {
+                return Integer.MAX_VALUE;
+            }
+
+            @Override
+            public boolean isValid(int index, FluidResource resource) { return true; }
+
+            @Override
+            public int insert(int index, FluidResource resource, int amount, TransactionContext tx) {
+                if (resource.isEmpty() || amount <= 0) return 0;
+                FluidStack remainder = insertFluidIntoNetwork(resource.toStack(amount));
+                return amount - remainder.getAmount();
+            }
+
+            @Override
+            public int extract(int index, FluidResource resource, int amount, TransactionContext tx) {
+                var slots = allSlots();
+                if (index >= slots.size()) return 0;
+                var ref = slots.get(index);
+                if (!FluidResource.of(ref.drawer().getStoredFluid(ref.slot())).equals(resource)) return 0;
+                return ref.drawer().extractFluid(ref.slot(), amount, false).getAmount();
+            }
+        };
+    }
 }

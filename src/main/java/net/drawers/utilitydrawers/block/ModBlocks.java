@@ -30,6 +30,10 @@ public class ModBlocks {
             "test_block",
             properties -> new Block(properties.strength(4f))
     );
+    public static final DeferredBlock<Block> DRAWER_BASE = registerBlock(
+            "drawer_base",
+            properties -> new Block(properties.strength(4f))
+    );
 
     public static final DeferredBlock<Block> STORAGE_INTERFACE = registerBlock(
             "storage_interface",

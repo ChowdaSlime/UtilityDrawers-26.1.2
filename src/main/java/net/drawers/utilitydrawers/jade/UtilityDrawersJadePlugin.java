@@ -37,59 +37,6 @@ public class UtilityDrawersJadePlugin implements IWailaPlugin {
         public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
             if (!(accessor.getBlockEntity() instanceof DrawerBlockEntity drawer)) return;
 
-            int slotCount = drawer.getSlotCount();
-
-            if (slotCount == 4) {
-                for (int row = 0; row < 2; row++) {
-                    int slotA = row * 2;
-                    int slotB = row * 2 + 1;
-
-                    var stackA = drawer.getStoredItem(slotA);
-                    var stackB = drawer.getStoredItem(slotB);
-                    long countA = drawer.getStoredCount(slotA);
-                    long countB = drawer.getStoredCount(slotB);
-
-                    boolean rowHasContent = false;
-
-                    if (!stackA.isEmpty()) {
-                        tooltip.add(JadeUI.item(stackA, 1.0f, String.valueOf(countA)));
-                        rowHasContent = true;
-                    }
-
-                    if (!stackB.isEmpty()) {
-                        if (rowHasContent) {
-                            tooltip.append(Component.literal("   "));
-                            tooltip.append(JadeUI.item(stackB, 1.0f, String.valueOf(countB)));
-                        } else {
-                            tooltip.add(JadeUI.item(stackB, 1.0f, String.valueOf(countB)));
-                        }
-                    }
-                }
-            } else {
-                boolean rowStarted = false;
-                for (int i = 0; i < slotCount; i++) {
-                    var stack = drawer.getStoredItem(i);
-                    long count = drawer.getStoredCount(i);
-                    if (stack.isEmpty()) continue;
-
-                    if (!rowStarted) {
-                        tooltip.add(JadeUI.item(stack, 1.0f, String.valueOf(count)));
-                        rowStarted = true;
-                    } else {
-                        tooltip.append(Component.literal("   "));
-                        tooltip.append(JadeUI.item(stack, 1.0f, String.valueOf(count)));
-                    }
-                }
-            }
-
-            for (int i = 0; i < slotCount; i++) {
-                var stack = drawer.getStoredItem(i);
-                if (!stack.isEmpty()) {
-                    tooltip.add(Component.literal("• " + stack.getHoverName().getString())
-                            .withStyle(ChatFormatting.WHITE));
-                }
-            }
-
             if (drawer.isLocked()) {
                 tooltip.add(Component.literal("Locked").withStyle(ChatFormatting.RED));
             }
@@ -107,26 +54,6 @@ public class UtilityDrawersJadePlugin implements IWailaPlugin {
         @Override
         public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
             if (!(accessor.getBlockEntity() instanceof FluidDrawerBlockEntity drawer)) return;
-
-            for (int i = 0; i < drawer.getSlotCount(); i++) {
-                FluidStack fluid = drawer.getStoredFluid(i);
-                long amount = drawer.getStoredAmount(i);
-                long max = drawer.getMaxCapacity(i);
-                if (fluid.isEmpty()) continue;
-
-                JadeFluidObject fluidObject = JadeFluidObject.of(
-                        fluid.getFluid(),
-                        amount,
-                        fluid.getComponentsPatch()
-                );
-                tooltip.add(JadeUI.fluid(fluidObject));
-
-                tooltip.add(Component.literal("")
-                        .append(fluid.getHoverName().copy().withStyle(ChatFormatting.AQUA))
-                        .append(Component.literal(": ").withStyle(ChatFormatting.GRAY))
-                        .append(Component.literal(amount + " / " + max + " mB")
-                                .withStyle(ChatFormatting.YELLOW)));
-            }
 
             if (drawer.isLocked()) {
                 tooltip.add(Component.literal("Locked").withStyle(ChatFormatting.RED));

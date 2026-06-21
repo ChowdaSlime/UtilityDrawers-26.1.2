@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "minecraft:stripped_acacia_log",
+    "B": "utilitydrawers:drawer_base"
+  },
+  "pattern": [
+    "AAA",
+    "ABA",
+    "AAA"
+  ],
+  "result": {
+    "id": "utilitydrawers:acacia_drawer_1"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "minecraft:stripped_crimson_stem",
+    "B": "utilitydrawers:drawer_base",
+    "C": "minecraft:chest"
+  },
+  "pattern": [
+    "AAA",
+    "CBC",
+    "AAA"
+  ],
+  "result": {
+    "id": "utilitydrawers:crimson_drawer_2"
+  }
+}

@@ -15,6 +15,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
@@ -125,6 +126,31 @@ public class ModEvents {
                 ModBlockEntities.STORAGE_INTERFACE_BLOCK_ENTITY.get(),
                 (interfaceEntity, side) -> new StorageInterfaceMEStorage(interfaceEntity)
         );
+
+        event.registerBlockEntity(
+                Capabilities.Item.BLOCK,
+                ModBlockEntities.DRAWER_BLOCK_ENTITY.get(),
+                (drawer, side) -> drawer.createItemHandler()
+        );
+
+        event.registerBlockEntity(
+                Capabilities.Fluid.BLOCK,
+                ModBlockEntities.FLUID_DRAWER_BLOCK_ENTITY.get(),
+                (drawer, side) -> drawer.createFluidHandler()
+        );
+
+        event.registerBlockEntity(
+                Capabilities.Item.BLOCK,
+                ModBlockEntities.STORAGE_INTERFACE_BLOCK_ENTITY.get(),
+                (interfaceEntity, side) -> interfaceEntity.createItemHandler()
+        );
+
+        event.registerBlockEntity(
+                Capabilities.Fluid.BLOCK,
+                ModBlockEntities.STORAGE_INTERFACE_BLOCK_ENTITY.get(),
+                (interfaceEntity, side) -> interfaceEntity.createFluidHandler()
+        );
     }
+
 
 }

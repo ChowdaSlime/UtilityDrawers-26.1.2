@@ -131,6 +131,9 @@ dependencies {
 
     compileOnly "curse.maven:guideme-1173950:8204880"
     localRuntime "curse.maven:guideme-1173950:8204880"
+
+    compileOnly "curse.maven:refined-storage-243076:8211383"
+    localRuntime "curse.maven:refined-storage-243076:8211383"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

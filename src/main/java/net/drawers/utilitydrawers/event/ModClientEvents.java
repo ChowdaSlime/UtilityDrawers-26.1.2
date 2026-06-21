@@ -17,10 +17,14 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidUtil;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.access.ItemAccess;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
 
 @EventBusSubscriber(modid = UtilityDrawers.MODID, value = Dist.CLIENT)
 public class ModClientEvents {
@@ -70,11 +74,19 @@ public class ModClientEvents {
         ItemStack stack = mc.player.getMainHandItem();
         if (stack.isEmpty()) return;
 
-        var fluidHandlerOpt = FluidUtil.getFluidHandler(stack.copyWithCount(1));
-        if (fluidHandlerOpt.isEmpty()) return;
+        ItemAccess access = ItemAccess.forStack(stack).oneByOne();
+        ResourceHandler<FluidResource> fluidHandler =
+                access.getCapability(Capabilities.Fluid.ITEM);
+        if (fluidHandler == null) return;
 
-        FluidStack simDrain = fluidHandlerOpt.get().drain(1, net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.SIMULATE);
-        if (simDrain.isEmpty()) return;
+        boolean hasFluid = false;
+        for (int i = 0; i < fluidHandler.size(); i++) {
+            if (!fluidHandler.getResource(i).isEmpty() && fluidHandler.getAmountAsInt(i) > 0) {
+                hasFluid = true;
+                break;
+            }
+        }
+        if (!hasFluid) return;
 
         if (!(mc.hitResult instanceof BlockHitResult blockHit)) return;
         BlockPos pos = blockHit.getBlockPos();

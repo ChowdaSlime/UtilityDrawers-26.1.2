@@ -33,7 +33,8 @@ public class ModModelProvider extends ModelProvider {
         itemModels.generateFlatItem(ModItems.DRAWER_UPGRADE_T4.get(), ModelTemplates.FLAT_ITEM);
         itemModels.generateFlatItem(ModItems.VOID_UPGRADE.get(), ModelTemplates.FLAT_ITEM);
         blockModels.registerSimpleItemModel(ModItems.STORAGE_REMOTE.get(), Identifier.fromNamespaceAndPath(UtilityDrawers.MODID, "item/storage_remote_base"));
-
+        itemModels.generateFlatItem(ModItems.UPGRADE_BASE.get(), ModelTemplates.FLAT_ITEM);
+        blockModels.createTrivialCube(ModBlocks.DRAWER_BASE.get());
         blockModels.createTrivialCube(ModBlocks.TEST_BLOCK.get());
 
 

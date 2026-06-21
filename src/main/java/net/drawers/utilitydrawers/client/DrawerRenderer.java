@@ -140,7 +140,7 @@ public class DrawerRenderer implements BlockEntityRenderer<DrawerBlockEntity, Dr
                             case 4 -> itemScale *= 0.65f;
                         }
                     } else {
-                        oz -= 0.06f;
+                        oz -= 0.02f;
                     }
 
                     float itemOx = ox;

@@ -26,6 +26,8 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 @EventBusSubscriber(modid = UtilityDrawers.MODID, value = Dist.CLIENT)
 public class NetworkHighlightRenderer {
 
+    private static final double MAX_DISTANCE_SQ = 64 * 64;
+
     @SubscribeEvent
     public static void renderNetworkHighlights(RenderLevelStageEvent.AfterTranslucentBlocks event) {
         Minecraft mc = Minecraft.getInstance();
@@ -52,16 +54,17 @@ public class NetworkHighlightRenderer {
 
         Vec3 cameraPos = event.getLevelRenderState().cameraRenderState.pos;
         MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
-
         VertexConsumer consumer = bufferSource.getBuffer(RenderTypes.lines());
 
         int color = ARGB.colorFromFloat(1.0F, 0.0F, 0.5F, 1.0F);
-
         VoxelShape blockShape = Shapes.block();
 
-        renderOutline(poseStack, consumer, blockShape, boundPos, cameraPos, color);
+        if (Vec3.atCenterOf(boundPos).distanceToSqr(player.position()) <= MAX_DISTANCE_SQ) {
+            renderOutline(poseStack, consumer, blockShape, boundPos, cameraPos, color);
+        }
 
         for (BlockPos drawerPos : interfaceEntity.getConnectedDrawers()) {
+            if (Vec3.atCenterOf(drawerPos).distanceToSqr(player.position()) > MAX_DISTANCE_SQ) continue;
             if (mc.level.getBlockEntity(drawerPos) instanceof DrawerBlockEntity ||
                     mc.level.getBlockEntity(drawerPos) instanceof FluidDrawerBlockEntity) {
                 renderOutline(poseStack, consumer, blockShape, drawerPos, cameraPos, color);

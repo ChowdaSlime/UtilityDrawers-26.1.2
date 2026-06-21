@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "minecraft:stripped_jungle_log",
+    "B": "utilitydrawers:drawer_base",
+    "C": "minecraft:chest"
+  },
+  "pattern": [
+    "CAC",
+    "ABA",
+    "CAC"
+  ],
+  "result": {
+    "id": "utilitydrawers:jungle_drawer_4"
+  }
+}

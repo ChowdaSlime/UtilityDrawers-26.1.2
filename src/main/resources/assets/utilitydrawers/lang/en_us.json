@@ -71,6 +71,9 @@
   "item.utilitydrawers.storage_remote": "Storage Remote",
   "block.utilitydrawers.storage_interface": "Storage Interface",
 
+  "item.utilitydrawers.upgrade_base": "Upgrade Base",
+  "block.utilitydrawers.drawer_base": "Drawer Base",
+
   "config.jade.plugin_utilitydrawers.drawer": "Drawer Contents",
   "config.jade.plugin_utilitydrawers.fluid_drawer": "Fluid Drawer Contents",
   "config.jade.plugin_utilitydrawers.storage_interface": "Storage Interface Info",

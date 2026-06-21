@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "minecraft:obsidian",
+    "B": "minecraft:crying_obsidian",
+    "C": "utilitydrawers:upgrade_base"
+  },
+  "pattern": [
+    "ABA",
+    "BCB",
+    "ABA"
+  ],
+  "result": {
+    "id": "utilitydrawers:void_upgrade"
+  }
+}

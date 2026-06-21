@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "minecraft:gold_ingot",
+    "B": "minecraft:gold_block",
+    "C": "utilitydrawers:drawer_upgrade_t1",
+    "D": "utilitydrawers:upgrade_base"
+  },
+  "pattern": [
+    "ABA",
+    "CDC",
+    "ABA"
+  ],
+  "result": {
+    "id": "utilitydrawers:drawer_upgrade_t2"
+  }
+}

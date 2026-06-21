@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "minecraft:stone",
+    "B": "utilitydrawers:drawer_base",
+    "C": "minecraft:bucket"
+  },
+  "pattern": [
+    "AAA",
+    "CBC",
+    "AAA"
+  ],
+  "result": {
+    "id": "utilitydrawers:fluid_drawer_2"
+  }
+}
