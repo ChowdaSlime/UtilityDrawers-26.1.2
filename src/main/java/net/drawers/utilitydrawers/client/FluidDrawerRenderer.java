@@ -38,7 +38,6 @@ public class FluidDrawerRenderer implements BlockEntityRenderer<FluidDrawerBlock
     private static final Identifier LOCK_TEXTURE =
             Identifier.fromNamespaceAndPath(UtilityDrawers.MODID, "textures/gui/lock.png");
 
-    // Slot zone constants — must match FluidDrawerBlock.getTargetSlot exactly
     private static final float EDGE     = 1.0f / 16.0f;
     private static final float TRIM     = 1.0f / 16.0f;
     private static final float HALF_LOW  = 0.5f - TRIM / 2.0f; // 0.46875

@@ -15,7 +15,6 @@ public class ModDataComponents {
     public static final DeferredRegister<DataComponentType<?>> DATA_COMPONENTS =
             DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, UtilityDrawers.MODID);
 
-    // 0 = link/unlink mode, 1 = lock/unlock mode
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> REMOTE_MODE =
             DATA_COMPONENTS.register("remote_mode",
                     () -> DataComponentType.<Integer>builder()
@@ -23,7 +22,6 @@ public class ModDataComponents {
                             .networkSynchronized(ByteBufCodecs.INT)
                             .build());
 
-    // bound storage interface position
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<BlockPos>> BOUND_INTERFACE =
             DATA_COMPONENTS.register("bound_interface",
                     () -> DataComponentType.<BlockPos>builder()

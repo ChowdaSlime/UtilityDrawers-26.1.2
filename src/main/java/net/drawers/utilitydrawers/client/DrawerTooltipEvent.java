@@ -2,7 +2,6 @@ package net.drawers.utilitydrawers.client;
 
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.DrawerBlock;
-import net.drawers.utilitydrawers.block.FluidDrawerBlock; // adjust import to your actual class
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -15,8 +14,6 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
-import net.neoforged.neoforge.fluids.FluidStack;
-//import net.neoforged.neoforge.registries.ForgeRegistries; // if needed for fluid lookup
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;

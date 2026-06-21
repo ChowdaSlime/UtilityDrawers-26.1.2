@@ -62,9 +62,7 @@ public class FluidDrawerTooltipEvent {
         if (fluids.isEmpty()) {
             event.getTooltipElements().add(Either.left(Component.literal("§7(Empty)")));
         } else {
-            // Add the visual component first
             event.getTooltipElements().add(Either.right(new FluidDrawerTooltipComponent(fluids, amounts)));
-            // Then add a text line per slot underneath
             for (int i = 0; i < fluids.size(); i++) {
                 String displayAmount = formatMillibuckets(amounts.get(i));
                 event.getTooltipElements().add(Either.left(
