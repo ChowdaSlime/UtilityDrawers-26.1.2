@@ -40,9 +40,11 @@ authors="ChowdaSlime"
 
 # The description text for the mod (multi line!) (#mandatory)
 description='''
-Utility Drawers adds configurable storage drawers for items and fluids,
-with support for storage networks, upgrades, and ME system integration.
-    '''
+Utility Drawers adds item and fluid drawers for storing large amounts of
+resources in a compact and organized way. Connect your drawers to a central
+storage interface for easy access, and use upgrades to increase capacity
+or automatically void excess items and fluids.
+'''
 
 # The [[mixins]] block allows you to declare your mixin config to FML so that it gets loaded.
 [[mixins]]
