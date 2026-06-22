@@ -1,11 +1,5 @@
 package net.drawers.utilitydrawers.block.entity;
 
-import appeng.api.AECapabilities;
-import appeng.api.stacks.AEFluidKey;
-import appeng.api.stacks.AEItemKey;
-import appeng.api.storage.AEKeyFilter;
-import appeng.api.storage.IStorageProvider;
-import appeng.api.storage.MEStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -20,7 +14,6 @@ import net.neoforged.neoforge.transfer.ResourceHandler;
 import net.neoforged.neoforge.transfer.fluid.FluidResource;
 import net.neoforged.neoforge.transfer.item.ItemResource;
 import net.neoforged.neoforge.transfer.transaction.TransactionContext;
-import snownee.jade.api.IBlockComponentProvider;
 
 import java.util.*;
 
@@ -41,6 +34,8 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
                 drawer.setLocked(lockState);
             } else if (be instanceof FluidDrawerBlockEntity fluidDrawer) {
                 fluidDrawer.setLocked(lockState);
+            } else if (be instanceof CompactingDrawerBlockEntity compactingDrawer) {
+                compactingDrawer.setLocked(lockState);
             } else {
                 it.remove();
                 this.setChanged();
@@ -51,7 +46,7 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
     public List<BlockPos> getConnectedDrawers() {
         boolean removed = connectedDrawers.removeIf(pos -> {
             BlockEntity be = level.getBlockEntity(pos);
-            return !(be instanceof DrawerBlockEntity) && !(be instanceof FluidDrawerBlockEntity);
+            return !(be instanceof DrawerBlockEntity) && !(be instanceof FluidDrawerBlockEntity) && !(be instanceof CompactingDrawerBlockEntity);
         });
 
         if (removed) {
@@ -68,11 +63,17 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
         BlockEntity be = level.getBlockEntity(drawerPos);
 
         if (be instanceof DrawerBlockEntity drawer) {
-            if (drawer.hasInterface() || connectedDrawers.contains(drawerPos)) return false;
+            if (drawer.hasInterface() || connectedDrawers.contains(drawerPos))
+                return false;
             drawer.setConnectedInterface(worldPosition);
         } else if (be instanceof FluidDrawerBlockEntity fluidDrawer) {
-            if (fluidDrawer.hasInterface() || connectedDrawers.contains(drawerPos)) return false;
+            if (fluidDrawer.hasInterface() || connectedDrawers.contains(drawerPos))
+                return false;
             fluidDrawer.setConnectedInterface(worldPosition);
+        } else if (be instanceof CompactingDrawerBlockEntity compactingDrawer) {
+            if (compactingDrawer.hasInterface() || connectedDrawers.contains(drawerPos))
+                return false;
+            compactingDrawer.setConnectedInterface(worldPosition);
         } else {
             return false;
         }
@@ -92,6 +93,8 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
                 drawer.clearConnectedInterface();
             } else if (be instanceof FluidDrawerBlockEntity fluidDrawer) {
                 fluidDrawer.clearConnectedInterface();
+            } else if (be instanceof CompactingDrawerBlockEntity compactingDrawer) {
+                compactingDrawer.clearConnectedInterface();
             }
             setChanged();
             if (level != null && !level.isClientSide()) {
@@ -110,6 +113,8 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
                 drawer.clearConnectedInterface();
             } else if (be instanceof FluidDrawerBlockEntity fluidDrawer) {
                 fluidDrawer.clearConnectedInterface();
+            } else if (be instanceof CompactingDrawerBlockEntity compactingDrawer) {
+                compactingDrawer.clearConnectedInterface();
             }
         }
         connectedDrawers.clear();
@@ -117,31 +122,55 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
     }
 
     public ItemStack insertIntoNetwork(ItemStack stack) {
-        if (stack.isEmpty() || level == null) return ItemStack.EMPTY;
+        if (stack.isEmpty() || level == null)
+            return ItemStack.EMPTY;
 
         connectedDrawers.removeIf(pos -> {
             BlockEntity be = level.getBlockEntity(pos);
-            return !(be instanceof DrawerBlockEntity) && !(be instanceof FluidDrawerBlockEntity);
+            return !(be instanceof DrawerBlockEntity) && !(be instanceof FluidDrawerBlockEntity) && !(be instanceof CompactingDrawerBlockEntity);
         });
 
         ItemStack remainder = stack.copy();
+
         for (BlockPos pos : connectedDrawers) {
-            if (level.getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof DrawerBlockEntity drawer) {
                 for (int i = 0; i < drawer.getSlotCount(); i++) {
                     ItemStack stored = drawer.getStoredItem(i);
                     if (!stored.isEmpty() && ItemStack.isSameItemSameComponents(stored, remainder)) {
                         remainder = drawer.insertItemIntoSlot(i, remainder, false);
-                        if (remainder.isEmpty()) return ItemStack.EMPTY;
+                        if (remainder.isEmpty())
+                            return ItemStack.EMPTY;
+                    }
+                }
+            } else if (be instanceof CompactingDrawerBlockEntity compactingDrawer) {
+                for (int i = 0; i < compactingDrawer.getSlotCount(); i++) {
+                    ItemStack stored = compactingDrawer.getStoredItem(i);
+                    if (!stored.isEmpty() && ItemStack.isSameItemSameComponents(stored, remainder)) {
+                        remainder = compactingDrawer.insertItemIntoSlot(i, remainder, false);
+                        if (remainder.isEmpty())
+                            return ItemStack.EMPTY;
                     }
                 }
             }
         }
+
         for (BlockPos pos : connectedDrawers) {
-            if (level.getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof DrawerBlockEntity drawer) {
                 for (int i = 0; i < drawer.getSlotCount(); i++) {
                     if (drawer.isSlotEmpty(i) && (!drawer.isLocked() || drawer.hasTemplate(i))) {
                         remainder = drawer.insertItemIntoSlot(i, remainder, false);
-                        if (remainder.isEmpty()) return ItemStack.EMPTY;
+                        if (remainder.isEmpty())
+                            return ItemStack.EMPTY;
+                    }
+                }
+            } else if (be instanceof CompactingDrawerBlockEntity compactingDrawer) {
+                for (int i = 0; i < compactingDrawer.getSlotCount(); i++) {
+                    if (compactingDrawer.isSlotEmpty(i) && !compactingDrawer.isLocked()) {
+                        remainder = compactingDrawer.insertItemIntoSlot(i, remainder, false);
+                        if (remainder.isEmpty())
+                            return ItemStack.EMPTY;
                     }
                 }
             }
@@ -150,7 +179,8 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
     }
 
     public FluidStack insertFluidIntoNetwork(FluidStack stack) {
-        if (stack.isEmpty() || level == null) return stack;
+        if (stack.isEmpty() || level == null)
+            return stack;
 
         FluidStack remainder = stack.copy();
 
@@ -160,7 +190,8 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
                     FluidStack stored = fluidDrawer.getStoredFluid(i);
                     if (!stored.isEmpty() && FluidStack.isSameFluidSameComponents(stored, remainder)) {
                         remainder = fluidDrawer.insertFluidIntoSlot(i, remainder, false);
-                        if (remainder.isEmpty()) return FluidStack.EMPTY;
+                        if (remainder.isEmpty())
+                            return FluidStack.EMPTY;
                     }
                 }
             }
@@ -173,7 +204,8 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
                             fluidDrawer.hasTemplate(i) &&
                             FluidStack.isSameFluidSameComponents(fluidDrawer.getStoredFluid(i), remainder)) {
                         remainder = fluidDrawer.insertFluidIntoSlot(i, remainder, false);
-                        if (remainder.isEmpty()) return FluidStack.EMPTY;
+                        if (remainder.isEmpty())
+                            return FluidStack.EMPTY;
                     }
                 }
             }
@@ -184,7 +216,8 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
                 for (int i = 0; i < fluidDrawer.getSlotCount(); i++) {
                     if (fluidDrawer.isSlotEmpty(i) && !fluidDrawer.isLocked()) {
                         remainder = fluidDrawer.insertFluidIntoSlot(i, remainder, false);
-                        if (remainder.isEmpty()) return FluidStack.EMPTY;
+                        if (remainder.isEmpty())
+                            return FluidStack.EMPTY;
                     }
                 }
             }
@@ -219,127 +252,183 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
         });
     }
 
-
     @Override
-    public CompoundTag getUpdateTag(HolderLookup.Provider registries) { return saveWithoutMetadata(registries);
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        return saveWithoutMetadata(registries);
     }
 
     @Override
-    public Packet<ClientGamePacketListener> getUpdatePacket() { return ClientboundBlockEntityDataPacket.create(this);
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
     }
 
-    // New Handlers
     public ResourceHandler<ItemResource> createItemHandler() {
-        record SlotRef(DrawerBlockEntity drawer, int slot) {}
+        record SlotRef(ResourceHandler<ItemResource> handler, int slot) {}
 
         return new ResourceHandler<ItemResource>() {
+
             private List<SlotRef> allSlots() {
                 List<SlotRef> slots = new ArrayList<>();
                 for (BlockPos pos : getConnectedDrawers()) {
-                    if (level != null && level.getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
-                        for (int i = 0; i < drawer.getSlotCount(); i++) slots.add(new SlotRef(drawer, i));
+                    if (level == null) continue;
+                    BlockEntity be = level.getBlockEntity(pos);
+                    if (be instanceof DrawerBlockEntity drawer) {
+                        ResourceHandler<ItemResource> handler = drawer.createItemHandler();
+                        for (int i = 0; i < drawer.getSlotCount(); i++)
+                            slots.add(new SlotRef(handler, i));
+                    } else if (be instanceof CompactingDrawerBlockEntity compacting) {
+                        ResourceHandler<ItemResource> handler = compacting.createItemHandler();
+                        for (int i = 0; i < compacting.getSlotCount(); i++)
+                            slots.add(new SlotRef(handler, i));
                     }
                 }
                 return slots;
             }
 
             @Override
-            public int size() { return allSlots().size(); }
+            public int size() {
+                return allSlots().size();
+            }
 
             @Override
             public ItemResource getResource(int index) {
                 var slots = allSlots();
-                if (index >= slots.size()) return ItemResource.EMPTY;
-                return ItemResource.of(slots.get(index).drawer().getStoredItem(slots.get(index).slot()));
+                if (index >= slots.size())
+                    return ItemResource.EMPTY;
+                var ref = slots.get(index);
+                return ref.handler().getResource(ref.slot());
             }
 
             @Override
             public long getAmountAsLong(int index) {
                 var slots = allSlots();
-                if (index >= slots.size()) return 0;
-                return slots.get(index).drawer().getStoredCount(slots.get(index).slot());
+                if (index >= slots.size())
+                    return 0;
+                var ref = slots.get(index);
+                return ref.handler().getAmountAsLong(ref.slot());
             }
 
             @Override
             public long getCapacityAsLong(int index, ItemResource resource) {
-                return Integer.MAX_VALUE;
+                var slots = allSlots();
+                if (index >= slots.size())
+                    return 0;
+                var ref = slots.get(index);
+                return ref.handler().getCapacityAsLong(ref.slot(), resource);
             }
 
             @Override
-            public boolean isValid(int index, ItemResource resource) { return true; }
+            public boolean isValid(int index, ItemResource resource) {
+                var slots = allSlots();
+                if (index >= slots.size())
+                    return false;
+                var ref = slots.get(index);
+                return ref.handler().isValid(ref.slot(), resource);
+            }
 
             @Override
             public int insert(int index, ItemResource resource, int amount, TransactionContext tx) {
-                if (resource.isEmpty() || amount <= 0) return 0;
-                ItemStack stack = resource.toStack(amount);
-                ItemStack remainder = insertIntoNetwork(stack.copy());
-                return amount - remainder.getCount();
+                if (resource.isEmpty() || amount <= 0)
+                    return 0;
+                var slots = allSlots();
+                if (index >= slots.size())
+                    return 0;
+                var ref = slots.get(index);
+                return ref.handler().insert(ref.slot(), resource, amount, tx);
             }
 
             @Override
             public int extract(int index, ItemResource resource, int amount, TransactionContext tx) {
+                if (resource.isEmpty() || amount <= 0)
+                    return 0;
                 var slots = allSlots();
-                if (index >= slots.size()) return 0;
+                if (index >= slots.size())
+                    return 0;
                 var ref = slots.get(index);
-                if (!ItemResource.of(ref.drawer().getStoredItem(ref.slot())).equals(resource)) return 0;
-                return ref.drawer().extractItem(ref.slot(), amount, false).getCount();
+                return ref.handler().extract(ref.slot(), resource, amount, tx);
             }
         };
     }
 
     public ResourceHandler<FluidResource> createFluidHandler() {
-        record SlotRef(FluidDrawerBlockEntity drawer, int slot) {}
+        record SlotRef(ResourceHandler<FluidResource> handler, int slot) {}
 
         return new ResourceHandler<FluidResource>() {
+
             private List<SlotRef> allSlots() {
                 List<SlotRef> slots = new ArrayList<>();
                 for (BlockPos pos : getConnectedDrawers()) {
-                    if (level != null && level.getBlockEntity(pos) instanceof FluidDrawerBlockEntity drawer) {
-                        for (int i = 0; i < drawer.getSlotCount(); i++) slots.add(new SlotRef(drawer, i));
+                    if (level == null) continue;
+                    if (level.getBlockEntity(pos) instanceof FluidDrawerBlockEntity fluidDrawer) {
+                        ResourceHandler<FluidResource> handler = fluidDrawer.createFluidHandler();
+                        for (int i = 0; i < fluidDrawer.getSlotCount(); i++)
+                            slots.add(new SlotRef(handler, i));
                     }
                 }
                 return slots;
             }
 
             @Override
-            public int size() { return allSlots().size(); }
+            public int size() {
+                return allSlots().size();
+            }
 
             @Override
             public FluidResource getResource(int index) {
                 var slots = allSlots();
-                if (index >= slots.size()) return FluidResource.EMPTY;
-                return FluidResource.of(slots.get(index).drawer().getStoredFluid(slots.get(index).slot()));
+                if (index >= slots.size())
+                    return FluidResource.EMPTY;
+                var ref = slots.get(index);
+                return ref.handler().getResource(ref.slot());
             }
 
             @Override
             public long getAmountAsLong(int index) {
                 var slots = allSlots();
-                if (index >= slots.size()) return 0;
-                return slots.get(index).drawer().getStoredAmount(slots.get(index).slot());
+                if (index >= slots.size())
+                    return 0;
+                var ref = slots.get(index);
+                return ref.handler().getAmountAsLong(ref.slot());
             }
 
             @Override
             public long getCapacityAsLong(int index, FluidResource resource) {
-                return Integer.MAX_VALUE;
+                var slots = allSlots();
+                if (index >= slots.size())
+                    return 0;
+                var ref = slots.get(index);
+                return ref.handler().getCapacityAsLong(ref.slot(), resource);
             }
 
             @Override
-            public boolean isValid(int index, FluidResource resource) { return true; }
+            public boolean isValid(int index, FluidResource resource) {
+                var slots = allSlots();
+                if (index >= slots.size())
+                    return false;
+                var ref = slots.get(index);
+                return ref.handler().isValid(ref.slot(), resource);
+            }
 
             @Override
             public int insert(int index, FluidResource resource, int amount, TransactionContext tx) {
-                if (resource.isEmpty() || amount <= 0) return 0;
-                FluidStack remainder = insertFluidIntoNetwork(resource.toStack(amount));
-                return amount - remainder.getAmount();
+                if (resource.isEmpty() || amount <= 0)
+                    return 0;
+                var slots = allSlots();
+                if (index >= slots.size())
+                    return 0;
+                var ref = slots.get(index);
+                return ref.handler().insert(ref.slot(), resource, amount, tx);
             }
 
             @Override
             public int extract(int index, FluidResource resource, int amount, TransactionContext tx) {
+                if (resource.isEmpty() || amount <= 0)
+                    return 0;
                 var slots = allSlots();
-                if (index >= slots.size()) return 0;
+                if (index >= slots.size())
+                    return 0;
                 var ref = slots.get(index);
-                if (!FluidResource.of(ref.drawer().getStoredFluid(ref.slot())).equals(resource)) return 0;
-                return ref.drawer().extractFluid(ref.slot(), amount, false).getAmount();
+                return ref.handler().extract(ref.slot(), resource, amount, tx);
             }
         };
     }

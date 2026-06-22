@@ -1,6 +1,7 @@
 package net.drawers.utilitydrawers.item;
 
 import net.drawers.utilitydrawers.block.StorageInterfaceBlock;
+import net.drawers.utilitydrawers.block.entity.CompactingDrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.StorageInterfaceBlockEntity;
@@ -180,6 +181,42 @@ public class StorageRemoteItem extends Item {
                 return InteractionResult.SUCCESS;
             }
             return InteractionResult.FAIL;
+        } else if (blockEntity instanceof CompactingDrawerBlockEntity compactingDrawer) {
+            BlockPos boundPos = getBoundInterface(stack);
+
+            if (boundPos == null) {
+                player.sendOverlayMessage(Component.literal("No Storage Interface bound!").withStyle(ChatFormatting.RED));
+                return InteractionResult.FAIL;
+            }
+            if (boundPos.distManhattan(pos) > 16) {
+                player.sendOverlayMessage(Component.literal("Drawer out of range! (Max 16 blocks)").withStyle(ChatFormatting.RED));
+                return InteractionResult.FAIL;
+            }
+            if (!(level.getBlockEntity(boundPos) instanceof StorageInterfaceBlockEntity interfaceEntity)) {
+                player.sendOverlayMessage(Component.literal("Bound Storage Interface no longer exists at " + boundPos.toShortString()).withStyle(ChatFormatting.RED));
+                clearBoundInterface(stack);
+                return InteractionResult.FAIL;
+            }
+
+            BlockPos currentInterface = compactingDrawer.getConnectedInterface();
+            if (currentInterface != null) {
+                if (!(level.getBlockEntity(currentInterface) instanceof StorageInterfaceBlockEntity)) {
+                    compactingDrawer.clearConnectedInterface();
+                } else if (boundPos.equals(currentInterface)) {
+                    interfaceEntity.tryUnlinkDrawer(pos);
+                    player.sendOverlayMessage(Component.literal("Compacting Drawer unlinked!").withStyle(ChatFormatting.YELLOW));
+                    return InteractionResult.SUCCESS;
+                } else {
+                    player.sendOverlayMessage(Component.literal("Drawer already linked to another interface!").withStyle(ChatFormatting.RED));
+                    return InteractionResult.FAIL;
+                }
+            }
+
+            if (interfaceEntity.tryLinkDrawer(pos)) {
+                player.sendOverlayMessage(Component.literal("Compacting Drawer linked!").withStyle(ChatFormatting.GREEN));
+                return InteractionResult.SUCCESS;
+            }
+            return InteractionResult.FAIL;
         }
 
         return InteractionResult.PASS;
@@ -204,6 +241,15 @@ public class StorageRemoteItem extends Item {
             fluidDrawer.setLocked(nowLocked);
             player.sendOverlayMessage(
                     Component.literal(nowLocked ? "Fluid Drawer Locked" : "Fluid Drawer Unlocked")
+                            .withStyle(nowLocked ? ChatFormatting.RED : ChatFormatting.GREEN));
+            return InteractionResult.SUCCESS;
+        }
+
+        if (blockEntity instanceof CompactingDrawerBlockEntity compactingDrawer) {
+            boolean nowLocked = !compactingDrawer.isLocked();
+            compactingDrawer.setLocked(nowLocked);
+            player.sendOverlayMessage(
+                    Component.literal(nowLocked ? "Compacting Drawer Locked" : "Compacting Drawer Unlocked")
                             .withStyle(nowLocked ? ChatFormatting.RED : ChatFormatting.GREEN));
             return InteractionResult.SUCCESS;
         }

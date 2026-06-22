@@ -85,6 +85,17 @@ public class DrawerRenderer implements BlockEntityRenderer<DrawerBlockEntity, Dr
     private static final Identifier LOCK_TEXTURE =
             Identifier.fromNamespaceAndPath(UtilityDrawers.MODID, "textures/gui/lock.png");
 
+    private String formatNumber(long count) {
+        if (count >= 1000000) {
+            String formatted = String.format(java.util.Locale.US, "%.2fM", count / 1000000.0f);
+            return formatted.replace(".00M", "M");
+        } else if (count >= 1000) {
+            String formatted = String.format(java.util.Locale.US, "%.1fk", count / 1000.0f);
+            return formatted.replace(".0k", "k");
+        }
+        return String.valueOf(count);
+    }
+
     @Override
     public void submit(DrawerRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
         if (state.itemStates.length == 0) return;
@@ -190,7 +201,7 @@ public class DrawerRenderer implements BlockEntityRenderer<DrawerBlockEntity, Dr
 
                         poseStack.translate(textOx, textOy - (baseScale * 0.3f), 0.4376D);
                         poseStack.scale(0.009f, -0.009f, 0.009f);
-                        String text = String.valueOf(state.counts[i]);
+                        String text = formatNumber(state.counts[i]);
                         float textWidth = this.font.width(text);
                         submitNodeCollector.submitText(
                                 poseStack, -textWidth / 2.0f, 0.0f,
@@ -228,5 +239,4 @@ public class DrawerRenderer implements BlockEntityRenderer<DrawerBlockEntity, Dr
             poseStack.popPose();
         }
     }
-
 }

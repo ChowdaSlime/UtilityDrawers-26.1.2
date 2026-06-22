@@ -208,6 +208,16 @@ public class ModRecipeProvider extends RecipeProvider {
                 .define('C', Items.BUCKET)
                 .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
                 .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.COMPACTING_DRAWER.get())
+                .pattern("ABA")
+                .pattern("BCB")
+                .pattern("ABA")
+                .define('A', Items.IRON_BLOCK)
+                .define('B', Items.PISTON)
+                .define('C', ModBlocks.DRAWER_BASE.get())
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
     }
 
     private net.minecraft.world.item.crafting.Ingredient ingredient(Item item) {

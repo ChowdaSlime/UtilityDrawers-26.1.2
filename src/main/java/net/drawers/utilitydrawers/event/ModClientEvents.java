@@ -5,6 +5,7 @@ import net.drawers.utilitydrawers.block.entity.ModBlockEntities;
 import net.drawers.utilitydrawers.block.entity.StorageInterfaceBlockEntity;
 import net.drawers.utilitydrawers.client.*;
 import net.drawers.utilitydrawers.item.StorageRemoteItem;
+import net.drawers.utilitydrawers.menu.CompactingDrawerScreen;
 import net.drawers.utilitydrawers.menu.DrawerScreen;
 import net.drawers.utilitydrawers.menu.FluidDrawerScreen;
 import net.drawers.utilitydrawers.menu.ModMenuTypes;
@@ -20,8 +21,6 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.FluidUtil;
 import net.neoforged.neoforge.transfer.ResourceHandler;
 import net.neoforged.neoforge.transfer.access.ItemAccess;
 import net.neoforged.neoforge.transfer.fluid.FluidResource;
@@ -33,18 +32,21 @@ public class ModClientEvents {
     public static void registerBER(EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(ModBlockEntities.DRAWER_BLOCK_ENTITY.get(), DrawerRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.FLUID_DRAWER_BLOCK_ENTITY.get(), FluidDrawerRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.COMPACTING_DRAWER_BLOCK_ENTITY.get(), CompactingDrawerRenderer::new);
     }
 
     @SubscribeEvent
     public static void registerTooltipFactories(RegisterClientTooltipComponentFactoriesEvent event) {
         event.register(DrawerTooltipComponent.class, ClientDrawerTooltipComponent::new);
         event.register(FluidDrawerTooltipComponent.class, ClientFluidDrawerTooltipComponent::new);
+        event.register(CompactingDrawerTooltipComponent.class, ClientCompactingDrawerTooltipComponent::new);
     }
 
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(ModMenuTypes.DRAWER_MENU.get(), DrawerScreen::new);
         event.register(ModMenuTypes.FLUID_DRAWER_MENU.get(), FluidDrawerScreen::new);
+        event.register(ModMenuTypes.COMPACTING_DRAWER_MENU.get(), CompactingDrawerScreen::new);
     }
 
     @SubscribeEvent

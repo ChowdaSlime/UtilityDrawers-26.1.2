@@ -1,11 +1,14 @@
 package net.drawers.utilitydrawers.event;
 
 import appeng.api.AECapabilities;
+import net.drawers.utilitydrawers.ae2.CompactingDrawerMEStorage;
 import net.drawers.utilitydrawers.ae2.DrawerMEStorage;
 import net.drawers.utilitydrawers.ae2.FluidDrawerMEStorage;
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.ae2.StorageInterfaceMEStorage;
+import net.drawers.utilitydrawers.block.CompactingDrawerBlock;
 import net.drawers.utilitydrawers.block.DrawerBlock;
+import net.drawers.utilitydrawers.block.entity.CompactingDrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.ModBlockEntities;
@@ -20,8 +23,6 @@ import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.level.block.BreakBlockEvent;
-import snownee.jade.addon.vanilla.ItemTooltipProvider;
-import snownee.jade.api.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,24 +47,42 @@ public class ModEvents {
         if (event.getAction() != PlayerInteractEvent.LeftClickBlock.Action.START) return;
 
         BlockState state = event.getLevel().getBlockState(event.getPos());
-        if (!(state.getBlock() instanceof DrawerBlock drawerBlock)) return;
-        if (event.getFace() != state.getValue(DrawerBlock.FACING)) return;
-
         BlockPos pos = event.getPos();
-
         double reach = player.blockInteractionRange();
         net.minecraft.world.phys.HitResult hitResult = player.pick(reach, 0, false);
         int targetSlot = -1;
-        if (hitResult instanceof net.minecraft.world.phys.BlockHitResult blockHit) {
-            if (event.getLevel().getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
-                targetSlot = drawerBlock.getTargetSlot(blockHit.getLocation(), state, drawer.getSlotCount());
+
+        if (state.getBlock() instanceof DrawerBlock drawerBlock) {
+            if (event.getFace() != state.getValue(DrawerBlock.FACING)) return;
+
+            if (hitResult instanceof net.minecraft.world.phys.BlockHitResult blockHit) {
+                if (event.getLevel().getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
+                    targetSlot = drawerBlock.getTargetSlot(blockHit.getLocation(), state, drawer.getSlotCount());
+
+                    if (targetSlot >= 0) {
+                        event.setCanceled(true);
+                        handleExtraction(event, player, uuid, pos, targetSlot, drawer);
+                    }
+                }
             }
         }
+        else if (state.getBlock() instanceof CompactingDrawerBlock compactingBlock) {
+            if (event.getFace() != state.getValue(CompactingDrawerBlock.FACING)) return;
 
-        if (targetSlot < 0) return;
+            if (hitResult instanceof net.minecraft.world.phys.BlockHitResult blockHit) {
+                if (event.getLevel().getBlockEntity(pos) instanceof CompactingDrawerBlockEntity drawer) {
+                    targetSlot = compactingBlock.getTargetSlot(blockHit.getLocation(), state);
 
-        event.setCanceled(true);
+                    if (targetSlot >= 0) {
+                        event.setCanceled(true);
+                        handleCompactingExtraction(event, player, uuid, pos, targetSlot, drawer);
+                    }
+                }
+            }
+        }
+    }
 
+    private static void handleExtraction(PlayerInteractEvent.LeftClickBlock event, Player player, UUID uuid, BlockPos pos, int targetSlot, DrawerBlockEntity drawer) {
         if (!event.getLevel().isClientSide()) {
             long currentTick = event.getLevel().getGameTime();
             long lastTick = lastClickTick.getOrDefault(uuid, 0L);
@@ -72,18 +91,39 @@ public class ModEvents {
                 heldDrawer.put(uuid, pos);
                 lastClickTick.put(uuid, currentTick);
 
-                if (event.getLevel().getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
-                    if (!drawer.isSlotEmpty(targetSlot)) {
-                        int amount = player.isShiftKeyDown()
-                                ? drawer.getStoredItem(targetSlot).getMaxStackSize() : 1;
-                        ItemStack extracted = drawer.extractItem(targetSlot, amount, false);
+                if (!drawer.isSlotEmpty(targetSlot)) {
+                    int amount = player.isShiftKeyDown() ? drawer.getStoredItem(targetSlot).getMaxStackSize() : 1;
+                    ItemStack extracted = drawer.extractItem(targetSlot, amount, false);
 
-                        if (!extracted.isEmpty()) {
-                            if (!player.getInventory().add(extracted)) {
-                                player.drop(extracted, false);
-                            }
-                            player.inventoryMenu.broadcastChanges();
+                    if (!extracted.isEmpty()) {
+                        if (!player.getInventory().add(extracted)) {
+                            player.drop(extracted, false);
                         }
+                        player.inventoryMenu.broadcastChanges();
+                    }
+                }
+            }
+        }
+    }
+
+    private static void handleCompactingExtraction(PlayerInteractEvent.LeftClickBlock event, Player player, UUID uuid, BlockPos pos, int targetSlot, CompactingDrawerBlockEntity drawer) {
+        if (!event.getLevel().isClientSide()) {
+            long currentTick = event.getLevel().getGameTime();
+            long lastTick = lastClickTick.getOrDefault(uuid, 0L);
+
+            if (!pos.equals(heldDrawer.get(uuid)) || (currentTick - lastTick > 2)) {
+                heldDrawer.put(uuid, pos);
+                lastClickTick.put(uuid, currentTick);
+
+                if (!drawer.isSlotEmpty(targetSlot)) {
+                    int amount = player.isShiftKeyDown() ? drawer.getStoredItem(targetSlot).getMaxStackSize() : 1;
+                    ItemStack extracted = drawer.extractItem(targetSlot, amount, false);
+
+                    if (!extracted.isEmpty()) {
+                        if (!player.getInventory().add(extracted)) {
+                            player.drop(extracted, false);
+                        }
+                        player.inventoryMenu.broadcastChanges();
                     }
                 }
             }
@@ -103,6 +143,11 @@ public class ModEvents {
         }
 
         if (event.getLevel().getBlockEntity(event.getPos()) instanceof FluidDrawerBlockEntity drawer) {
+            drawer.unlinkFromInterfaces();
+        }
+
+        // Ensure compacting drawer is properly unlinked from the network when broken!
+        if (event.getLevel().getBlockEntity(event.getPos()) instanceof CompactingDrawerBlockEntity drawer) {
             drawer.unlinkFromInterfaces();
         }
     }
@@ -128,6 +173,12 @@ public class ModEvents {
         );
 
         event.registerBlockEntity(
+                AECapabilities.ME_STORAGE,
+                ModBlockEntities.COMPACTING_DRAWER_BLOCK_ENTITY.get(),
+                (interfaceEntity, side) -> new CompactingDrawerMEStorage(interfaceEntity)
+        );
+
+        event.registerBlockEntity(
                 Capabilities.Item.BLOCK,
                 ModBlockEntities.DRAWER_BLOCK_ENTITY.get(),
                 (drawer, side) -> drawer.createItemHandler()
@@ -150,7 +201,11 @@ public class ModEvents {
                 ModBlockEntities.STORAGE_INTERFACE_BLOCK_ENTITY.get(),
                 (interfaceEntity, side) -> interfaceEntity.createFluidHandler()
         );
+
+        event.registerBlockEntity(
+                Capabilities.Item.BLOCK,
+                ModBlockEntities.COMPACTING_DRAWER_BLOCK_ENTITY.get(),
+                (drawer, side) -> drawer.createItemHandler()
+        );
     }
-
-
 }

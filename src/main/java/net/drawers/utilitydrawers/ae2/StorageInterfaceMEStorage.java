@@ -7,6 +7,7 @@ import appeng.api.stacks.AEItemKey;
 import appeng.api.stacks.AEKey;
 import appeng.api.stacks.KeyCounter;
 import appeng.api.storage.MEStorage;
+import net.drawers.utilitydrawers.block.entity.CompactingDrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.StorageInterfaceBlockEntity;
@@ -31,7 +32,8 @@ public class StorageInterfaceMEStorage implements MEStorage {
 
         if (what instanceof AEItemKey itemKey) {
             for (var pos : interfaceEntity.getConnectedDrawers()) {
-                if (level.getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
+                var be = level.getBlockEntity(pos);
+                if (be instanceof DrawerBlockEntity drawer) {
                     for (int i = 0; i < drawer.getSlotCount(); i++) {
                         var stored = drawer.getStoredItem(i);
                         if (stored.isEmpty() || !itemKey.matches(stored)) continue;
@@ -40,15 +42,34 @@ public class StorageInterfaceMEStorage implements MEStorage {
                         inserted += toInsert.getCount() - remainder.getCount();
                         if (inserted >= amount) return inserted;
                     }
+                } else if (be instanceof CompactingDrawerBlockEntity compacting) {
+                    for (int i = 0; i < compacting.getSlotCount(); i++) {
+                        var stored = compacting.getStoredItem(i);
+                        if (stored.isEmpty() || !itemKey.matches(stored)) continue;
+                        var toInsert = itemKey.toStack((int) Math.min(amount - inserted, Integer.MAX_VALUE));
+                        var remainder = compacting.insertItemIntoSlot(i, toInsert, mode == Actionable.SIMULATE);
+                        inserted += toInsert.getCount() - remainder.getCount();
+                        if (inserted >= amount) return inserted;
+                    }
                 }
             }
             for (var pos : interfaceEntity.getConnectedDrawers()) {
-                if (level.getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
+                var be = level.getBlockEntity(pos);
+                if (be instanceof DrawerBlockEntity drawer) {
                     for (int i = 0; i < drawer.getSlotCount(); i++) {
                         if (!drawer.isSlotEmpty(i)) continue;
                         if (drawer.isLocked() && !drawer.hasTemplate(i)) continue;
                         var toInsert = itemKey.toStack((int) Math.min(amount - inserted, Integer.MAX_VALUE));
                         var remainder = drawer.insertItemIntoSlot(i, toInsert, mode == Actionable.SIMULATE);
+                        inserted += toInsert.getCount() - remainder.getCount();
+                        if (inserted >= amount) return inserted;
+                    }
+                } else if (be instanceof CompactingDrawerBlockEntity compacting) {
+                    for (int i = 0; i < compacting.getSlotCount(); i++) {
+                        if (!compacting.isSlotEmpty(i)) continue;
+                        if (compacting.isLocked()) continue;
+                        var toInsert = itemKey.toStack((int) Math.min(amount - inserted, Integer.MAX_VALUE));
+                        var remainder = compacting.insertItemIntoSlot(i, toInsert, mode == Actionable.SIMULATE);
                         inserted += toInsert.getCount() - remainder.getCount();
                         if (inserted >= amount) return inserted;
                     }
@@ -94,7 +115,8 @@ public class StorageInterfaceMEStorage implements MEStorage {
 
         if (what instanceof AEItemKey itemKey) {
             for (var pos : interfaceEntity.getConnectedDrawers()) {
-                if (level.getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
+                var be = level.getBlockEntity(pos);
+                if (be instanceof DrawerBlockEntity drawer) {
                     for (int i = 0; i < drawer.getSlotCount(); i++) {
                         var stored = drawer.getStoredItem(i);
                         if (stored.isEmpty() || !itemKey.matches(stored)) continue;
@@ -103,6 +125,19 @@ public class StorageInterfaceMEStorage implements MEStorage {
                         if (toExtract <= 0) continue;
                         if (mode == Actionable.MODULATE) {
                             drawer.extractItem(i, (int) toExtract, false);
+                        }
+                        extracted += toExtract;
+                        if (extracted >= amount) return extracted;
+                    }
+                } else if (be instanceof CompactingDrawerBlockEntity compacting) {
+                    for (int i = 0; i < compacting.getSlotCount(); i++) {
+                        var stored = compacting.getStoredItem(i);
+                        if (stored.isEmpty() || !itemKey.matches(stored)) continue;
+                        long available = compacting.getStoredCount(i);
+                        long toExtract = Math.min(amount - extracted, available);
+                        if (toExtract <= 0) continue;
+                        if (mode == Actionable.MODULATE) {
+                            compacting.extractItem(i, (int) toExtract, false);
                         }
                         extracted += toExtract;
                         if (extracted >= amount) return extracted;
@@ -142,6 +177,15 @@ public class StorageInterfaceMEStorage implements MEStorage {
                 for (int i = 0; i < drawer.getSlotCount(); i++) {
                     var stored = drawer.getStoredItem(i);
                     long count = drawer.getStoredCount(i);
+                    if (!stored.isEmpty() && count > 0) {
+                        AEItemKey key = AEItemKey.of(stored);
+                        if (key != null) out.add(key, count);
+                    }
+                }
+            } else if (be instanceof CompactingDrawerBlockEntity compacting) {
+                for (int i = 0; i < compacting.getSlotCount(); i++) {
+                    var stored = compacting.getStoredItem(i);
+                    long count = compacting.getStoredCount(i);
                     if (!stored.isEmpty() && count > 0) {
                         AEItemKey key = AEItemKey.of(stored);
                         if (key != null) out.add(key, count);

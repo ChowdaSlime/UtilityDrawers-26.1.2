@@ -33,6 +33,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         for (Block fluidDrawer : ModBlocks.getAllFluidDrawerBlocks()) {
             this.add(fluidDrawer, createDrawerDrop(fluidDrawer));
         }
+        this.add(ModBlocks.COMPACTING_DRAWER.get(), createDrawerDrop(ModBlocks.COMPACTING_DRAWER.get()));
     }
 
     protected LootTable.Builder createDrawerDrop(Block block) {

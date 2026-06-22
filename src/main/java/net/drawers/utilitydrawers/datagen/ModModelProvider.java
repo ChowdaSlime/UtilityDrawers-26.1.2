@@ -1,10 +1,7 @@
 package net.drawers.utilitydrawers.datagen;
 
 import net.drawers.utilitydrawers.UtilityDrawers;
-import net.drawers.utilitydrawers.block.DrawerBlock;
-import net.drawers.utilitydrawers.block.FluidDrawerBlock;
-import net.drawers.utilitydrawers.block.ModBlocks;
-import net.drawers.utilitydrawers.block.StorageInterfaceBlock;
+import net.drawers.utilitydrawers.block.*;
 import net.drawers.utilitydrawers.item.ModItems;
 import net.minecraft.client.data.models.BlockModelGenerators;
 import net.minecraft.client.data.models.ItemModelGenerators;
@@ -69,6 +66,17 @@ public class ModModelProvider extends ModelProvider {
             );
         }
 
+        Block compactingDrawer = ModBlocks.COMPACTING_DRAWER.get();
+        var compactingModelLoc = ModelLocationUtils.getModelLocation(compactingDrawer);
+
+        blockModels.blockStateOutput.accept(
+                MultiVariantGenerator.dispatch(compactingDrawer, BlockModelGenerators.plainVariant(compactingModelLoc))
+                        .with(PropertyDispatch.modify(CompactingDrawerBlock.FACING)
+                                .select(Direction.NORTH, v -> v)
+                                .select(Direction.EAST,  BlockModelGenerators.Y_ROT_90)
+                                .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
+                                .select(Direction.WEST,  BlockModelGenerators.Y_ROT_270))
+        );
 
         Block storageInterface = ModBlocks.STORAGE_INTERFACE.get();
         Identifier unlockedModel = Identifier.fromNamespaceAndPath(UtilityDrawers.MODID, "block/storage_interface");

@@ -50,10 +50,12 @@ public class DrawerBlockEntity extends BlockEntity {
     }
 
     public boolean hasInterface() {
+
         return connectedInterface != null;
     }
 
     public BlockPos getConnectedInterface() {
+
         return connectedInterface;
     }
 

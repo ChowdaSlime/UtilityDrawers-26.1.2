@@ -40,8 +40,8 @@ public class FluidDrawerRenderer implements BlockEntityRenderer<FluidDrawerBlock
 
     private static final float EDGE     = 1.0f / 16.0f;
     private static final float TRIM     = 1.0f / 16.0f;
-    private static final float HALF_LOW  = 0.5f - TRIM / 2.0f; // 0.46875
-    private static final float HALF_HIGH = 0.5f + TRIM / 2.0f; // 0.53125
+    private static final float HALF_LOW  = 0.5f - TRIM / 2.0f;
+    private static final float HALF_HIGH = 0.5f + TRIM / 2.0f;
 
     public FluidDrawerRenderer(BlockEntityRendererProvider.Context context) {
         this.font = context.font();
@@ -108,6 +108,17 @@ public class FluidDrawerRenderer implements BlockEntityRenderer<FluidDrawerBlock
         };
     }
 
+    private String formatNumber(long count) {
+        if (count >= 1000000) {
+            String formatted = String.format(java.util.Locale.US, "%.2fM", count / 1000000.0f);
+            return formatted.replace(".00M", "M");
+        } else if (count >= 1000) {
+            String formatted = String.format(java.util.Locale.US, "%.1fk", count / 1000.0f);
+            return formatted.replace(".0k", "k");
+        }
+        return String.valueOf(count);
+    }
+
     @Override
     public void submit(FluidDrawerRenderState state, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
         if (state.fluids.length == 0) return;
@@ -141,7 +152,6 @@ public class FluidDrawerRenderer implements BlockEntityRenderer<FluidDrawerBlock
                 float rBottom = -(vMax - 0.5f);
                 float rTop    = -(vMin - 0.5f);
                 float rCenterX = (rLeft + rRight) / 2f;
-                float rCenterY = (rBottom + rTop) / 2f;
 
                 FluidStack stack = state.fluids[i];
 
@@ -200,10 +210,11 @@ public class FluidDrawerRenderer implements BlockEntityRenderer<FluidDrawerBlock
 
                 if (state.amounts[i] > 0) {
                     poseStack.pushPose();
-                    poseStack.translate(rCenterX, rCenterY + 0.2f, textZ);
+
+                    poseStack.translate(rCenterX, rBottom + 0.08f, textZ);
                     poseStack.scale(0.009f, -0.009f, 0.009f);
 
-                    String text = String.valueOf(state.amounts[i]);
+                    String text = formatNumber(state.amounts[i]);
                     float textWidth = this.font.width(text);
                     submitNodeCollector.submitText(
                             poseStack, -textWidth / 2.0f, 0.0f,

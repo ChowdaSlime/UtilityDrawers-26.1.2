@@ -3,6 +3,7 @@ package net.drawers.utilitydrawers.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.drawers.utilitydrawers.UtilityDrawers;
+import net.drawers.utilitydrawers.block.entity.CompactingDrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.StorageInterfaceBlockEntity;
@@ -15,6 +16,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.ARGB;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -65,8 +67,11 @@ public class NetworkHighlightRenderer {
 
         for (BlockPos drawerPos : interfaceEntity.getConnectedDrawers()) {
             if (Vec3.atCenterOf(drawerPos).distanceToSqr(player.position()) > MAX_DISTANCE_SQ) continue;
-            if (mc.level.getBlockEntity(drawerPos) instanceof DrawerBlockEntity ||
-                    mc.level.getBlockEntity(drawerPos) instanceof FluidDrawerBlockEntity) {
+
+            BlockEntity be = mc.level.getBlockEntity(drawerPos);
+            if (be instanceof DrawerBlockEntity ||
+                    be instanceof FluidDrawerBlockEntity ||
+                    be instanceof CompactingDrawerBlockEntity) {
                 renderOutline(poseStack, consumer, blockShape, drawerPos, cameraPos, color);
             }
         }

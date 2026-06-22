@@ -62,6 +62,8 @@
   "block.utilitydrawers.fluid_drawer_3": "Fluid Drawer 3x",
   "block.utilitydrawers.fluid_drawer_4": "Fluid Drawer 4x",
 
+  "block.utilitydrawers.compacting_drawer": "Compacting Drawer",
+
   "item.utilitydrawers.drawer_upgrade_t1": "Iron Upgrade",
   "item.utilitydrawers.drawer_upgrade_t2": "Gold Upgrade",
   "item.utilitydrawers.drawer_upgrade_t3": "Diamond Upgrade",
