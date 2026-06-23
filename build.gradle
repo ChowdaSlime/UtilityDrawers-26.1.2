@@ -137,6 +137,9 @@ dependencies {
 
     compileOnly "curse.maven:pipez-443900:7904268"
     localRuntime "curse.maven:pipez-443900:7904268"
+
+    compileOnly "curse.maven:productive-metalworks-1184570:8303948"
+    localRuntime "curse.maven:productive-metalworks-1184570:8303948"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
