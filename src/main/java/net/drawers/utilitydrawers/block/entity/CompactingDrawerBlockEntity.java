@@ -195,39 +195,73 @@ public class CompactingDrawerBlockEntity extends BlockEntity {
         recalculateCapacity();
     }
 
-    private void discoverCompactingChain(ItemStack seed) {
+    private record CompressResult(ItemStack output, int ratio) {}
+    private record DecompressResult(ItemStack output, int ratio) {}
+
+    private void discoverChainFromAnyTier(ItemStack seed) {
         if (level == null || level.isClientSide()) return;
 
-        baseItem = seed.copyWithCount(1);
-        midItem  = ItemStack.EMPTY;
-        blockItem = ItemStack.EMPTY;
-        ratio0 = 9;
-        ratio1 = 9;
+        ItemStack current = seed.copyWithCount(1);
+        int detectedRatio0 = 9;
+        int detectedRatio1 = 9;
+        ItemStack detectedBase  = current.copyWithCount(1);
+        ItemStack detectedMid   = ItemStack.EMPTY;
+        ItemStack detectedBlock = ItemStack.EMPTY;
 
-        Optional<CompressResult> midResult = findCompressRecipe(seed);
-        if (midResult.isEmpty()) {
-            recalculateCapacity();
-            return;
+        Optional<DecompressResult> firstDecompress = findDecompressRecipe(current);
+        if (firstDecompress.isPresent()) {
+            ItemStack oneDown = firstDecompress.get().output().copyWithCount(1);
+            int ratio = firstDecompress.get().ratio();
+
+            Optional<DecompressResult> secondDecompress = findDecompressRecipe(oneDown);
+            if (secondDecompress.isPresent()) {
+                detectedBase  = secondDecompress.get().output().copyWithCount(1);
+                detectedMid   = oneDown;
+                detectedBlock = current;
+                detectedRatio0 = secondDecompress.get().ratio();
+                detectedRatio1 = ratio;
+            } else {
+                detectedBase  = oneDown;
+                detectedMid   = current;
+                detectedRatio0 = ratio;
+
+                Optional<CompressResult> compress = findCompressRecipe(current);
+                if (compress.isPresent()) {
+                    detectedBlock  = compress.get().output().copyWithCount(1);
+                    detectedRatio1 = compress.get().ratio();
+                }
+            }
+        } else {
+            Optional<CompressResult> firstCompress = findCompressRecipe(current);
+            if (firstCompress.isPresent()) {
+                detectedMid   = firstCompress.get().output().copyWithCount(1);
+                detectedRatio0 = firstCompress.get().ratio();
+
+                Optional<CompressResult> secondCompress = findCompressRecipe(detectedMid);
+                if (secondCompress.isPresent()) {
+                    detectedBlock  = secondCompress.get().output().copyWithCount(1);
+                    detectedRatio1 = secondCompress.get().ratio();
+                }
+            }
         }
 
-        midItem = midResult.get().output().copyWithCount(1);
-        ratio0  = midResult.get().ratio();
-
-        Optional<CompressResult> blockResult = findCompressRecipe(midItem);
-        if (blockResult.isPresent()) {
-            blockItem = blockResult.get().output().copyWithCount(1);
-            ratio1    = blockResult.get().ratio();
-        }
-
+        baseItem  = detectedBase;
+        midItem   = detectedMid;
+        blockItem = detectedBlock;
+        ratio0    = detectedRatio0;
+        ratio1    = detectedRatio1;
         recalculateCapacity();
     }
 
-    private record CompressResult(ItemStack output, int ratio) {}
+    private int getSlotForItem(ItemStack stack) {
+        if (!baseItem.isEmpty()  && ItemStack.isSameItemSameComponents(baseItem,  stack)) return SLOT_BASE;
+        if (!midItem.isEmpty()   && ItemStack.isSameItemSameComponents(midItem,   stack)) return SLOT_MID;
+        if (!blockItem.isEmpty() && ItemStack.isSameItemSameComponents(blockItem, stack)) return SLOT_BLOCK;
+        return -1;
+    }
 
     private Optional<CompressResult> findCompressRecipe(ItemStack input) {
-        if (!(level instanceof ServerLevel serverLevel)) {
-            return Optional.empty();
-        }
+        if (!(level instanceof ServerLevel serverLevel)) return Optional.empty();
 
         var recipeAccess = serverLevel.recipeAccess();
 
@@ -249,6 +283,27 @@ public class CompactingDrawerBlockEntity extends BlockEntity {
         return Optional.empty();
     }
 
+    private Optional<DecompressResult> findDecompressRecipe(ItemStack input) {
+        if (!(level instanceof ServerLevel serverLevel)) return Optional.empty();
+
+        var recipeAccess = serverLevel.recipeAccess();
+
+        CraftingInput craftingInput = CraftingInput.of(1, 1, List.of(input.copyWithCount(1)));
+        Optional<RecipeHolder<CraftingRecipe>> match =
+                recipeAccess.getRecipeFor(RecipeType.CRAFTING, craftingInput, serverLevel);
+
+        if (match.isPresent()) {
+            ItemStack result = match.get().value().assemble(craftingInput);
+            if (!result.isEmpty() && !ItemStack.isSameItemSameComponents(result, input)) {
+                int count = result.getCount();
+                if (count == 9 || count == 4) {
+                    return Optional.of(new DecompressResult(result.copyWithCount(1), count));
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
     private CraftingInput buildUniformGrid(ItemStack item, int count) {
         int side = (count == 9) ? 3 : 2;
         List<ItemStack> items = new java.util.ArrayList<>();
@@ -262,15 +317,15 @@ public class CompactingDrawerBlockEntity extends BlockEntity {
 
         if (baseItem.isEmpty()) {
             if (locked) return stack;
-            if (!simulate) discoverCompactingChain(stack);
+            if (!simulate) discoverChainFromAnyTier(stack);
         }
 
-        ItemStack expected = getStoredItem(slot);
-        if (!expected.isEmpty() && !ItemStack.isSameItemSameComponents(expected, stack)) {
+        int resolvedSlot = getSlotForItem(stack);
+        if (resolvedSlot == -1) {
             return stack;
         }
 
-        long rawPerUnit = rawUnitsPerSlot(slot);
+        long rawPerUnit = rawUnitsPerSlot(resolvedSlot);
         long spaceRaw   = maxRawCapacity - rawCount;
         long spaceUnits = spaceRaw / rawPerUnit;
 
@@ -278,7 +333,7 @@ public class CompactingDrawerBlockEntity extends BlockEntity {
             return hasVoidUpgrade() ? ItemStack.EMPTY : stack;
         }
 
-        int toInsert = (int) Math.min(stack.getCount(), spaceUnits);
+        int toInsert  = (int) Math.min(stack.getCount(), spaceUnits);
         int remainder = stack.getCount() - toInsert;
 
         if (!simulate) {
@@ -472,9 +527,10 @@ public class CompactingDrawerBlockEntity extends BlockEntity {
         @Override
         public boolean isValid(int slot, ItemResource resource) {
             if (resource.isEmpty()) return false;
-            ItemStack stored = getStoredItem(slot);
-            if (stored.isEmpty()) return !locked && slot == SLOT_BASE;
-            return ItemResource.of(stored).equals(resource);
+            if (!baseItem.isEmpty()  && ItemResource.of(baseItem).equals(resource))  return true;
+            if (!midItem.isEmpty()   && ItemResource.of(midItem).equals(resource))   return true;
+            if (!blockItem.isEmpty() && ItemResource.of(blockItem).equals(resource)) return true;
+            return baseItem.isEmpty() && !locked;
         }
 
         @Override
