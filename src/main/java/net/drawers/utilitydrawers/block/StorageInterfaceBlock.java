@@ -1,14 +1,19 @@
 package net.drawers.utilitydrawers.block;
 
 import net.drawers.utilitydrawers.block.entity.StorageInterfaceBlockEntity;
+import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
 import net.drawers.utilitydrawers.item.StorageRemoteItem;
+import net.drawers.utilitydrawers.menu.StorageInterfaceMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -72,12 +77,28 @@ public class StorageInterfaceBlock extends Block implements EntityBlock {
 
     @Override
     protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        if (stack.isEmpty() || stack.getItem() instanceof DrawerUpgradeItem) {
+            return openMenu(level, pos, player);
+        }
         return handleInteraction(level, pos, player, stack, hand);
     }
 
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-        return handleInteraction(level, pos, player, ItemStack.EMPTY, InteractionHand.MAIN_HAND);
+        return openMenu(level, pos, player);
+    }
+
+    private InteractionResult openMenu(Level level, BlockPos pos, Player player) {
+        if (level.isClientSide()) return InteractionResult.SUCCESS;
+        if (!(player instanceof ServerPlayer serverPlayer)) return InteractionResult.FAIL;
+        if (!(level.getBlockEntity(pos) instanceof StorageInterfaceBlockEntity interfaceEntity)) return InteractionResult.FAIL;
+
+        serverPlayer.openMenu(new SimpleMenuProvider(
+                (id, inv, p) -> new StorageInterfaceMenu(id, inv, interfaceEntity),
+                Component.translatable("block.utilitydrawers.storage_interface")
+        ), buf -> buf.writeBlockPos(pos));
+
+        return InteractionResult.CONSUME;
     }
 
     private InteractionResult handleInteraction(Level level, BlockPos pos, Player player, ItemStack handStack, InteractionHand hand) {

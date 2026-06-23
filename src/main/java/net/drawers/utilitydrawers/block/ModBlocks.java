@@ -1,6 +1,7 @@
 package net.drawers.utilitydrawers.block;
 
 import net.drawers.utilitydrawers.UtilityDrawers;
+import net.drawers.utilitydrawers.item.CompactingDrawerBlockItem;
 import net.drawers.utilitydrawers.item.DrawerBlockItem;
 import net.drawers.utilitydrawers.item.ModItems;
 import net.minecraft.world.item.BlockItem;
@@ -37,7 +38,7 @@ public class ModBlocks {
             properties -> new StorageInterfaceBlock(
                     properties.strength(3.0F, 6.0F).sound(SoundType.STONE).requiresCorrectToolForDrops()));
 
-    public static final DeferredBlock<Block> COMPACTING_DRAWER = registerBlock(
+    public static final DeferredBlock<Block> COMPACTING_DRAWER = registerCompactingDrawerBlock(
             "compacting_drawer",
             properties -> new CompactingDrawerBlock(properties.strength(1.5f))
     );
@@ -109,6 +110,15 @@ public class ModBlocks {
         DeferredBlock<T> toReturn = BLOCKS.registerBlock(name, function);
         ModItems.ITEMS.registerItem(name,
                 properties -> new DrawerBlockItem(toReturn.value(), properties.useBlockDescriptionPrefix()));
+        return toReturn;
+    }
+
+    private static <T extends Block> DeferredBlock<T> registerCompactingDrawerBlock(
+            String name,
+            Function<BlockBehaviour.Properties, T> function) {
+        DeferredBlock<T> toReturn = BLOCKS.registerBlock(name, function);
+        ModItems.ITEMS.registerItem(name,
+                properties -> new CompactingDrawerBlockItem(toReturn.value(), properties.useBlockDescriptionPrefix()));
         return toReturn;
     }
 

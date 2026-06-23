@@ -1,8 +1,7 @@
 package net.drawers.utilitydrawers.menu;
 
-import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
+import net.drawers.utilitydrawers.block.entity.StorageInterfaceBlockEntity;
 import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
-import net.drawers.utilitydrawers.item.VoidUpgradeItem;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -12,50 +11,38 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-public class FluidDrawerMenu extends AbstractContainerMenu {
+public class StorageInterfaceMenu extends AbstractContainerMenu {
 
-    private final FluidDrawerBlockEntity blockEntity;
-    private final int slotCount;
+    private final StorageInterfaceBlockEntity blockEntity;
     private final SimpleContainer upgradeContainer;
 
     private boolean isInitializing = true;
 
-    private static final int UPGRADE_SLOT_COUNT = 4;
-
-    public FluidDrawerMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
+    public StorageInterfaceMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
         this(containerId, playerInventory, playerInventory.player.level()
                 .getBlockEntity(buf.readBlockPos()));
     }
 
-    public FluidDrawerMenu(int containerId, Inventory playerInventory, BlockEntity blockEntity) {
-        super(ModMenuTypes.FLUID_DRAWER_MENU.get(), containerId);
+    public StorageInterfaceMenu(int containerId, Inventory playerInventory, BlockEntity blockEntity) {
+        super(ModMenuTypes.STORAGE_INTERFACE_MENU.get(), containerId);
 
-        this.blockEntity = (FluidDrawerBlockEntity) blockEntity;
-        this.slotCount = this.blockEntity.getSlotCount();
+        this.blockEntity = (StorageInterfaceBlockEntity) blockEntity;
 
-        this.upgradeContainer = new SimpleContainer(UPGRADE_SLOT_COUNT) {
+        this.upgradeContainer = new SimpleContainer(1) {
             @Override
             public void setChanged() {
                 super.setChanged();
-                if (!FluidDrawerMenu.this.isInitializing) {
-                    for (int i = 0; i < UPGRADE_SLOT_COUNT; i++) {
-                        FluidDrawerMenu.this.blockEntity.setUpgradeSlot(i, this.getItem(i).copy());
-                    }
+                if (!StorageInterfaceMenu.this.isInitializing) {
+                    StorageInterfaceMenu.this.blockEntity
+                            .setUpgradeSlot(this.getItem(0).copy());
                 }
             }
         };
 
-        for (int i = 0; i < UPGRADE_SLOT_COUNT; i++) {
-            this.upgradeContainer.setItem(i, this.blockEntity.getUpgradeSlot(i).copy());
-        }
-
+        this.upgradeContainer.setItem(0, this.blockEntity.getUpgradeSlot().copy());
         this.isInitializing = false;
 
-        for (int i = 0; i < UPGRADE_SLOT_COUNT; i++) {
-            int xPos = 152;
-            int yPos = 8 + (i * 18);
-            this.addSlot(new UpgradeSlot(this.upgradeContainer, i, xPos, yPos, this.blockEntity));
-        }
+        this.addSlot(new UpgradeSlot(this.upgradeContainer, 0, 152, 35, this.blockEntity));
 
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
@@ -68,18 +55,15 @@ public class FluidDrawerMenu extends AbstractContainerMenu {
         }
     }
 
-    public FluidDrawerBlockEntity getBlockEntity() {
+    public StorageInterfaceBlockEntity getBlockEntity() {
         return blockEntity;
-    }
-
-    public int getDrawerSlotCount() {
-        return slotCount;
     }
 
     @Override
     public boolean stillValid(Player player) {
         return blockEntity.getLevel() != null &&
-                player.distanceToSqr(blockEntity.getBlockPos().getX() + 0.5,
+                player.distanceToSqr(
+                        blockEntity.getBlockPos().getX() + 0.5,
                         blockEntity.getBlockPos().getY() + 0.5,
                         blockEntity.getBlockPos().getZ() + 0.5) < 64;
     }
@@ -93,21 +77,21 @@ public class FluidDrawerMenu extends AbstractContainerMenu {
             ItemStack stackInSlot = slot.getItem();
             originalStack = stackInSlot.copy();
 
-            if (index < UPGRADE_SLOT_COUNT) {
-                if (!this.moveItemStackTo(stackInSlot, UPGRADE_SLOT_COUNT, UPGRADE_SLOT_COUNT + 36, true)) {
+            if (index == 0) {
+                if (!this.moveItemStackTo(stackInSlot, 1, 37, true)) {
                     return ItemStack.EMPTY;
                 }
             } else {
-                if (stackInSlot.getItem() instanceof DrawerUpgradeItem || stackInSlot.getItem() instanceof VoidUpgradeItem) {
-                    if (!this.moveItemStackTo(stackInSlot, 0, UPGRADE_SLOT_COUNT, false)) {
+                if (stackInSlot.getItem() instanceof DrawerUpgradeItem) {
+                    if (!this.moveItemStackTo(stackInSlot, 0, 1, false)) {
                         return ItemStack.EMPTY;
                     }
-                } else if (index >= UPGRADE_SLOT_COUNT && index < UPGRADE_SLOT_COUNT + 27) {
-                    if (!this.moveItemStackTo(stackInSlot, UPGRADE_SLOT_COUNT + 27, UPGRADE_SLOT_COUNT + 36, false)) {
+                } else if (index >= 1 && index < 28) {
+                    if (!this.moveItemStackTo(stackInSlot, 28, 37, false)) {
                         return ItemStack.EMPTY;
                     }
-                } else if (index >= UPGRADE_SLOT_COUNT + 27 && index < UPGRADE_SLOT_COUNT + 36) {
-                    if (!this.moveItemStackTo(stackInSlot, UPGRADE_SLOT_COUNT, UPGRADE_SLOT_COUNT + 27, false)) {
+                } else if (index >= 28 && index < 37) {
+                    if (!this.moveItemStackTo(stackInSlot, 1, 28, false)) {
                         return ItemStack.EMPTY;
                     }
                 }
@@ -129,21 +113,22 @@ public class FluidDrawerMenu extends AbstractContainerMenu {
     }
 
     private static class UpgradeSlot extends Slot {
-        private final FluidDrawerBlockEntity blockEntity;
+        private final StorageInterfaceBlockEntity blockEntity;
 
-        public UpgradeSlot(SimpleContainer container, int index, int x, int y, FluidDrawerBlockEntity blockEntity) {
+        public UpgradeSlot(SimpleContainer container, int index, int x, int y,
+                           StorageInterfaceBlockEntity blockEntity) {
             super(container, index, x, y);
             this.blockEntity = blockEntity;
         }
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return stack.getItem() instanceof DrawerUpgradeItem || stack.getItem() instanceof VoidUpgradeItem;
+            return stack.getItem() instanceof DrawerUpgradeItem;
         }
 
         @Override
         public boolean mayPickup(Player player) {
-            return blockEntity.canRemoveUpgrade(this.getSlotIndex());
+            return true;
         }
 
         @Override

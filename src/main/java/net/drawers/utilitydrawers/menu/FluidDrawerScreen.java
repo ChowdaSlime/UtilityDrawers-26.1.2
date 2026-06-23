@@ -3,8 +3,6 @@ package net.drawers.utilitydrawers.menu;
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.color.block.BlockColors;
-import net.minecraft.client.color.block.BlockTintSource;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -12,8 +10,6 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.fluids.FluidStack;
 
 public class FluidDrawerScreen extends AbstractContainerScreen<FluidDrawerMenu> {
@@ -51,7 +47,6 @@ public class FluidDrawerScreen extends AbstractContainerScreen<FluidDrawerMenu> 
                 bx, by, 0, 0,
                 this.imageWidth, this.imageHeight, 256, 256);
 
-        // Player Inventory
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 int sx = bx + 8 + col * 18;
@@ -60,14 +55,12 @@ public class FluidDrawerScreen extends AbstractContainerScreen<FluidDrawerMenu> 
             }
         }
 
-        // Hotbar
         for (int col = 0; col < 9; col++) {
             int sx = bx + 8 + col * 18;
             int sy = by + 142;
             drawSlotBorder(graphics, sx, sy, 16);
         }
 
-        // Upgrades (Items)
         for (int i = 0; i < 4; i++) {
             int sx = bx + UPGRADE_SLOT_X;
             int sy = by + UPGRADE_SLOT_Y_START + i * UPGRADE_SLOT_SIZE;
@@ -112,27 +105,28 @@ public class FluidDrawerScreen extends AbstractContainerScreen<FluidDrawerMenu> 
 
         Minecraft mc = Minecraft.getInstance();
 
-        BlockState fluidState = stack.getFluid().defaultFluidState().createLegacyBlock();
-
-        TextureAtlasSprite sprite = mc.getModelManager()
-                .getBlockStateModelSet()
-                .get(fluidState)
-                .particleMaterial()
-                .sprite();
-
-        int tint = -1;
-        BlockColors blockColors = mc.getBlockColors();
-        BlockTintSource source = blockColors.getTintSource(fluidState, 0);
-        if (source != null && mc.level != null && mc.player != null) {
-            tint = source.colorInWorld(fluidState, mc.level, mc.player.blockPosition());
+        TextureAtlasSprite sprite;
+        try {
+            var fluidModel = mc.getModelManager()
+                    .getFluidStateModelSet()
+                    .get(stack.getFluid().defaultFluidState());
+            sprite = fluidModel.stillMaterial().sprite();
+        } catch (Exception e) {
+            return;
         }
 
-        int fluidColor = tint == -1
-                ? (stack.getFluid() == Fluids.WATER ? 0xFF3F76E4 : 0xFFFFFFFF)
-                : (0xFF000000 | tint);
+        int color;
+        try {
+            var fluidModel = mc.getModelManager()
+                    .getFluidStateModelSet()
+                    .get(stack.getFluid().defaultFluidState());
+            var tintSource = fluidModel.fluidTintSource();
+            color = tintSource != null ? tintSource.colorAsStack(stack) : 0xFFFFFFFF;
+        } catch (Exception e) {
+            color = 0xFFFFFFFF;
+        }
 
-
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, x, y, width, height, fluidColor);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, x, y, width, height, color);
     }
 
     private void drawSlotBorder(GuiGraphicsExtractor graphics, int x, int y, int size) {

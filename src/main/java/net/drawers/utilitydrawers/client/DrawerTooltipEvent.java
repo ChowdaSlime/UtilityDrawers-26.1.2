@@ -68,5 +68,4 @@ public class DrawerTooltipEvent {
             event.getToolTip().add(Component.literal("§7(Empty)"));
         }
     }
-
 }

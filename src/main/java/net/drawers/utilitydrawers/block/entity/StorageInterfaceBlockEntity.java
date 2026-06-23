@@ -1,5 +1,6 @@
 package net.drawers.utilitydrawers.block.entity;
 
+import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -20,6 +21,7 @@ import java.util.*;
 public class StorageInterfaceBlockEntity extends BlockEntity {
 
     private final List<BlockPos> connectedDrawers = new ArrayList<>();
+    private ItemStack upgradeSlot = ItemStack.EMPTY;
 
     public StorageInterfaceBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.STORAGE_INTERFACE_BLOCK_ENTITY.get(), pos, state);
@@ -60,6 +62,12 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
     }
 
     public boolean tryLinkDrawer(BlockPos drawerPos) {
+        double dx = drawerPos.getX() - worldPosition.getX();
+        double dy = drawerPos.getY() - worldPosition.getY();
+        double dz = drawerPos.getZ() - worldPosition.getZ();
+        double distSq = dx * dx + dy * dy + dz * dz;
+        if (distSq > getMaxRangeSq()) return false;
+
         BlockEntity be = level.getBlockEntity(drawerPos);
 
         if (be instanceof DrawerBlockEntity drawer) {
@@ -226,6 +234,30 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
         return remainder;
     }
 
+    public ItemStack getUpgradeSlot() {
+        return upgradeSlot;
+    }
+
+    public void setUpgradeSlot(ItemStack stack) {
+        this.upgradeSlot = stack.isEmpty() ? ItemStack.EMPTY : stack.copyWithCount(1);
+        setChanged();
+        if (level != null && !level.isClientSide()) {
+            level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
+        }
+    }
+
+    public int getRangeMultiplier() {
+        if (!upgradeSlot.isEmpty() && upgradeSlot.getItem() instanceof DrawerUpgradeItem upgrade) {
+            return upgrade.getMultiplier();
+        }
+        return 1;
+    }
+
+    public double getMaxRangeSq() {
+        double range = 16.0 * getRangeMultiplier();
+        return range * range;
+    }
+
     @Override
     protected void saveAdditional(net.minecraft.world.level.storage.ValueOutput output) {
         super.saveAdditional(output);
@@ -235,6 +267,10 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
             list.child(String.valueOf(i)).putLong("Pos", pos.asLong());
         }
         list.putInt("Count", connectedDrawers.size());
+
+        if (!upgradeSlot.isEmpty()) {
+            output.child("UpgradeSlot").store("Item", ItemStack.CODEC, upgradeSlot);
+        }
     }
 
     @Override
@@ -250,6 +286,10 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
                 });
             }
         });
+        upgradeSlot = ItemStack.EMPTY;
+        input.child("UpgradeSlot").ifPresent(u ->
+                upgradeSlot = u.read("Item", ItemStack.CODEC).orElse(ItemStack.EMPTY)
+        );
     }
 
     @Override

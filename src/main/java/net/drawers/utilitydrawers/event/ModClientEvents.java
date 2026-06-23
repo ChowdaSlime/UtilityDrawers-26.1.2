@@ -5,10 +5,7 @@ import net.drawers.utilitydrawers.block.entity.ModBlockEntities;
 import net.drawers.utilitydrawers.block.entity.StorageInterfaceBlockEntity;
 import net.drawers.utilitydrawers.client.*;
 import net.drawers.utilitydrawers.item.StorageRemoteItem;
-import net.drawers.utilitydrawers.menu.CompactingDrawerScreen;
-import net.drawers.utilitydrawers.menu.DrawerScreen;
-import net.drawers.utilitydrawers.menu.FluidDrawerScreen;
-import net.drawers.utilitydrawers.menu.ModMenuTypes;
+import net.drawers.utilitydrawers.menu.*;
 import net.drawers.utilitydrawers.network.CycleRemoteModePayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -47,6 +44,7 @@ public class ModClientEvents {
         event.register(ModMenuTypes.DRAWER_MENU.get(), DrawerScreen::new);
         event.register(ModMenuTypes.FLUID_DRAWER_MENU.get(), FluidDrawerScreen::new);
         event.register(ModMenuTypes.COMPACTING_DRAWER_MENU.get(), CompactingDrawerScreen::new);
+        event.register(ModMenuTypes.STORAGE_INTERFACE_MENU.get(), StorageInterfaceScreen ::new);
     }
 
     @SubscribeEvent

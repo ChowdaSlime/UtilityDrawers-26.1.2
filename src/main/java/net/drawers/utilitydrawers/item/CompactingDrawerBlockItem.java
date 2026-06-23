@@ -1,6 +1,6 @@
 package net.drawers.utilitydrawers.item;
 
-import net.drawers.utilitydrawers.client.DrawerTooltipComponent;
+import net.drawers.utilitydrawers.client.CompactingDrawerTooltipComponent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -27,30 +27,33 @@ public class CompactingDrawerBlockItem extends BlockItem {
         if (customData == null) return Optional.empty();
 
         CompoundTag tag = customData.copyTag();
-        List<ItemStack> items = new ArrayList<>();
-        List<Long> counts = new ArrayList<>();
+        var registries = Minecraft.getInstance().level.registryAccess();
+        var ops = registries.createSerializationContext(NbtOps.INSTANCE);
 
-        for (int i = 0; i < 4; i++) {
-            String slotKey = "Slot" + i;
-            if (tag.contains(slotKey)) {
-                tag.getCompound(slotKey).ifPresent(slotTag -> {
-                    slotTag.getCompound("Item").ifPresent(itemTag -> {
-                        var registries = Minecraft.getInstance().level.registryAccess();
-                        var ops = registries.createSerializationContext(NbtOps.INSTANCE);
-                        Optional<ItemStack> parsedOpt = ItemStack.CODEC.parse(ops, itemTag).resultOrPartial();
-                        if (parsedOpt.isPresent() && !parsedOpt.get().isEmpty()) {
-                            long count = slotTag.getLong("Count").orElse((long) parsedOpt.get().getCount());
-                            if (count > 0) {
-                                items.add(parsedOpt.get());
-                                counts.add(count);
-                            }
-                        }
-                    });
-                });
-            }
+        long rawCount = tag.getLongOr("RawCount", 0L);
+        int ratio0 = tag.getIntOr("Ratio0", 9);
+        int ratio1 = tag.getIntOr("Ratio1", 9);
+
+        String[] keys  = {"BlockItem", "MidItem", "BaseItem"};
+        long[] counts = {rawCount / ((long) ratio0 * ratio1), rawCount / ratio0, rawCount};
+
+        List<ItemStack> items      = new ArrayList<>();
+        List<Long>      itemCounts = new ArrayList<>();
+
+        for (int i = 0; i < keys.length; i++) {
+            if (!tag.contains(keys[i])) continue;
+            var itemTag = tag.get(keys[i]);
+            if (itemTag == null) continue;
+
+            Optional<ItemStack> parsed = ItemStack.CODEC.parse(ops, itemTag).resultOrPartial();
+            if (parsed.isEmpty() || parsed.get().isEmpty()) continue;
+            if (counts[i] <= 0) continue;
+
+            items.add(parsed.get());
+            itemCounts.add(counts[i]);
         }
 
         if (items.isEmpty()) return Optional.empty();
-        return Optional.of(new DrawerTooltipComponent(items, counts));
+        return Optional.of(new CompactingDrawerTooltipComponent(items, itemCounts));
     }
 }

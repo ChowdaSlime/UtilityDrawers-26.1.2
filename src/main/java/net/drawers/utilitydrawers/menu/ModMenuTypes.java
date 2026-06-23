@@ -22,6 +22,9 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<CompactingDrawerMenu>> COMPACTING_DRAWER_MENU =
             MENU_TYPES.register("compacting_drawer_menu",
                     () -> IMenuTypeExtension.create(CompactingDrawerMenu::new));
+    public static final DeferredHolder<MenuType<?>, MenuType<StorageInterfaceMenu>> STORAGE_INTERFACE_MENU =
+            MENU_TYPES.register("storage_interface_menu",
+                    () -> IMenuTypeExtension.create(StorageInterfaceMenu::new));
 
     public static void register(IEventBus eventBus) {
         MENU_TYPES.register(eventBus);

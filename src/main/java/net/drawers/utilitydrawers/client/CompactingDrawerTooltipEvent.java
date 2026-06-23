@@ -16,7 +16,6 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @EventBusSubscriber(modid = UtilityDrawers.MODID, value = Dist.CLIENT)
 public class CompactingDrawerTooltipEvent {
@@ -24,47 +23,42 @@ public class CompactingDrawerTooltipEvent {
     @SubscribeEvent
     public static void onTooltip(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
-
         if (!(stack.getItem() instanceof BlockItem blockItem)) return;
+        if (!(blockItem.getBlock() instanceof CompactingDrawerBlock)) return;
 
-        if (blockItem.getBlock() instanceof CompactingDrawerBlock) {
-            handleItemDrawerTooltip(event, stack);
-        }
-    }
-
-    private static void handleItemDrawerTooltip(ItemTooltipEvent event, ItemStack stack) {
         CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         if (customData == null) return;
 
         CompoundTag tag = customData.copyTag();
-        AtomicBoolean hasItems = new AtomicBoolean(false);
+        var registries = Minecraft.getInstance().level.registryAccess();
+        var ops = registries.createSerializationContext(NbtOps.INSTANCE);
 
-        for (int i = 0; i < 3; i++) {
-            String slotKey = "Slot" + i;
-            if (!tag.contains(slotKey)) continue;
+        long rawCount = tag.getLongOr("RawCount", 0L);
+        int ratio0 = tag.getIntOr("Ratio0", 9);
+        int ratio1 = tag.getIntOr("Ratio1", 9);
 
-            tag.getCompound(slotKey).ifPresent(slotTag ->
-                    slotTag.getCompound("Item").ifPresent(itemTag -> {
-                        var registries = Minecraft.getInstance().level.registryAccess();
-                        var ops = registries.createSerializationContext(NbtOps.INSTANCE);
-                        Optional<ItemStack> parsedStackOpt = ItemStack.CODEC.parse(ops, itemTag).resultOrPartial();
+        String[] keys  = {"BlockItem", "MidItem", "BaseItem"};
+        long[] counts = {rawCount / ((long) ratio0 * ratio1), rawCount / ratio0, rawCount};
 
-                        if (parsedStackOpt.isPresent() && !parsedStackOpt.get().isEmpty()) {
-                            ItemStack storedStack = parsedStackOpt.get();
-                            long count = slotTag.getLong("Count").orElse((long) storedStack.getCount());
+        boolean hasItems = false;
 
-                            if (count > 0) {
-                                hasItems.set(true);
-                                event.getToolTip().add(Component.literal(
-                                        "§7- " + count + "x §b" + storedStack.getHoverName().getString()
-                                ));
-                            }
-                        }
-                    })
-            );
+        for (int i = 0; i < keys.length; i++) {
+            if (!tag.contains(keys[i])) continue;
+            var itemTag = tag.get(keys[i]);
+            if (itemTag == null) continue;
+
+            Optional<ItemStack> parsed = ItemStack.CODEC.parse(ops, itemTag).resultOrPartial();
+            if (parsed.isEmpty() || parsed.get().isEmpty()) continue;
+            if (counts[i] <= 0) continue;
+
+            hasItems = true;
+            long count = counts[i];
+            event.getToolTip().add(Component.literal(
+                    "§7- " + count + "x §b" + parsed.get().getHoverName().getString()
+            ));
         }
 
-        if (!hasItems.get()) {
+        if (!hasItems) {
             event.getToolTip().add(Component.literal("§7(Empty)"));
         }
     }
