@@ -1,14 +1,19 @@
 package net.drawers.utilitydrawers.jade;
 
-import net.drawers.utilitydrawers.block.DrawerBlock;
-import net.drawers.utilitydrawers.block.FluidDrawerBlock;
-import net.drawers.utilitydrawers.block.StorageInterfaceBlock;
+import net.drawers.utilitydrawers.block.*;
 import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
+import net.drawers.utilitydrawers.block.entity.IFramedBlockEntity;
 import net.drawers.utilitydrawers.block.entity.StorageInterfaceBlockEntity;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.block.state.BlockState;
+import org.jspecify.annotations.Nullable;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IBlockComponentProvider;
 import snownee.jade.api.ITooltip;
@@ -16,6 +21,8 @@ import snownee.jade.api.IWailaClientRegistration;
 import snownee.jade.api.IWailaPlugin;
 import snownee.jade.api.WailaPlugin;
 import snownee.jade.api.config.IPluginConfig;
+import snownee.jade.api.ui.Element;
+import snownee.jade.api.ui.JadeUI;
 
 @WailaPlugin
 public class UtilityDrawersJadePlugin implements IWailaPlugin {
@@ -25,7 +32,12 @@ public class UtilityDrawersJadePlugin implements IWailaPlugin {
         registration.registerBlockComponent(DrawerProvider.INSTANCE, DrawerBlock.class);
         registration.registerBlockComponent(FluidDrawerProvider.INSTANCE, FluidDrawerBlock.class);
         registration.registerBlockComponent(StorageInterfaceProvider.INSTANCE, StorageInterfaceBlock.class);
+
+        registration.registerBlockIcon(FramedDrawerIconProvider.INSTANCE, FramedDrawerBlock.class);
+        registration.registerBlockIcon(FramedDrawerIconProvider.INSTANCE, FramedFluidDrawerBlock.class);
+        registration.registerBlockIcon(FramedDrawerIconProvider.INSTANCE, FramedCompactingDrawerBlock.class);
     }
+
 
     public static class DrawerProvider implements IBlockComponentProvider {
         public static final DrawerProvider INSTANCE = new DrawerProvider();
@@ -81,6 +93,42 @@ public class UtilityDrawersJadePlugin implements IWailaPlugin {
         @Override
         public Identifier getUid() {
             return Identifier.fromNamespaceAndPath("utilitydrawers", "storage_interface");
+        }
+    }
+
+    public static class FramedDrawerIconProvider implements IBlockComponentProvider {
+        public static final FramedDrawerIconProvider INSTANCE = new FramedDrawerIconProvider();
+
+        @Override
+        public @Nullable Element getIcon(BlockAccessor accessor, IPluginConfig config, @Nullable Element currentIcon) {
+            if (!(accessor.getBlockEntity() instanceof IFramedBlockEntity framed)) {
+                return currentIcon;
+            }
+
+            ItemStack stack = new ItemStack(accessor.getBlock());
+            CompoundTag tag = framed.saveDrawerData(accessor.getLevel().registryAccess());
+            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+            return JadeUI.item(stack);
+        }
+
+        @Override
+        public void appendTooltip(ITooltip tooltip, BlockAccessor accessor, IPluginConfig config) {
+            if (accessor.getBlockEntity() instanceof IFramedBlockEntity framed) {
+                BlockState faceState = framed.getFaceState();
+
+                if (faceState != null) {
+                    ItemStack faceStack = new ItemStack(faceState.getBlock());
+                    if (!faceStack.isEmpty()) {
+                        tooltip.add(JadeUI.item(faceStack));
+                        tooltip.append(JadeUI.text(Component.literal(" Front Face")));
+                    }
+                }
+            }
+        }
+
+        @Override
+        public Identifier getUid() {
+            return Identifier.fromNamespaceAndPath("utilitydrawers", "framed_drawer_icon");
         }
     }
 }

@@ -99,5 +99,7 @@
   "config.jade.plugin_utilitydrawers.fluid_drawer": "Fluid Drawer Contents",
   "config.jade.plugin_utilitydrawers.storage_interface": "Storage Interface Info",
 
-  "creativetab.utility_drawers_tab": "Utility Drawers"
+  "creativetab.utility_drawers_tab": "Utility Drawers",
+
+  "config.jade.plugin_utilitydrawers.framed_drawer_icon": "Framed Drawer Icon"
 }
