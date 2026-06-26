@@ -37,7 +37,7 @@ public class DrawerUpgradeItem extends Item {
             TooltipFlag flag) {
 
         builder.accept(
-                Component.literal("Storage Multiplier: " + getMultiplier() + "x")
+                Component.literal("Multiplier: " + getMultiplier() + "x")
                         .withStyle(ChatFormatting.BLUE)
         );
 

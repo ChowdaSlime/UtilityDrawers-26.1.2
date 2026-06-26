@@ -12,13 +12,12 @@ public class DrawerFramerScreen extends AbstractContainerScreen<DrawerFramerMenu
 
     private static final Identifier TEXTURE =
             Identifier.fromNamespaceAndPath(UtilityDrawers.MODID, "textures/gui/drawer_framer_gui.png");
-
-    private static final int TEXTURE_WIDTH = 512;
-    private static final int TEXTURE_HEIGHT = 490;
+    private static final int GUI_WIDTH = 512;
+    private static final int GUI_HEIGHT = 490;
     private static final float UI_SCALE = 0.5f;
 
     public DrawerFramerScreen(DrawerFramerMenu menu, Inventory playerInventory, Component title) {
-        super(menu, playerInventory, title, (int)(TEXTURE_WIDTH * UI_SCALE), (int)(TEXTURE_HEIGHT * UI_SCALE));
+        super(menu, playerInventory, title, (int)(GUI_WIDTH * UI_SCALE), (int)(GUI_HEIGHT * UI_SCALE));
     }
 
     @Override
@@ -43,7 +42,7 @@ public class DrawerFramerScreen extends AbstractContainerScreen<DrawerFramerMenu
 
         graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE,
                 0, 0, 0, 22,
-                TEXTURE_WIDTH, TEXTURE_HEIGHT, 512, 512);
+                GUI_WIDTH, GUI_HEIGHT, 1024, 1024);
 
         graphics.pose().popMatrix();
 
@@ -51,20 +50,47 @@ public class DrawerFramerScreen extends AbstractContainerScreen<DrawerFramerMenu
         int max = menu.getMaxProgress();
 
         if (max > 0) {
-            int fullTextureWidth = 175;
-            int filledTextureWidth = progress * fullTextureWidth / max;
+            int fullBodyWidth = 175;
+            int tipTextureX = 691;
+            int tipTextureY = 212;
+            int tipWidth = 33;
+            int tipHeight = 57;
+            int tipYOffset = 227 - 212;
+
+            int filledBodyWidth = progress * fullBodyWidth / max;
+
+            int arrowOffsetX = 85;
+            int arrowOffsetY = 68;
 
             graphics.pose().pushMatrix();
-
-            graphics.pose().translate(bx + 75, by + 54);
+            graphics.pose().translate(bx + arrowOffsetX, by + arrowOffsetY);
             graphics.pose().scale(UI_SCALE, UI_SCALE);
 
             graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE,
-                    0, 0, 170, 159, filledTextureWidth, 28, 512, 512);
-
+                    0, 0, 553, 227, filledBodyWidth, 28, 1024, 1024);
             graphics.pose().popMatrix();
-        }
 
+            int totalWidth = fullBodyWidth + tipWidth;
+            int filledTotal = progress * totalWidth / max;
+            int filledTipWidth = Math.max(0, filledTotal - fullBodyWidth);
+
+            if (filledTipWidth > 0) {
+                graphics.pose().pushMatrix();
+                graphics.pose().translate(
+                        bx + arrowOffsetX + 70,
+                        by + arrowOffsetY - tipYOffset + 7
+                );
+                graphics.pose().scale(UI_SCALE, UI_SCALE);
+
+                graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE,
+                        0, 0,
+                        tipTextureX, tipTextureY,
+                        filledTipWidth, tipHeight,
+                        1024, 1024);
+
+                graphics.pose().popMatrix();
+            }
+        }
         super.extractContents(graphics, mouseX, mouseY, partialTick);
     }
 }

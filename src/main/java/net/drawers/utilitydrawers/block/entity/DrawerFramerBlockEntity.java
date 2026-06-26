@@ -20,6 +20,7 @@ import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
@@ -48,6 +49,30 @@ public class DrawerFramerBlockEntity extends BlockEntity implements Container, M
 
     private int progress = 0;
     private int maxProgress = BASE_PROCESS_TICKS;
+
+    protected final ContainerData dataAccess = new ContainerData() {
+        @Override
+        public int get(int index) {
+            return switch (index) {
+                case 0 -> DrawerFramerBlockEntity.this.progress;
+                case 1 -> DrawerFramerBlockEntity.this.maxProgress;
+                default -> 0;
+            };
+        }
+
+        @Override
+        public void set(int index, int value) {
+            switch (index) {
+                case 0 -> DrawerFramerBlockEntity.this.progress = value;
+                case 1 -> DrawerFramerBlockEntity.this.maxProgress = value;
+            }
+        }
+
+        @Override
+        public int getCount() {
+            return 2;
+        }
+    };
 
     public DrawerFramerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.DRAWER_FRAMER_BLOCK_ENTITY.get(), pos, state);
@@ -103,7 +128,6 @@ public class DrawerFramerBlockEntity extends BlockEntity implements Container, M
             if (progress > 0) {
                 progress = 0;
                 setChanged();
-                syncToClients();
             }
             return;
         }
@@ -115,7 +139,6 @@ public class DrawerFramerBlockEntity extends BlockEntity implements Container, M
             processOutput();
             progress = 0;
             setChanged();
-            syncToClients();
         }
     }
 
@@ -128,32 +151,27 @@ public class DrawerFramerBlockEntity extends BlockEntity implements Container, M
 
     private void processOutput() {
         BlockState sidesState = ((BlockItem) inventory[SLOT_SIDES].getItem()).getBlock().defaultBlockState();
-        BlockState faceState = ((BlockItem) inventory[SLOT_FACE].getItem()).getBlock().defaultBlockState();
-
-        ItemStack inputDrawer = inventory[SLOT_INPUT].getItem().getDefaultInstance();
-        inputDrawer.setCount(1);
+        BlockState faceState  = ((BlockItem) inventory[SLOT_FACE].getItem()).getBlock().defaultBlockState();
+        ItemStack result = inventory[SLOT_INPUT].getItem().getDefaultInstance();
+        result.setCount(1);
         inventory[SLOT_INPUT].shrink(1);
-        if (inventory[SLOT_INPUT].isEmpty()) inventory[SLOT_INPUT] = ItemStack.EMPTY;inventory[SLOT_SIDES].shrink(1);
-        if (inventory[SLOT_SIDES].isEmpty()) inventory[SLOT_SIDES] = ItemStack.EMPTY;inventory[SLOT_FACE].shrink(1);
+        if (inventory[SLOT_INPUT].isEmpty()) inventory[SLOT_INPUT] = ItemStack.EMPTY;
+        inventory[SLOT_SIDES].shrink(1);
+        if (inventory[SLOT_SIDES].isEmpty()) inventory[SLOT_SIDES] = ItemStack.EMPTY;
+        inventory[SLOT_FACE].shrink(1);
         if (inventory[SLOT_FACE].isEmpty()) inventory[SLOT_FACE] = ItemStack.EMPTY;
-
         CompoundTag tag = new CompoundTag();
-
         if (level != null) {
             var ops = level.registryAccess().createSerializationContext(NbtOps.INSTANCE);
             tag.put("FrameState", BlockState.CODEC.encodeStart(ops, sidesState).getOrThrow());
-            tag.put("FaceState", BlockState.CODEC.encodeStart(ops, faceState).getOrThrow());
+            tag.put("FaceState",  BlockState.CODEC.encodeStart(ops, faceState).getOrThrow());
         }
 
-        inputDrawer.set(DataComponents.CUSTOM_DATA,
-                CustomData.of(tag));
+        result.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
 
-        setItem(SLOT_OUTPUT, inputDrawer);
-    }
+        inventory[SLOT_OUTPUT] = result;
 
-    private void syncToClients() {
-        if (level != null && !level.isClientSide())
-            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        setChanged();
     }
 
     @Override
@@ -259,6 +277,6 @@ public class DrawerFramerBlockEntity extends BlockEntity implements Container, M
             Inventory playerInventory,
             Player player
     ) {
-        return new DrawerFramerMenu(containerId, playerInventory, this);
+        return new DrawerFramerMenu(containerId, playerInventory, this, this.dataAccess);
     }
 }
