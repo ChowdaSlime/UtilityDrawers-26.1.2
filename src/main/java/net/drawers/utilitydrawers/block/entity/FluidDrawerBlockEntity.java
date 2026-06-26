@@ -14,6 +14,7 @@ import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -25,14 +26,14 @@ import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 
 public class FluidDrawerBlockEntity extends BlockEntity {
 
-    private final int slotCount;
+    protected final int slotCount;
     FluidStack[] storedFluids;
     long[] storedAmounts;
-    private final long[] maxCapacities;
-    private boolean locked = false;
-    private BlockPos connectedInterface;
+    protected final long[] maxCapacities;
+    protected boolean locked = false;
+    protected BlockPos connectedInterface;
 
-    private final ItemStack[] upgradeSlots = new ItemStack[]{
+    protected final ItemStack[] upgradeSlots = new ItemStack[]{
             ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY
     };
 
@@ -50,6 +51,19 @@ public class FluidDrawerBlockEntity extends BlockEntity {
         this.storedAmounts = new long[slotCount];
         this.maxCapacities = new long[slotCount];
 
+        for (int i = 0; i < slotCount; i++) {
+            storedFluids[i] = FluidStack.EMPTY;
+            storedAmounts[i] = 0L;
+            maxCapacities[i] = (long) getBaseStackMultiplier() * BASE_FLUID_CAPACITY;
+        }
+    }
+
+    protected FluidDrawerBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
+        this.slotCount = (state.getBlock() instanceof SlotCountProvider provider) ? provider.getSlotCount() : 1;
+        this.storedFluids = new FluidStack[slotCount];
+        this.storedAmounts = new long[slotCount];
+        this.maxCapacities = new long[slotCount];
         for (int i = 0; i < slotCount; i++) {
             storedFluids[i] = FluidStack.EMPTY;
             storedAmounts[i] = 0L;
@@ -148,6 +162,14 @@ public class FluidDrawerBlockEntity extends BlockEntity {
             }
         }
         return false;
+    }
+
+    public boolean isFramed() {
+        return this instanceof IFramedBlockEntity;
+    }
+
+    public IFramedBlockEntity getFramedData() {
+        return this instanceof IFramedBlockEntity framed ? framed : null;
     }
 
     private FluidStack insertIntoSlot(int slot, FluidStack stack, boolean simulate) {

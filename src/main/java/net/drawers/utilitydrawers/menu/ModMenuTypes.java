@@ -25,6 +25,9 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<StorageInterfaceMenu>> STORAGE_INTERFACE_MENU =
             MENU_TYPES.register("storage_interface_menu",
                     () -> IMenuTypeExtension.create(StorageInterfaceMenu::new));
+    public static final DeferredHolder<MenuType<?>, MenuType<DrawerFramerMenu>> DRAWER_FRAMER_MENU =
+            MENU_TYPES.register("drawer_framer_menu",
+                    () -> IMenuTypeExtension.create(DrawerFramerMenu::new));
 
     public static void register(IEventBus eventBus) {
         MENU_TYPES.register(eventBus);

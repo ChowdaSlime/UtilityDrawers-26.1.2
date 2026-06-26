@@ -26,6 +26,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.TEST_BLOCK.get());
         dropSelf(ModBlocks.DRAWER_BASE.get());
         dropSelf(ModBlocks.STORAGE_INTERFACE.get());
+        dropSelf(ModBlocks.DRAWER_FRAMER.get());
 
         for (Block drawer : ModBlocks.getAllDrawerBlocks()) {
             this.add(drawer, createDrawerDrop(drawer));
@@ -34,6 +35,13 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
             this.add(fluidDrawer, createDrawerDrop(fluidDrawer));
         }
         this.add(ModBlocks.COMPACTING_DRAWER.get(), createDrawerDrop(ModBlocks.COMPACTING_DRAWER.get()));
+        for (Block framedDrawer : ModBlocks.getAllFramedDrawerBlocks()) {
+            this.add(framedDrawer, createDrawerDrop(framedDrawer));
+        }
+        for (Block framedFluidDrawer : ModBlocks.getAllFramedFluidDrawerBlocks()) {
+            this.add(framedFluidDrawer, createDrawerDrop(framedFluidDrawer));
+        }
+        this.add(ModBlocks.FRAMED_COMPACTING_DRAWER.get(), createDrawerDrop(ModBlocks.FRAMED_COMPACTING_DRAWER.get()));
     }
 
     protected LootTable.Builder createDrawerDrop(Block block) {

@@ -16,6 +16,7 @@ import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -35,24 +36,27 @@ public class CompactingDrawerBlockEntity extends BlockEntity {
     public static final int SLOT_MID    = 1;
     public static final int SLOT_BASE   = 2;
 
-    private ItemStack baseItem   = ItemStack.EMPTY;
-    private ItemStack midItem    = ItemStack.EMPTY;
-    private ItemStack blockItem  = ItemStack.EMPTY;
+    protected ItemStack baseItem   = ItemStack.EMPTY;
+    protected ItemStack midItem    = ItemStack.EMPTY;
+    protected ItemStack blockItem  = ItemStack.EMPTY;
+    protected int ratio0 = 9;
+    protected int ratio1 = 9;
+    protected long rawCount = 0L;
+    protected long maxRawCapacity = 0L;
+    protected boolean locked = false;
+    protected BlockPos connectedInterface;
 
-    private int ratio0 = 9;
-    private int ratio1 = 9;
-
-    private long rawCount = 0L;
-    private long maxRawCapacity = 0L;
-    private boolean locked = false;
-    private BlockPos connectedInterface;
-
-    private final ItemStack[] upgradeSlots = new ItemStack[]{
+    protected final ItemStack[] upgradeSlots = new ItemStack[]{
             ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY
     };
 
     public CompactingDrawerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.COMPACTING_DRAWER_BLOCK_ENTITY.get(), pos, state);
+        recalculateCapacity();
+    }
+
+    protected CompactingDrawerBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
         recalculateCapacity();
     }
 
@@ -183,6 +187,14 @@ public class CompactingDrawerBlockEntity extends BlockEntity {
         }
         setChanged();
         syncToClients();
+    }
+
+    public boolean isFramed() {
+        return this instanceof IFramedBlockEntity;
+    }
+
+    public IFramedBlockEntity getFramedData() {
+        return this instanceof IFramedBlockEntity framed ? framed : null;
     }
 
     private void clearItems() {

@@ -9,6 +9,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -216,6 +217,105 @@ public class ModRecipeProvider extends RecipeProvider {
                 .define('A', Items.IRON_BLOCK)
                 .define('B', Items.PISTON)
                 .define('C', ModBlocks.DRAWER_BASE.get())
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.getFramedDrawer(1).get())
+                .pattern("AAA")
+                .pattern("ABA")
+                .pattern("AAA")
+                .define('A', Items.STICK)
+                .define('B', ModBlocks.DRAWER_BASE.get())
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.getFramedDrawer(2).get())
+                .pattern("AAA")
+                .pattern("CBC")
+                .pattern("AAA")
+                .define('A', Items.STICK)
+                .define('B', ModBlocks.DRAWER_BASE.get())
+                .define('C', Blocks.CHEST)
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.getFramedDrawer(3).get())
+                .pattern("ACA")
+                .pattern("ABA")
+                .pattern("CAC")
+                .define('A', Items.STICK)
+                .define('B', ModBlocks.DRAWER_BASE.get())
+                .define('C', Blocks.CHEST)
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.getFramedDrawer(4).get())
+                .pattern("CAC")
+                .pattern("ABA")
+                .pattern("CAC")
+                .define('A', Items.STICK)
+                .define('B', ModBlocks.DRAWER_BASE.get())
+                .define('C', Blocks.CHEST)
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.getFramedFluidDrawer(1).get())
+                .pattern("AAA")
+                .pattern("ABA")
+                .pattern("AAA")
+                .define('A', Items.STICK)
+                .define('B', ModBlocks.DRAWER_BASE.get())
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.getFramedFluidDrawer(2).get())
+                .pattern("AAA")
+                .pattern("CBC")
+                .pattern("AAA")
+                .define('A', Items.STICK)
+                .define('B', ModBlocks.DRAWER_BASE.get())
+                .define('C', Items.BUCKET)
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.getFramedFluidDrawer(3).get())
+                .pattern("ACA")
+                .pattern("ABA")
+                .pattern("CAC")
+                .define('A', Items.STICK)
+                .define('B', ModBlocks.DRAWER_BASE.get())
+                .define('C', Items.BUCKET)
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.getFramedFluidDrawer(4).get())
+                .pattern("CAC")
+                .pattern("ABA")
+                .pattern("CAC")
+                .define('A', Items.STICK)
+                .define('B', ModBlocks.DRAWER_BASE.get())
+                .define('C', Items.BUCKET)
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.FRAMED_COMPACTING_DRAWER.get())
+                .pattern("ABA")
+                .pattern("BCB")
+                .pattern("ABA")
+                .define('A', Items.IRON_BLOCK)
+                .define('B', Items.STICKY_PISTON)
+                .define('C', ModBlocks.DRAWER_BASE.get())
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.DRAWER_FRAMER.get())
+                .pattern("ABA")
+                .pattern("CDC")
+                .pattern("ABA")
+                .define('A', Items.STICK)
+                .define('B', Items.IRON_INGOT)
+                .define('C', Items.CRAFTING_TABLE)
+                .define('D', ModBlocks.DRAWER_BASE.get())
                 .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
                 .save(output);
     }

@@ -8,6 +8,8 @@ import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.ae2.StorageInterfaceMEStorage;
 import net.drawers.utilitydrawers.block.CompactingDrawerBlock;
 import net.drawers.utilitydrawers.block.DrawerBlock;
+import net.drawers.utilitydrawers.block.FramedCompactingDrawerBlock;
+import net.drawers.utilitydrawers.block.FramedDrawerBlock;
 import net.drawers.utilitydrawers.block.entity.CompactingDrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
@@ -16,6 +18,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.capabilities.Capabilities;
@@ -49,30 +53,47 @@ public class ModEvents {
         BlockState state = event.getLevel().getBlockState(event.getPos());
         BlockPos pos = event.getPos();
         double reach = player.blockInteractionRange();
-        net.minecraft.world.phys.HitResult hitResult = player.pick(reach, 0, false);
+        HitResult hitResult = player.pick(reach, 0, false);
         int targetSlot = -1;
 
-        if (state.getBlock() instanceof DrawerBlock drawerBlock) {
-            if (event.getFace() != state.getValue(DrawerBlock.FACING)) return;
-
-            if (hitResult instanceof net.minecraft.world.phys.BlockHitResult blockHit) {
+        if (state.getBlock() instanceof FramedDrawerBlock framedDrawerBlock) {
+            if (event.getFace() != state.getValue(FramedDrawerBlock.FACING)) return;
+            if (hitResult instanceof BlockHitResult blockHit) {
                 if (event.getLevel().getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
-                    targetSlot = drawerBlock.getTargetSlot(blockHit.getLocation(), state, drawer.getSlotCount());
-
+                    targetSlot = framedDrawerBlock.getTargetSlot(blockHit.getLocation(), state, drawer.getSlotCount());
                     if (targetSlot >= 0) {
                         event.setCanceled(true);
                         handleExtraction(event, player, uuid, pos, targetSlot, drawer);
                     }
                 }
             }
-        }
-        else if (state.getBlock() instanceof CompactingDrawerBlock compactingBlock) {
+        } else if (state.getBlock() instanceof FramedCompactingDrawerBlock framedCompactingBlock) {
+            if (event.getFace() != state.getValue(FramedCompactingDrawerBlock.FACING)) return;
+            if (hitResult instanceof BlockHitResult blockHit) {
+                if (event.getLevel().getBlockEntity(pos) instanceof CompactingDrawerBlockEntity drawer) {
+                    targetSlot = framedCompactingBlock.getTargetSlot(blockHit.getLocation(), state);
+                    if (targetSlot >= 0) {
+                        event.setCanceled(true);
+                        handleCompactingExtraction(event, player, uuid, pos, targetSlot, drawer);
+                    }
+                }
+            }
+        } else if (state.getBlock() instanceof DrawerBlock drawerBlock) {
+            if (event.getFace() != state.getValue(DrawerBlock.FACING)) return;
+            if (hitResult instanceof BlockHitResult blockHit) {
+                if (event.getLevel().getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
+                    targetSlot = drawerBlock.getTargetSlot(blockHit.getLocation(), state, drawer.getSlotCount());
+                    if (targetSlot >= 0) {
+                        event.setCanceled(true);
+                        handleExtraction(event, player, uuid, pos, targetSlot, drawer);
+                    }
+                }
+            }
+        } else if (state.getBlock() instanceof CompactingDrawerBlock compactingBlock) {
             if (event.getFace() != state.getValue(CompactingDrawerBlock.FACING)) return;
-
-            if (hitResult instanceof net.minecraft.world.phys.BlockHitResult blockHit) {
+            if (hitResult instanceof BlockHitResult blockHit) {
                 if (event.getLevel().getBlockEntity(pos) instanceof CompactingDrawerBlockEntity drawer) {
                     targetSlot = compactingBlock.getTargetSlot(blockHit.getLocation(), state);
-
                     if (targetSlot >= 0) {
                         event.setCanceled(true);
                         handleCompactingExtraction(event, player, uuid, pos, targetSlot, drawer);
@@ -141,12 +162,9 @@ public class ModEvents {
         if (event.getLevel().getBlockEntity(event.getPos()) instanceof DrawerBlockEntity drawer) {
             drawer.unlinkFromInterfaces();
         }
-
         if (event.getLevel().getBlockEntity(event.getPos()) instanceof FluidDrawerBlockEntity drawer) {
             drawer.unlinkFromInterfaces();
         }
-
-        // Ensure compacting drawer is properly unlinked from the network when broken!
         if (event.getLevel().getBlockEntity(event.getPos()) instanceof CompactingDrawerBlockEntity drawer) {
             drawer.unlinkFromInterfaces();
         }
@@ -159,52 +177,59 @@ public class ModEvents {
                 ModBlockEntities.DRAWER_BLOCK_ENTITY.get(),
                 (drawer, side) -> new DrawerMEStorage(drawer)
         );
-
         event.registerBlockEntity(
                 AECapabilities.ME_STORAGE,
                 ModBlockEntities.FLUID_DRAWER_BLOCK_ENTITY.get(),
                 (drawer, side) -> new FluidDrawerMEStorage(drawer)
         );
-
         event.registerBlockEntity(
                 AECapabilities.ME_STORAGE,
                 ModBlockEntities.STORAGE_INTERFACE_BLOCK_ENTITY.get(),
                 (interfaceEntity, side) -> new StorageInterfaceMEStorage(interfaceEntity)
         );
-
         event.registerBlockEntity(
                 AECapabilities.ME_STORAGE,
                 ModBlockEntities.COMPACTING_DRAWER_BLOCK_ENTITY.get(),
                 (interfaceEntity, side) -> new CompactingDrawerMEStorage(interfaceEntity)
         );
-
         event.registerBlockEntity(
                 Capabilities.Item.BLOCK,
                 ModBlockEntities.DRAWER_BLOCK_ENTITY.get(),
                 (drawer, side) -> drawer.createItemHandler()
         );
-
+        event.registerBlockEntity(
+                Capabilities.Item.BLOCK,
+                ModBlockEntities.FRAMED_DRAWER_BLOCK_ENTITY.get(),
+                (drawer, side) -> drawer.createItemHandler()
+        );
         event.registerBlockEntity(
                 Capabilities.Fluid.BLOCK,
                 ModBlockEntities.FLUID_DRAWER_BLOCK_ENTITY.get(),
                 (drawer, side) -> drawer.createFluidHandler()
         );
-
+        event.registerBlockEntity(
+                Capabilities.Fluid.BLOCK,
+                ModBlockEntities.FRAMED_FLUID_DRAWER_BLOCK_ENTITY.get(),
+                (drawer, side) -> drawer.createFluidHandler()
+        );
         event.registerBlockEntity(
                 Capabilities.Item.BLOCK,
                 ModBlockEntities.STORAGE_INTERFACE_BLOCK_ENTITY.get(),
                 (interfaceEntity, side) -> interfaceEntity.createItemHandler()
         );
-
         event.registerBlockEntity(
                 Capabilities.Fluid.BLOCK,
                 ModBlockEntities.STORAGE_INTERFACE_BLOCK_ENTITY.get(),
                 (interfaceEntity, side) -> interfaceEntity.createFluidHandler()
         );
-
         event.registerBlockEntity(
                 Capabilities.Item.BLOCK,
                 ModBlockEntities.COMPACTING_DRAWER_BLOCK_ENTITY.get(),
+                (drawer, side) -> drawer.createItemHandler()
+        );
+        event.registerBlockEntity(
+                Capabilities.Item.BLOCK,
+                ModBlockEntities.FRAMED_COMPACTING_DRAWER_BLOCK_ENTITY.get(),
                 (drawer, side) -> drawer.createItemHandler()
         );
     }

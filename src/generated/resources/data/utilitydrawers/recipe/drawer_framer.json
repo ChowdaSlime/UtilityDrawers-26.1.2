@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "minecraft:stick",
+    "B": "minecraft:iron_ingot",
+    "C": "minecraft:crafting_table",
+    "D": "utilitydrawers:drawer_base"
+  },
+  "pattern": [
+    "ABA",
+    "CDC",
+    "ABA"
+  ],
+  "result": {
+    "id": "utilitydrawers:drawer_framer"
+  }
+}

@@ -69,6 +69,20 @@
 
   "block.utilitydrawers.compacting_drawer": "Compacting Drawer",
 
+  "block.utilitydrawers.framed_drawer_1": "Framed Drawer 1x",
+  "block.utilitydrawers.framed_drawer_2": "Framed Drawer 2x",
+  "block.utilitydrawers.framed_drawer_3": "Framed Drawer 3x",
+  "block.utilitydrawers.framed_drawer_4": "Framed Drawer 4x",
+
+  "block.utilitydrawers.framed_fluid_drawer_1": "Framed Fluid Drawer 1x",
+  "block.utilitydrawers.framed_fluid_drawer_2": "Framed Fluid Drawer 2x",
+  "block.utilitydrawers.framed_fluid_drawer_3": "Framed Fluid Drawer 3x",
+  "block.utilitydrawers.framed_fluid_drawer_4": "Framed Fluid Drawer 4x",
+
+  "block.utilitydrawers.framed_compacting_drawer": "Framed Compacting Drawer",
+
+  "block.utilitydrawers.drawer_framer": "Drawer Framer",
+
   "item.utilitydrawers.drawer_upgrade_t1": "Iron Upgrade",
   "item.utilitydrawers.drawer_upgrade_t2": "Gold Upgrade",
   "item.utilitydrawers.drawer_upgrade_t3": "Diamond Upgrade",

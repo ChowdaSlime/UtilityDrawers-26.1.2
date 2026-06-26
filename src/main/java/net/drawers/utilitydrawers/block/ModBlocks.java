@@ -12,11 +12,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 public class ModBlocks {
@@ -25,13 +21,10 @@ public class ModBlocks {
             DeferredRegister.createBlocks(UtilityDrawers.MODID);
 
     public static final DeferredBlock<Block> TEST_BLOCK = registerBlock(
-            "test_block",
-            properties -> new Block(properties.strength(4f))
-    );
+            "test_block", properties -> new Block(properties.strength(4f)));
+
     public static final DeferredBlock<Block> DRAWER_BASE = registerBlock(
-            "drawer_base",
-            properties -> new Block(properties.strength(4f))
-    );
+            "drawer_base", properties -> new Block(properties.strength(4f)));
 
     public static final DeferredBlock<Block> STORAGE_INTERFACE = registerBlock(
             "storage_interface",
@@ -40,16 +33,25 @@ public class ModBlocks {
 
     public static final DeferredBlock<Block> COMPACTING_DRAWER = registerCompactingDrawerBlock(
             "compacting_drawer",
-            properties -> new CompactingDrawerBlock(properties.strength(1.5f))
-    );
+            properties -> new CompactingDrawerBlock(properties.strength(1.5f)));
+
+    public static final DeferredBlock<Block> FRAMED_COMPACTING_DRAWER = registerCompactingDrawerBlock(
+            "framed_compacting_drawer",
+            properties -> new FramedCompactingDrawerBlock(properties.strength(1.5f).noOcclusion()));
+
+    public static final DeferredBlock<Block> DRAWER_FRAMER = registerBlock(
+            "drawer_framer",
+            properties -> new DrawerFramerBlock(
+                    properties.strength(3.0F, 6.0F).sound(SoundType.WOOD).requiresCorrectToolForDrops().noOcclusion()));
 
     public enum WoodType {
         OAK, SPRUCE, BIRCH, ACACIA, JUNGLE, DARK_OAK, MANGROVE, CHERRY, PALE_OAK, BAMBOO, CRIMSON, WARPED
     }
 
     private static final Map<WoodType, Map<Integer, DeferredBlock<Block>>> DRAWERS = new EnumMap<>(WoodType.class);
-
     private static final Map<Integer, DeferredBlock<Block>> FLUID_DRAWERS = new HashMap<>();
+    private static final Map<Integer, DeferredBlock<Block>> FRAMED_DRAWERS = new HashMap<>();
+    private static final Map<Integer, DeferredBlock<Block>> FRAMED_FLUID_DRAWERS = new HashMap<>();
 
     static {
         for (WoodType wood : WoodType.values()) {
@@ -57,19 +59,28 @@ public class ModBlocks {
             for (int slotCount = 1; slotCount <= 4; slotCount++) {
                 String name = wood.name().toLowerCase() + "_drawer_" + slotCount;
                 final int sc = slotCount;
-                DeferredBlock<Block> block = registerDrawerBlock(name,
-                        properties -> new DrawerBlock(properties.strength(1.5f), sc));
-                slots.put(slotCount, block);
+                slots.put(slotCount, registerDrawerBlock(name,
+                        properties -> new DrawerBlock(properties.strength(1.5f), sc)));
             }
             DRAWERS.put(wood, slots);
         }
 
         for (int slotCount = 1; slotCount <= 4; slotCount++) {
-            String name = "fluid_drawer_" + slotCount;
             final int sc = slotCount;
-            DeferredBlock<Block> block = registerDrawerBlock(name,
-                    properties -> new FluidDrawerBlock(properties.strength(1.5f), sc));
-            FLUID_DRAWERS.put(slotCount, block);
+            FLUID_DRAWERS.put(slotCount, registerDrawerBlock("fluid_drawer_" + slotCount,
+                    properties -> new FluidDrawerBlock(properties.strength(1.5f), sc)));
+        }
+
+        for (int slotCount = 1; slotCount <= 4; slotCount++) {
+            final int sc = slotCount;
+            FRAMED_DRAWERS.put(slotCount, registerDrawerBlock("framed_drawer_" + slotCount,
+                    properties -> new FramedDrawerBlock(properties.strength(1.5f).noOcclusion(), sc)));
+        }
+
+        for (int slotCount = 1; slotCount <= 4; slotCount++) {
+            final int sc = slotCount;
+            FRAMED_FLUID_DRAWERS.put(slotCount, registerDrawerBlock("framed_fluid_drawer_" + slotCount,
+                    properties -> new FramedFluidDrawerBlock(properties.strength(1.5f).noOcclusion(), sc)));
         }
     }
 
@@ -81,32 +92,45 @@ public class ModBlocks {
         return FLUID_DRAWERS.get(slotCount);
     }
 
+    public static DeferredBlock<Block> getFramedDrawer(int slotCount) {
+        return FRAMED_DRAWERS.get(slotCount);
+    }
+
+    public static DeferredBlock<Block> getFramedFluidDrawer(int slotCount) {
+        return FRAMED_FLUID_DRAWERS.get(slotCount);
+    }
+
     public static List<Block> getAllDrawerBlocks() {
         List<Block> list = new ArrayList<>();
-        for (Map.Entry<WoodType, Map<Integer, DeferredBlock<Block>>> woodEntry : DRAWERS.entrySet()) {
-            for (Map.Entry<Integer, DeferredBlock<Block>> slotEntry : woodEntry.getValue().entrySet()) {
-                Block block = slotEntry.getValue().get();
-                UtilityDrawers.LOGGER.info("Drawer block registered: {} -> {}",
-                        woodEntry.getKey().name() + "_" + slotEntry.getKey(), block);
-                list.add(block);
-            }
-        }
+        for (var woodEntry : DRAWERS.entrySet())
+            for (var slotEntry : woodEntry.getValue().entrySet())
+                list.add(slotEntry.getValue().get());
         return list;
     }
 
     public static List<Block> getAllFluidDrawerBlocks() {
         List<Block> list = new ArrayList<>();
-        for (Map.Entry<Integer, DeferredBlock<Block>> slotEntry : FLUID_DRAWERS.entrySet()) {
-            Block block = slotEntry.getValue().get();
-            UtilityDrawers.LOGGER.info("Fluid Drawer block registered: fluid_drawer_{} -> {}", slotEntry.getKey(), block);
-            list.add(block);
-        }
+        for (var entry : FLUID_DRAWERS.entrySet())
+            list.add(entry.getValue().get());
+        return list;
+    }
+
+    public static List<Block> getAllFramedDrawerBlocks() {
+        List<Block> list = new ArrayList<>();
+        for (var entry : FRAMED_DRAWERS.entrySet())
+            list.add(entry.getValue().get());
+        return list;
+    }
+
+    public static List<Block> getAllFramedFluidDrawerBlocks() {
+        List<Block> list = new ArrayList<>();
+        for (var entry : FRAMED_FLUID_DRAWERS.entrySet())
+            list.add(entry.getValue().get());
         return list;
     }
 
     private static <T extends Block> DeferredBlock<T> registerDrawerBlock(
-            String name,
-            Function<BlockBehaviour.Properties, T> function) {
+            String name, Function<BlockBehaviour.Properties, T> function) {
         DeferredBlock<T> toReturn = BLOCKS.registerBlock(name, function);
         ModItems.ITEMS.registerItem(name,
                 properties -> new DrawerBlockItem(toReturn.value(), properties.useBlockDescriptionPrefix()));
@@ -114,8 +138,7 @@ public class ModBlocks {
     }
 
     private static <T extends Block> DeferredBlock<T> registerCompactingDrawerBlock(
-            String name,
-            Function<BlockBehaviour.Properties, T> function) {
+            String name, Function<BlockBehaviour.Properties, T> function) {
         DeferredBlock<T> toReturn = BLOCKS.registerBlock(name, function);
         ModItems.ITEMS.registerItem(name,
                 properties -> new CompactingDrawerBlockItem(toReturn.value(), properties.useBlockDescriptionPrefix()));
@@ -123,18 +146,11 @@ public class ModBlocks {
     }
 
     private static <T extends Block> DeferredBlock<T> registerBlock(
-            String name,
-            Function<BlockBehaviour.Properties, T> function) {
+            String name, Function<BlockBehaviour.Properties, T> function) {
         DeferredBlock<T> toReturn = BLOCKS.registerBlock(name, function);
-        registerBlockItem(name, toReturn);
-        return toReturn;
-    }
-
-    private static <T extends Block> void registerBlockItem(
-            String name,
-            DeferredBlock<T> block) {
         ModItems.ITEMS.registerItem(name,
-                properties -> new BlockItem(block.value(), properties.useBlockDescriptionPrefix()));
+                properties -> new BlockItem(toReturn.value(), properties.useBlockDescriptionPrefix()));
+        return toReturn;
     }
 
     public static void register(IEventBus eventBus) {

@@ -9,7 +9,6 @@ import net.drawers.utilitydrawers.block.entity.StorageInterfaceBlockEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.neoforged.neoforge.fluids.FluidStack;
 import snownee.jade.api.BlockAccessor;
 import snownee.jade.api.IBlockComponentProvider;
 import snownee.jade.api.ITooltip;
@@ -17,8 +16,6 @@ import snownee.jade.api.IWailaClientRegistration;
 import snownee.jade.api.IWailaPlugin;
 import snownee.jade.api.WailaPlugin;
 import snownee.jade.api.config.IPluginConfig;
-import snownee.jade.api.fluid.JadeFluidObject;
-import snownee.jade.api.ui.JadeUI;
 
 @WailaPlugin
 public class UtilityDrawersJadePlugin implements IWailaPlugin {

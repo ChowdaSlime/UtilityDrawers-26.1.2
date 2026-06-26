@@ -4,9 +4,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
+import net.drawers.utilitydrawers.block.entity.FramedDrawerBlockEntity;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
@@ -17,13 +17,11 @@ import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.AABB;
@@ -49,7 +47,11 @@ public class DrawerRenderer implements BlockEntityRenderer<DrawerBlockEntity, Dr
         public long[] counts = new long[0];
         public Direction facing = Direction.NORTH;
         public boolean locked;
+
+        public BlockState frameState = null;
+        public BlockState faceState = null;
     }
+
 
     @Override
     public DrawerRenderState createRenderState() {
@@ -59,6 +61,12 @@ public class DrawerRenderer implements BlockEntityRenderer<DrawerBlockEntity, Dr
     @Override
     public void extractRenderState(DrawerBlockEntity blockEntity, DrawerRenderState state, float partialTick, Vec3 cameraPos, @Nullable ModelFeatureRenderer.CrumblingOverlay crumblingOverlay) {
         BlockEntityRenderer.super.extractRenderState(blockEntity, state, partialTick, cameraPos, crumblingOverlay);
+
+        if (blockEntity instanceof FramedDrawerBlockEntity framed) {
+            state.frameState = framed.getFrameState();
+            state.faceState = framed.getFaceState();
+        }
+
         state.facing = blockEntity.getBlockState().getValue(BlockStateProperties.HORIZONTAL_FACING);
         state.locked = blockEntity.isLocked();
         int slotCount = blockEntity.getSlotCount();
@@ -80,6 +88,7 @@ public class DrawerRenderer implements BlockEntityRenderer<DrawerBlockEntity, Dr
                 state.itemStates[i].clear();
             }
         }
+
     }
 
     private static final Identifier LOCK_TEXTURE =
@@ -101,6 +110,7 @@ public class DrawerRenderer implements BlockEntityRenderer<DrawerBlockEntity, Dr
         if (state.itemStates.length == 0) return;
 
         poseStack.pushPose();
+
 
         try {
             poseStack.translate(0.5D, 0.5D, 0.5D);

@@ -37,9 +37,7 @@ public class ModModelProvider extends ModelProvider {
 
 
         for (Block drawer : ModBlocks.getAllDrawerBlocks()) {
-
             var modelLoc = ModelLocationUtils.getModelLocation(drawer);
-
             MultiVariant baseVariant = BlockModelGenerators.plainVariant(modelLoc);
 
             blockModels.blockStateOutput.accept(
@@ -88,6 +86,59 @@ public class ModModelProvider extends ModelProvider {
                                 .select(true, v -> v.withModel(lockedModel))
                                 .select(false, v -> v))
                         .with(PropertyDispatch.modify(StorageInterfaceBlock.FACING)
+                                .select(Direction.NORTH, v -> v)
+                                .select(Direction.EAST,  BlockModelGenerators.Y_ROT_90)
+                                .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
+                                .select(Direction.WEST,  BlockModelGenerators.Y_ROT_270))
+        );
+
+        Block drawerFramer = ModBlocks.DRAWER_FRAMER.get();
+        var framerModelLoc = ModelLocationUtils.getModelLocation(drawerFramer);
+
+        blockModels.blockStateOutput.accept(
+                MultiVariantGenerator.dispatch(drawerFramer, BlockModelGenerators.plainVariant(framerModelLoc))
+                        .with(PropertyDispatch.modify(DrawerFramerBlock.FACING)
+                                .select(Direction.NORTH, v -> v)
+                                .select(Direction.EAST,  BlockModelGenerators.Y_ROT_90)
+                                .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
+                                .select(Direction.WEST,  BlockModelGenerators.Y_ROT_270))
+        );
+
+
+        for (Block framedDrawer : ModBlocks.getAllFramedDrawerBlocks()) {
+            var modelLoc = ModelLocationUtils.getModelLocation(framedDrawer);
+            MultiVariant baseVariant = BlockModelGenerators.plainVariant(modelLoc);
+
+            blockModels.blockStateOutput.accept(
+                    MultiVariantGenerator.dispatch(framedDrawer, BlockModelGenerators.plainVariant(modelLoc))
+                            .with(PropertyDispatch.modify(DrawerBlock.FACING)
+                                    .select(Direction.NORTH, v -> v)
+                                    .select(Direction.EAST,  BlockModelGenerators.Y_ROT_90)
+                                    .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
+                                    .select(Direction.WEST,  BlockModelGenerators.Y_ROT_270))
+            );
+        }
+
+        for (Block framedFluidDrawer : ModBlocks.getAllFramedFluidDrawerBlocks()) {
+            var modelLoc = ModelLocationUtils.getModelLocation(framedFluidDrawer);
+            MultiVariant baseVariant = BlockModelGenerators.plainVariant(modelLoc);
+
+            blockModels.blockStateOutput.accept(
+                    MultiVariantGenerator.dispatch(framedFluidDrawer, BlockModelGenerators.plainVariant(modelLoc))
+                            .with(PropertyDispatch.modify(FluidDrawerBlock.FACING)
+                                    .select(Direction.NORTH, v -> v)
+                                    .select(Direction.EAST,  BlockModelGenerators.Y_ROT_90)
+                                    .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
+                                    .select(Direction.WEST,  BlockModelGenerators.Y_ROT_270))
+            );
+        }
+
+        Block framedCompactingDrawer = ModBlocks.FRAMED_COMPACTING_DRAWER.get();
+        var framedCompactingModelLoc = ModelLocationUtils.getModelLocation(framedCompactingDrawer);
+
+        blockModels.blockStateOutput.accept(
+                MultiVariantGenerator.dispatch(framedCompactingDrawer, BlockModelGenerators.plainVariant(framedCompactingModelLoc))
+                        .with(PropertyDispatch.modify(FramedCompactingDrawerBlock.FACING)
                                 .select(Direction.NORTH, v -> v)
                                 .select(Direction.EAST,  BlockModelGenerators.Y_ROT_90)
                                 .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)

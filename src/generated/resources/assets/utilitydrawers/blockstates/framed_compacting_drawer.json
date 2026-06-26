@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "utilitydrawers:block/framed_compacting_drawer",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "utilitydrawers:block/framed_compacting_drawer"
+    },
+    "facing=south": {
+      "model": "utilitydrawers:block/framed_compacting_drawer",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "utilitydrawers:block/framed_compacting_drawer",
+      "y": 270
+    }
+  }
+}

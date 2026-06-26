@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "minecraft:iron_block",
+    "B": "minecraft:sticky_piston",
+    "C": "utilitydrawers:drawer_base"
+  },
+  "pattern": [
+    "ABA",
+    "BCB",
+    "ABA"
+  ],
+  "result": {
+    "id": "utilitydrawers:framed_compacting_drawer"
+  }
+}

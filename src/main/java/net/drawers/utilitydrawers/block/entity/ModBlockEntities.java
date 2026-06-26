@@ -24,15 +24,28 @@ public class ModBlockEntities {
                 return new BlockEntityType<>(FluidDrawerBlockEntity::new, Set.copyOf(ModBlocks.getAllFluidDrawerBlocks()));
             });
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CompactingDrawerBlockEntity>> COMPACTING_DRAWER_BLOCK_ENTITY =
-            BLOCK_ENTITIES.register("compacting_drawer_entity", () ->
-                    new BlockEntityType<>(
-                            CompactingDrawerBlockEntity::new, Set.of(ModBlocks.COMPACTING_DRAWER.get())));
+            BLOCK_ENTITIES.register("compacting_drawer_block_entity", () ->
+                    new BlockEntityType<>(CompactingDrawerBlockEntity::new, Set.of(ModBlocks.COMPACTING_DRAWER.get())));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FramedDrawerBlockEntity>> FRAMED_DRAWER_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("framed_drawer_block_entity", () ->
+                    new BlockEntityType<>(FramedDrawerBlockEntity::new, Set.copyOf(ModBlocks.getAllFramedDrawerBlocks())));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FramedFluidDrawerBlockEntity>> FRAMED_FLUID_DRAWER_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("framed_fluid_drawer_block_entity", () ->
+                    new BlockEntityType<>(FramedFluidDrawerBlockEntity::new, Set.copyOf(ModBlocks.getAllFramedFluidDrawerBlocks())));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FramedCompactingDrawerBlockEntity>> FRAMED_COMPACTING_DRAWER_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("framed_compacting_drawer_block_entity", () ->
+                    new BlockEntityType<>(FramedCompactingDrawerBlockEntity::new, Set.of(ModBlocks.FRAMED_COMPACTING_DRAWER.get())));
 
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StorageInterfaceBlockEntity>> STORAGE_INTERFACE_BLOCK_ENTITY =
-            BLOCK_ENTITIES.register("storage_interface_entity", () ->
-                    new BlockEntityType<>(
-                            StorageInterfaceBlockEntity::new, Set.of(ModBlocks.STORAGE_INTERFACE.get())));
+            BLOCK_ENTITIES.register("storage_interface_block_entity", () ->
+                    new BlockEntityType<>(StorageInterfaceBlockEntity::new, Set.of(ModBlocks.STORAGE_INTERFACE.get())));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<DrawerFramerBlockEntity>> DRAWER_FRAMER_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("drawer_framer_block_entity", () ->
+                    new BlockEntityType<>(DrawerFramerBlockEntity::new, Set.of(ModBlocks.DRAWER_FRAMER.get())));
 
 
 

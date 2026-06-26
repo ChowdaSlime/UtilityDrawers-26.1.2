@@ -12,6 +12,7 @@ import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -24,24 +25,37 @@ import net.neoforged.neoforge.transfer.item.ItemResource;
 
 public class DrawerBlockEntity extends BlockEntity {
 
-    private final int slotCount;
-    private final ItemStack[] storedStacks;
-    private final long[] storedCounts;
-    private final long[] maxCapacities;
-    private boolean locked = false;
-    private BlockPos connectedInterface;
+    protected final int slotCount;
+    protected final ItemStack[] storedStacks;
+    protected final long[] storedCounts;
+    protected final long[] maxCapacities;
+    protected boolean locked = false;
+    protected BlockPos connectedInterface;
 
-    private final ItemStack[] upgradeSlots = new ItemStack[]{
+    protected final ItemStack[] upgradeSlots = new ItemStack[]{
             ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY
     };
 
     public DrawerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.DRAWER_BLOCK_ENTITY.get(), pos, state);
-        this.slotCount = (state.getBlock() instanceof DrawerBlock provider) ? provider.getSlotCount() : 1;
+        this.slotCount = (state.getBlock() instanceof SlotCountProvider provider) ? provider.getSlotCount() : 1;
         this.storedStacks = new ItemStack[slotCount];
         this.storedCounts = new long[slotCount];
         this.maxCapacities = new long[slotCount];
 
+        for (int i = 0; i < slotCount; i++) {
+            storedStacks[i] = ItemStack.EMPTY;
+            storedCounts[i] = 0L;
+            maxCapacities[i] = (long) getBaseStackMultiplier() * 64;
+        }
+    }
+
+    protected DrawerBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
+        this.slotCount = (state.getBlock() instanceof SlotCountProvider provider) ? provider.getSlotCount() : 1;
+        this.storedStacks = new ItemStack[slotCount];
+        this.storedCounts = new long[slotCount];
+        this.maxCapacities = new long[slotCount];
         for (int i = 0; i < slotCount; i++) {
             storedStacks[i] = ItemStack.EMPTY;
             storedCounts[i] = 0L;
@@ -200,6 +214,14 @@ public class DrawerBlockEntity extends BlockEntity {
             return ItemStack.EMPTY;
         }
         return remainder <= 0 ? ItemStack.EMPTY : stack.copyWithCount(remainder);
+    }
+
+    public boolean isFramed() {
+        return this instanceof IFramedBlockEntity;
+    }
+
+    public IFramedBlockEntity getFramedData() {
+        return this instanceof IFramedBlockEntity framed ? framed : null;
     }
 
     public ItemStack insertItemIntoSlot(int slot, ItemStack stack, boolean simulate) {
