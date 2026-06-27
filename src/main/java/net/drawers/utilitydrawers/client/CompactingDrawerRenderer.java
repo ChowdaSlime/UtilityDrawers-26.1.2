@@ -166,7 +166,7 @@ public class CompactingDrawerRenderer implements BlockEntityRenderer<CompactingD
 
                         float textOy = oy - 0.015f;
 
-                        poseStack.translate(textOx, textOy - (baseScale * 0.3f), 0.4376D);
+                        poseStack.translate(textOx, textOy - (baseScale * 0.3f), 0.4576D);
                         poseStack.scale(0.009f, -0.009f, 0.009f);
                         String text = formatNumber(state.counts[i]);
                         float textWidth = this.font.width(text);

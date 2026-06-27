@@ -163,10 +163,10 @@ public class FluidDrawerRenderer implements BlockEntityRenderer<FluidDrawerBlock
             poseStack.mulPose(Axis.YP.rotationDegrees(-facing.toYRot()));
 
             int slotCount = state.fluids.length;
-            final float oz = 0.435f;
-            final float bgZ = 0.002f;
-            final float fillZ = 0.003f;
-            final float textZ = 0.440f;
+            final float oz = 0.4576f;
+            final float bgZ = 0.000f;
+            final float fillZ = 0.001f;
+            final float textZ = 0.507f;
 
             Minecraft mc = Minecraft.getInstance();
 
@@ -192,14 +192,14 @@ public class FluidDrawerRenderer implements BlockEntityRenderer<FluidDrawerBlock
                         ? (float) state.amounts[i] / state.maxCapacities[i]
                         : 0f;
 
-                var bgRenderType = RenderTypes.entityTranslucent(sprite.atlasLocation());
+                var bgRenderType = RenderTypes.entityCutout(sprite.atlasLocation());
 
                 poseStack.pushPose();
                 poseStack.translate(0f, 0f, oz);
 
                 submitNodeCollector.submitCustomGeometry(poseStack, bgRenderType, (pose, consumer) -> {
                     var matrix   = pose.pose();
-                    int bgColor  = 0x88111111;
+                    int bgColor  = 0xFF111111;
                     consumer.addVertex(matrix, rLeft,  rBottom, bgZ).setColor(bgColor).setUv(sprite.getU0(), sprite.getV1()).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0f, 0f, 1f);
                     consumer.addVertex(matrix, rRight, rBottom, bgZ).setColor(bgColor).setUv(sprite.getU1(), sprite.getV1()).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0f, 0f, 1f);
                     consumer.addVertex(matrix, rRight, rTop, bgZ).setColor(bgColor).setUv(sprite.getU1(), sprite.getV0()).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(pose, 0f, 0f, 1f);
