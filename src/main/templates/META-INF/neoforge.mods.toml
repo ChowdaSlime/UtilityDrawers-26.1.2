@@ -9,7 +9,7 @@
 license="MIT License"
 
 # A URL to refer people to when problems occur with this mod
-#issueTrackerURL="https://change.me.to.your.issue.tracker.example.invalid/" #optional
+issueTrackerURL="https://github.com/ChowdaSlime/UtilityDrawers-26.1.2/issues" #optional
 
 # A list of mods - how many allowed here is determined by the individual mod loader
 [[mods]] #mandatory
@@ -18,7 +18,7 @@ license="MIT License"
 modId="utilitydrawers" #mandatory
 
 # The version number of the mod
-version="0.0.1-26.1.2" #mandatory
+version="1.0.1 - 26.1.2" #mandatory
 
 # A display name for the mod
 displayName="Utility Drawers" #mandatory
@@ -27,10 +27,10 @@ displayName="Utility Drawers" #mandatory
 #updateJSONURL="https://change.me.example.invalid/updates.json" #optional
 
 # A URL for the "homepage" for this mod, displayed in the mod UI
-#displayURL="https://change.me.to.your.mods.homepage.example.invalid/" #optional
+displayURL="https://www.curseforge.com/minecraft/mc-mods/utility-drawers" #optional
 
 # A file name (in the root of the mod JAR) containing a logo for display
-#logoFile="examplemod.png" #optional
+logoFile="assets/utilitydrawers/logo/logo.png" #optional
 
 # A text field displayed in the mod UI
 #credits="" #optional
@@ -41,9 +41,17 @@ authors="ChowdaSlime"
 # The description text for the mod (multi line!) (#mandatory)
 description='''
 Utility Drawers adds item and fluid drawers for storing large amounts of
-resources in a compact and organized way. Connect your drawers to a central
-storage interface for easy access, and use upgrades to increase capacity
-or automatically void excess items and fluids.
+resources in a compact and organized way. Choose from a variety of wood
+types for item drawers, or use fluid drawers to store liquids. Need more
+storage in one block? The 2-slot and 3-slot drawers let you store multiple
+items side by side. For the ultimate in customization, Framed Drawers let
+you apply any block texture to match your build aesthetic, configured using
+the Drawer Framer block.
+
+Connect your drawers to a central Storage Interface for easy access across
+all connected drawers, and use the Storage Remote to access your storage
+from anywhere. Upgrade your drawers with Capacity Upgrades to store more,
+or Void Upgrades to automatically delete excess items and fluids.
 '''
 
 # The [[mixins]] block allows you to declare your mixin config to FML so that it gets loaded.
