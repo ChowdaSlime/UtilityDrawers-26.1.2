@@ -1,10 +1,7 @@
 package net.drawers.utilitydrawers.item;
 
 import net.drawers.utilitydrawers.block.StorageInterfaceBlock;
-import net.drawers.utilitydrawers.block.entity.CompactingDrawerBlockEntity;
-import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
-import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
-import net.drawers.utilitydrawers.block.entity.StorageInterfaceBlockEntity;
+import net.drawers.utilitydrawers.block.entity.*;
 import net.drawers.utilitydrawers.data.ModDataComponents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -177,6 +174,16 @@ public class StorageRemoteItem extends Item {
                 return InteractionResult.SUCCESS;
             }
             return InteractionResult.FAIL;
+        } else if (blockEntity instanceof StorageViewerBlockEntity viewer) {
+            BlockPos current = viewer.getStorageInterfacePos();
+            if (current != null && current.equals(boundPos)) {
+                viewer.setStorageInterfacePos(null);
+                player.sendOverlayMessage(Component.literal("Storage Viewer unlinked!").withStyle(ChatFormatting.YELLOW));
+                return InteractionResult.SUCCESS;
+            }
+            viewer.setStorageInterfacePos(boundPos);
+            player.sendOverlayMessage(Component.literal("Storage Viewer linked to interface!").withStyle(ChatFormatting.GREEN));
+            return InteractionResult.SUCCESS;
         }
 
         return InteractionResult.PASS;

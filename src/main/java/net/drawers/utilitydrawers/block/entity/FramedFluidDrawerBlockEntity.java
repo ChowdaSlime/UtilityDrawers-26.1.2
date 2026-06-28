@@ -70,6 +70,9 @@ public class FramedFluidDrawerBlockEntity extends FluidDrawerBlockEntity impleme
     public CompoundTag saveDrawerData(HolderLookup.Provider provider) {
         CompoundTag tag = super.saveDrawerData(provider);
         var ops = provider.createSerializationContext(NbtOps.INSTANCE);
+        if (connectedInterface != null) {
+            tag.putLong("ConnectedInterface", connectedInterface.asLong());
+        }
         if (frameState != null)
             tag.put("FrameState", BlockState.CODEC.encodeStart(ops, frameState).getOrThrow());
         if (faceState != null)
@@ -89,11 +92,14 @@ public class FramedFluidDrawerBlockEntity extends FluidDrawerBlockEntity impleme
 
     @Override
     public void onDataPacket(Connection connection, ValueInput input) {
+        BlockPos savedInterface = this.connectedInterface;
         super.onDataPacket(connection, input);
         frameState = input.read("FrameState", BlockState.CODEC).orElse(null);
         faceState  = input.read("FaceState",  BlockState.CODEC).orElse(null);
-        if (level != null && level.isClientSide())
-            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        if (this.level != null && this.level.isClientSide()) {
+            this.connectedInterface = savedInterface;
+            this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+        }
     }
 
     public void loadContentsFromTag(CompoundTag tag) {

@@ -30,6 +30,8 @@ public class ModBlockTagsProvider extends BlockTagsProvider {
         this.tag(BlockTags.NEEDS_STONE_TOOL).add(ModBlocks.STORAGE_INTERFACE.get());
         this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ModBlocks.COMPACTING_DRAWER.get());
         this.tag(BlockTags.NEEDS_STONE_TOOL).add(ModBlocks.COMPACTING_DRAWER.get());
+        this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ModBlocks.STORAGE_VIEWER.get());
+        this.tag(BlockTags.NEEDS_STONE_TOOL).add(ModBlocks.STORAGE_VIEWER.get());
     }
 }
 

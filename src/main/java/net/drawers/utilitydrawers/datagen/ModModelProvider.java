@@ -6,7 +6,6 @@ import net.drawers.utilitydrawers.item.ModItems;
 import net.minecraft.client.data.models.BlockModelGenerators;
 import net.minecraft.client.data.models.ItemModelGenerators;
 import net.minecraft.client.data.models.ModelProvider;
-import net.minecraft.client.data.models.MultiVariant;
 import net.minecraft.client.data.models.blockstates.MultiVariantGenerator;
 import net.minecraft.client.data.models.blockstates.PropertyDispatch;
 import net.minecraft.client.data.models.model.ModelLocationUtils;
@@ -38,7 +37,6 @@ public class ModModelProvider extends ModelProvider {
 
         for (Block drawer : ModBlocks.getAllDrawerBlocks()) {
             var modelLoc = ModelLocationUtils.getModelLocation(drawer);
-            MultiVariant baseVariant = BlockModelGenerators.plainVariant(modelLoc);
 
             blockModels.blockStateOutput.accept(
                     MultiVariantGenerator.dispatch(drawer, BlockModelGenerators.plainVariant(modelLoc))
@@ -52,7 +50,6 @@ public class ModModelProvider extends ModelProvider {
 
         for (Block fluidDrawer : ModBlocks.getAllFluidDrawerBlocks()) {
             var modelLoc = ModelLocationUtils.getModelLocation(fluidDrawer);
-            MultiVariant baseVariant = BlockModelGenerators.plainVariant(modelLoc);
 
             blockModels.blockStateOutput.accept(
                     MultiVariantGenerator.dispatch(fluidDrawer, BlockModelGenerators.plainVariant(modelLoc))
@@ -107,7 +104,6 @@ public class ModModelProvider extends ModelProvider {
 
         for (Block framedDrawer : ModBlocks.getAllFramedDrawerBlocks()) {
             var modelLoc = ModelLocationUtils.getModelLocation(framedDrawer);
-            MultiVariant baseVariant = BlockModelGenerators.plainVariant(modelLoc);
 
             blockModels.blockStateOutput.accept(
                     MultiVariantGenerator.dispatch(framedDrawer, BlockModelGenerators.plainVariant(modelLoc))
@@ -121,7 +117,6 @@ public class ModModelProvider extends ModelProvider {
 
         for (Block framedFluidDrawer : ModBlocks.getAllFramedFluidDrawerBlocks()) {
             var modelLoc = ModelLocationUtils.getModelLocation(framedFluidDrawer);
-            MultiVariant baseVariant = BlockModelGenerators.plainVariant(modelLoc);
 
             blockModels.blockStateOutput.accept(
                     MultiVariantGenerator.dispatch(framedFluidDrawer, BlockModelGenerators.plainVariant(modelLoc))
@@ -143,6 +138,14 @@ public class ModModelProvider extends ModelProvider {
                                 .select(Direction.EAST,  BlockModelGenerators.Y_ROT_90)
                                 .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
                                 .select(Direction.WEST,  BlockModelGenerators.Y_ROT_270))
+        );
+
+        Block storageViewer = ModBlocks.STORAGE_VIEWER.get();
+        var storageViewerModelLoc = ModelLocationUtils.getModelLocation(storageViewer);
+
+        blockModels.blockStateOutput.accept(
+                MultiVariantGenerator.dispatch(storageViewer, BlockModelGenerators.plainVariant(storageViewerModelLoc))
+                        .with(BlockModelGenerators.ROTATION_FACING)
         );
     }
 }

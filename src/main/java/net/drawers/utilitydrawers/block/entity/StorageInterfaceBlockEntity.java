@@ -1,6 +1,7 @@
 package net.drawers.utilitydrawers.block.entity;
 
 import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
+import net.drawers.utilitydrawers.network.StorageNetwork;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -22,6 +23,7 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
 
     private final List<BlockPos> connectedDrawers = new ArrayList<>();
     private ItemStack upgradeSlot = ItemStack.EMPTY;
+    private final StorageNetwork network = new StorageNetwork();
 
     public StorageInterfaceBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.STORAGE_INTERFACE_BLOCK_ENTITY.get(), pos, state);
@@ -48,7 +50,10 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
     public List<BlockPos> getConnectedDrawers() {
         boolean removed = connectedDrawers.removeIf(pos -> {
             BlockEntity be = level.getBlockEntity(pos);
-            return !(be instanceof DrawerBlockEntity) && !(be instanceof FluidDrawerBlockEntity) && !(be instanceof CompactingDrawerBlockEntity);
+            if (be == null) return false;
+            return !(be instanceof DrawerBlockEntity)
+                    && !(be instanceof FluidDrawerBlockEntity)
+                    && !(be instanceof CompactingDrawerBlockEntity);
         });
 
         if (removed) {
@@ -91,11 +96,13 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
         if (level != null && !level.isClientSide()) {
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
         }
+        refreshNetworkNodes();
         return true;
     }
 
     public boolean tryUnlinkDrawer(BlockPos drawerPos) {
         if (connectedDrawers.remove(drawerPos)) {
+            refreshNetworkNodes();
             BlockEntity be = level.getBlockEntity(drawerPos);
             if (be instanceof DrawerBlockEntity drawer) {
                 drawer.clearConnectedInterface();
@@ -290,6 +297,9 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
         input.child("UpgradeSlot").ifPresent(u ->
                 upgradeSlot = u.read("Item", ItemStack.CODEC).orElse(ItemStack.EMPTY)
         );
+        if (level != null && !level.isClientSide()) {
+            refreshNetworkNodes();
+        }
     }
 
     @Override
@@ -471,5 +481,18 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
                 return ref.handler().extract(ref.slot(), resource, amount, tx);
             }
         };
+    }
+
+    public void refreshNetworkNodes() {
+        network.getNodes().clear();
+        network.getNodes().addAll(connectedDrawers);
+        network.markDirty();
+        if (level != null && !level.isClientSide()) {
+            network.rebuild(level, network.getNodes());
+        }
+    }
+
+    public StorageNetwork getNetwork() {
+        return network;
     }
 }

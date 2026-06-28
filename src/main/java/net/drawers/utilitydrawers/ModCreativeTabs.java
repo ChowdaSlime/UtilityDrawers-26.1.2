@@ -30,6 +30,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.UPGRADE_BASE.get());
                         output.accept(ModBlocks.COMPACTING_DRAWER.get());
                         output.accept(ModBlocks.FRAMED_COMPACTING_DRAWER.get());
+                        output.accept(ModBlocks.STORAGE_VIEWER.get());
 
                         ModBlocks.getAllDrawerBlocks().forEach(output::accept);
                         ModBlocks.getAllFluidDrawerBlocks().forEach(output::accept);

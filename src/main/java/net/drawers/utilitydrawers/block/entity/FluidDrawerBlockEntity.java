@@ -406,6 +406,9 @@ public class FluidDrawerBlockEntity extends BlockEntity {
     public CompoundTag saveDrawerData(HolderLookup.Provider provider) {
         CompoundTag tag = new CompoundTag();
         tag.putBoolean("Locked", locked);
+        if (connectedInterface != null) {
+            tag.putLong("ConnectedInterface", connectedInterface.asLong());
+        }
         for (int i = 0; i < slotCount; i++) {
             if (!storedFluids[i].isEmpty()) {
                 CompoundTag slotTag = new CompoundTag();
@@ -437,8 +440,10 @@ public class FluidDrawerBlockEntity extends BlockEntity {
 
     @Override
     public void onDataPacket(Connection connection, ValueInput input) {
+        BlockPos savedInterface = this.connectedInterface;
         super.onDataPacket(connection, input);
         if (this.level != null && this.level.isClientSide()) {
+            this.connectedInterface = savedInterface;
             this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
         }
     }

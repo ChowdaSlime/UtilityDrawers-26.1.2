@@ -46,6 +46,9 @@ public class ModBlockEntities {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<DrawerFramerBlockEntity>> DRAWER_FRAMER_BLOCK_ENTITY =
             BLOCK_ENTITIES.register("drawer_framer_block_entity", () ->
                     new BlockEntityType<>(DrawerFramerBlockEntity::new, Set.of(ModBlocks.DRAWER_FRAMER.get())));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StorageViewerBlockEntity>> STORAGE_VIEWER_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("storage_viewer_block_entity", () ->
+                    new BlockEntityType<>(StorageViewerBlockEntity::new, Set.of(ModBlocks.STORAGE_VIEWER.get())));
 
 
 

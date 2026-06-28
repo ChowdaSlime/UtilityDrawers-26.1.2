@@ -318,6 +318,17 @@ public class ModRecipeProvider extends RecipeProvider {
                 .define('D', ModBlocks.DRAWER_BASE.get())
                 .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
                 .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.STORAGE_VIEWER.get())
+                .pattern("AAA")
+                .pattern("BCD")
+                .pattern("AAA")
+                .define('A', Items.GLASS)
+                .define('B', Items.GLOWSTONE_DUST)
+                .define('C', ModBlocks.DRAWER_BASE.get())
+                .define('D', Items.REDSTONE)
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
     }
 
     private net.minecraft.world.item.crafting.Ingredient ingredient(Item item) {

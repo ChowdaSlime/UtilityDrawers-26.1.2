@@ -27,6 +27,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.DRAWER_BASE.get());
         dropSelf(ModBlocks.STORAGE_INTERFACE.get());
         dropSelf(ModBlocks.DRAWER_FRAMER.get());
+        dropSelf(ModBlocks.STORAGE_VIEWER.get());
 
         for (Block drawer : ModBlocks.getAllDrawerBlocks()) {
             this.add(drawer, createDrawerDrop(drawer));

@@ -447,6 +447,9 @@ public class CompactingDrawerBlockEntity extends BlockEntity {
         tag.putLong("RawCount", rawCount);
         tag.putInt("Ratio0", ratio0);
         tag.putInt("Ratio1", ratio1);
+        if (connectedInterface != null) {
+            tag.putLong("ConnectedInterface", connectedInterface.asLong());
+        }
 
         var ops = provider.createSerializationContext(NbtOps.INSTANCE);
         if (!baseItem.isEmpty())
@@ -509,8 +512,12 @@ public class CompactingDrawerBlockEntity extends BlockEntity {
 
     @Override
     public void onDataPacket(Connection connection, ValueInput input) {
+        BlockPos savedInterface = this.connectedInterface;
         super.onDataPacket(connection, input);
-        syncToClients();
+        if (this.level != null && this.level.isClientSide()) {
+            this.connectedInterface = savedInterface;
+            this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+        }
     }
 
     private final class ItemHandler

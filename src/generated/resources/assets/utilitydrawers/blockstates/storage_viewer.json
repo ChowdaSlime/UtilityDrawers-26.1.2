@@ -1,0 +1,27 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "utilitydrawers:block/storage_viewer",
+      "x": 90
+    },
+    "facing=east": {
+      "model": "utilitydrawers:block/storage_viewer",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "utilitydrawers:block/storage_viewer"
+    },
+    "facing=south": {
+      "model": "utilitydrawers:block/storage_viewer",
+      "y": 180
+    },
+    "facing=up": {
+      "model": "utilitydrawers:block/storage_viewer",
+      "x": 270
+    },
+    "facing=west": {
+      "model": "utilitydrawers:block/storage_viewer",
+      "y": 270
+    }
+  }
+}

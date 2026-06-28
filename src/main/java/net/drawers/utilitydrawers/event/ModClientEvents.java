@@ -61,6 +61,7 @@ public class ModClientEvents {
         event.register(ModMenuTypes.COMPACTING_DRAWER_MENU.get(), CompactingDrawerScreen::new);
         event.register(ModMenuTypes.STORAGE_INTERFACE_MENU.get(), StorageInterfaceScreen::new);
         event.register(ModMenuTypes.DRAWER_FRAMER_MENU.get(), DrawerFramerScreen::new);
+        event.register(ModMenuTypes.STORAGE_VIEWER_MENU.get(), StorageViewerScreen::new);
     }
 
     @SubscribeEvent

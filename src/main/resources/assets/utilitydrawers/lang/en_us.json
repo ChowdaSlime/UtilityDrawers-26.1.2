@@ -92,6 +92,8 @@
   "item.utilitydrawers.storage_remote": "Storage Remote",
   "block.utilitydrawers.storage_interface": "Storage Interface",
 
+  "block.utilitydrawers.storage_viewer": "Storage Viewer",
+
   "item.utilitydrawers.upgrade_base": "Upgrade Base",
   "block.utilitydrawers.drawer_base": "Drawer Base",
 

@@ -5,6 +5,7 @@
     "utilitydrawers:fluid_drawer_3",
     "utilitydrawers:fluid_drawer_4",
     "utilitydrawers:storage_interface",
-    "utilitydrawers:compacting_drawer"
+    "utilitydrawers:compacting_drawer",
+    "utilitydrawers:storage_viewer"
   ]
 }
