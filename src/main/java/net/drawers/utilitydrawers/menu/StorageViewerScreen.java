@@ -319,7 +319,7 @@ public class StorageViewerScreen extends AbstractContainerScreen<StorageViewerMe
     @Override
     protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         graphics.text(this.font, this.playerInventoryTitle,
-                this.inventoryLabelX, this.inventoryLabelY, 0xFFF2F3E5, false);
+                this.inventoryLabelX, this.inventoryLabelY + 2, 0xFFF2F3E5, false);
     }
 
     private String formatCount(long count) {
