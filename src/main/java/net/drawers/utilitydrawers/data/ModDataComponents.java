@@ -29,6 +29,20 @@ public class ModDataComponents {
                             .networkSynchronized(BlockPos.STREAM_CODEC)
                             .build());
 
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> SELECT_MODE =
+            DATA_COMPONENTS.register("select_mode",
+                    () -> DataComponentType.<Integer>builder()
+                            .persistent(Codec.INT)
+                            .networkSynchronized(ByteBufCodecs.INT)
+                            .build());
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<BlockPos>> MULTI_SELECT_CORNER =
+            DATA_COMPONENTS.register("multi_select_corner",
+                    () -> DataComponentType.<BlockPos>builder()
+                            .persistent(BlockPos.CODEC)
+                            .networkSynchronized(BlockPos.STREAM_CODEC)
+                            .build());
+
     public static void register(IEventBus eventBus) {
         DATA_COMPONENTS.register(eventBus);
     }

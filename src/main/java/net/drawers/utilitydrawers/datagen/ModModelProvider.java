@@ -1,5 +1,6 @@
 package net.drawers.utilitydrawers.datagen;
 
+import com.mojang.math.Quadrant;
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.*;
 import net.drawers.utilitydrawers.item.ModItems;
@@ -10,6 +11,7 @@ import net.minecraft.client.data.models.blockstates.MultiVariantGenerator;
 import net.minecraft.client.data.models.blockstates.PropertyDispatch;
 import net.minecraft.client.data.models.model.ModelLocationUtils;
 import net.minecraft.client.data.models.model.ModelTemplates;
+import net.minecraft.client.renderer.block.dispatch.VariantMutator;
 import net.minecraft.core.Direction;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.Identifier;
@@ -141,11 +143,46 @@ public class ModModelProvider extends ModelProvider {
         );
 
         Block storageViewer = ModBlocks.STORAGE_VIEWER.get();
-        var storageViewerModelLoc = ModelLocationUtils.getModelLocation(storageViewer);
+        var viewerModelLoc = ModelLocationUtils.getModelLocation(storageViewer);
 
         blockModels.blockStateOutput.accept(
-                MultiVariantGenerator.dispatch(storageViewer, BlockModelGenerators.plainVariant(storageViewerModelLoc))
-                        .with(BlockModelGenerators.ROTATION_FACING)
+                MultiVariantGenerator.dispatch(storageViewer, BlockModelGenerators.plainVariant(viewerModelLoc))
+                        .with(PropertyDispatch.modify(StorageViewerBlock.FACING, StorageViewerBlock.HORIZONTAL_FACING)
+                                .generate((facing, hFacing) -> {
+                                    int xRot = 0;
+                                    int yRot = 0;
+
+                                    switch (facing) {
+                                        case NORTH -> { xRot = 0;   yRot = 0;   }
+                                        case SOUTH -> { xRot = 0;   yRot = 180; }
+                                        case EAST  -> { xRot = 0;   yRot = 90;  }
+                                        case WEST  -> { xRot = 0;   yRot = 270; }
+                                        case UP    -> {
+                                            xRot = 270;
+                                            yRot = switch (hFacing) {
+                                                case NORTH -> 0;
+                                                case EAST  -> 90;
+                                                case SOUTH -> 180;
+                                                case WEST  -> 270;
+                                                default    -> 0;
+                                            };
+                                        }
+                                        case DOWN  -> {
+                                            xRot = 90;
+                                            yRot = switch (hFacing) {
+                                                case SOUTH -> 180;
+                                                case WEST  -> 270;
+                                                case NORTH -> 0;
+                                                case EAST  -> 90;
+                                                default    -> 0;
+                                            };
+                                        }
+                                    }
+
+                                    return VariantMutator.X_ROT.withValue(Quadrant.values()[xRot / 90])
+                                            .then(VariantMutator.Y_ROT.withValue(Quadrant.values()[yRot / 90]));
+                                })
+                        )
         );
     }
 }

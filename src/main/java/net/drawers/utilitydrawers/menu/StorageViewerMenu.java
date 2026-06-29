@@ -3,6 +3,7 @@ package net.drawers.utilitydrawers.menu;
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.attachment.ModAttachments;
 import net.drawers.utilitydrawers.attachment.PlayerPreferences;
+import net.drawers.utilitydrawers.block.ModBlocks;
 import net.drawers.utilitydrawers.block.entity.CompactingDrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
@@ -17,6 +18,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -215,10 +217,8 @@ public class StorageViewerMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
-        return player.distanceToSqr(
-                viewerPos.getX() + 0.5D,
-                viewerPos.getY() + 0.5D,
-                viewerPos.getZ() + 0.5D) <= 64.0D;
+        ContainerLevelAccess access = ContainerLevelAccess.create(player.level(), viewerPos);
+        return stillValid(access, player, ModBlocks.STORAGE_VIEWER.get());
     }
 
     @Override

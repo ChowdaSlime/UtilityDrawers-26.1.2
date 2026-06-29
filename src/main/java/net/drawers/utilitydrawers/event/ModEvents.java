@@ -14,6 +14,8 @@ import net.drawers.utilitydrawers.block.entity.CompactingDrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.ModBlockEntities;
+import net.drawers.utilitydrawers.item.StorageRemoteItem;
+import net.drawers.utilitydrawers.network.ToggleSelectModePacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -24,6 +26,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.level.block.BreakBlockEvent;
@@ -232,5 +235,16 @@ public class ModEvents {
                 ModBlockEntities.FRAMED_COMPACTING_DRAWER_BLOCK_ENTITY.get(),
                 (drawer, side) -> drawer.createItemHandler()
         );
+    }
+
+    @SubscribeEvent
+    public static void onLeftClickEmpty(PlayerInteractEvent.LeftClickEmpty event) {
+        Player player = event.getEntity();
+        ItemStack stack = player.getItemInHand(event.getHand());
+        if (stack.getItem() instanceof StorageRemoteItem && player.isShiftKeyDown()) {
+            if (player.level().isClientSide()) {
+                ClientPacketDistributor.sendToServer(new ToggleSelectModePacket());
+            }
+        }
     }
 }

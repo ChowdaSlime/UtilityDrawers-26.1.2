@@ -5,11 +5,8 @@ import com.mojang.serialization.MapCodec;
 import net.drawers.utilitydrawers.block.entity.StorageInterfaceBlockEntity;
 import net.drawers.utilitydrawers.block.entity.StorageViewerBlockEntity;
 import net.drawers.utilitydrawers.item.StorageRemoteItem;
-import net.drawers.utilitydrawers.menu.StorageViewerMenu;
-import net.drawers.utilitydrawers.network.StorageViewerSyncPayload;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -28,12 +25,9 @@ import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 
 
-import java.util.ArrayList;
-import java.util.List;
 
 
 public class StorageViewerBlock extends BaseEntityBlock {
@@ -41,6 +35,9 @@ public class StorageViewerBlock extends BaseEntityBlock {
 
     public static final EnumProperty<Direction> FACING =
             BlockStateProperties.FACING;
+    public static final EnumProperty<Direction> HORIZONTAL_FACING =
+            EnumProperty.create("horizontal_facing", Direction.class, Direction.Plane.HORIZONTAL);
+
 
 
     private static final VoxelShape SHAPE_NORTH = Block.box(0, 0, 14, 16, 16, 16);
@@ -53,7 +50,9 @@ public class StorageViewerBlock extends BaseEntityBlock {
 
     public StorageViewerBlock(Properties properties) {
         super(properties);
-        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
+        registerDefaultState(stateDefinition.any()
+                .setValue(FACING, Direction.NORTH)
+                .setValue(HORIZONTAL_FACING, Direction.NORTH));
     }
 
 
@@ -65,7 +64,7 @@ public class StorageViewerBlock extends BaseEntityBlock {
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING);
+        builder.add(FACING, HORIZONTAL_FACING);
     }
 
 
@@ -74,17 +73,17 @@ public class StorageViewerBlock extends BaseEntityBlock {
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
         Direction face = ctx.getClickedFace();
 
-
         BlockPos supportPos = ctx.getClickedPos().relative(face.getOpposite());
         BlockState supportState = ctx.getLevel().getBlockState(supportPos);
-
 
         if (!supportState.isFaceSturdy(ctx.getLevel(), supportPos, face)) {
             return null;
         }
+        Direction horizontalFacing = ctx.getHorizontalDirection().getOpposite();
 
-
-        return defaultBlockState().setValue(FACING, face);
+        return defaultBlockState()
+                .setValue(FACING, face)
+                .setValue(HORIZONTAL_FACING, horizontalFacing);
     }
 
 

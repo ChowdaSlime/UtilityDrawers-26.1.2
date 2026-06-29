@@ -75,6 +75,12 @@ public class ModNetworking {
                 }
         );
 
+        registrar.playToServer(
+                ToggleSelectModePacket.TYPE,
+                ToggleSelectModePacket.STREAM_CODEC,
+                ToggleSelectModePacket::handle
+        );
+
         registrar.playToClient(
                 SyncPreferencesPayload.TYPE,
                 SyncPreferencesPayload.STREAM_CODEC,

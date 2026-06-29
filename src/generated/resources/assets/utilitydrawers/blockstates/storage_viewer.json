@@ -1,25 +1,100 @@
 {
   "variants": {
-    "facing=down": {
+    "facing=down,horizontal_facing=east": {
+      "model": "utilitydrawers:block/storage_viewer",
+      "x": 90,
+      "y": 90
+    },
+    "facing=down,horizontal_facing=north": {
       "model": "utilitydrawers:block/storage_viewer",
       "x": 90
     },
-    "facing=east": {
+    "facing=down,horizontal_facing=south": {
+      "model": "utilitydrawers:block/storage_viewer",
+      "x": 90,
+      "y": 180
+    },
+    "facing=down,horizontal_facing=west": {
+      "model": "utilitydrawers:block/storage_viewer",
+      "x": 90,
+      "y": 270
+    },
+    "facing=east,horizontal_facing=east": {
       "model": "utilitydrawers:block/storage_viewer",
       "y": 90
     },
-    "facing=north": {
+    "facing=east,horizontal_facing=north": {
+      "model": "utilitydrawers:block/storage_viewer",
+      "y": 90
+    },
+    "facing=east,horizontal_facing=south": {
+      "model": "utilitydrawers:block/storage_viewer",
+      "y": 90
+    },
+    "facing=east,horizontal_facing=west": {
+      "model": "utilitydrawers:block/storage_viewer",
+      "y": 90
+    },
+    "facing=north,horizontal_facing=east": {
       "model": "utilitydrawers:block/storage_viewer"
     },
-    "facing=south": {
+    "facing=north,horizontal_facing=north": {
+      "model": "utilitydrawers:block/storage_viewer"
+    },
+    "facing=north,horizontal_facing=south": {
+      "model": "utilitydrawers:block/storage_viewer"
+    },
+    "facing=north,horizontal_facing=west": {
+      "model": "utilitydrawers:block/storage_viewer"
+    },
+    "facing=south,horizontal_facing=east": {
       "model": "utilitydrawers:block/storage_viewer",
       "y": 180
     },
-    "facing=up": {
+    "facing=south,horizontal_facing=north": {
+      "model": "utilitydrawers:block/storage_viewer",
+      "y": 180
+    },
+    "facing=south,horizontal_facing=south": {
+      "model": "utilitydrawers:block/storage_viewer",
+      "y": 180
+    },
+    "facing=south,horizontal_facing=west": {
+      "model": "utilitydrawers:block/storage_viewer",
+      "y": 180
+    },
+    "facing=up,horizontal_facing=east": {
+      "model": "utilitydrawers:block/storage_viewer",
+      "x": 270,
+      "y": 90
+    },
+    "facing=up,horizontal_facing=north": {
       "model": "utilitydrawers:block/storage_viewer",
       "x": 270
     },
-    "facing=west": {
+    "facing=up,horizontal_facing=south": {
+      "model": "utilitydrawers:block/storage_viewer",
+      "x": 270,
+      "y": 180
+    },
+    "facing=up,horizontal_facing=west": {
+      "model": "utilitydrawers:block/storage_viewer",
+      "x": 270,
+      "y": 270
+    },
+    "facing=west,horizontal_facing=east": {
+      "model": "utilitydrawers:block/storage_viewer",
+      "y": 270
+    },
+    "facing=west,horizontal_facing=north": {
+      "model": "utilitydrawers:block/storage_viewer",
+      "y": 270
+    },
+    "facing=west,horizontal_facing=south": {
+      "model": "utilitydrawers:block/storage_viewer",
+      "y": 270
+    },
+    "facing=west,horizontal_facing=west": {
       "model": "utilitydrawers:block/storage_viewer",
       "y": 270
     }
