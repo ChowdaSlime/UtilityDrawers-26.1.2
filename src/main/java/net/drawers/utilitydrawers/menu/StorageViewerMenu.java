@@ -1,10 +1,14 @@
 package net.drawers.utilitydrawers.menu;
 
+import net.drawers.utilitydrawers.UtilityDrawers;
+import net.drawers.utilitydrawers.attachment.ModAttachments;
+import net.drawers.utilitydrawers.attachment.PlayerPreferences;
 import net.drawers.utilitydrawers.block.entity.CompactingDrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.StorageInterfaceBlockEntity;
 import net.drawers.utilitydrawers.network.SyncNetworkSlotsPayload;
+import net.drawers.utilitydrawers.network.SyncPreferencesPayload;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -32,7 +36,8 @@ public class StorageViewerMenu extends AbstractContainerMenu {
     private final Player player;
     private int syncTimer = 0;
     public boolean clientNeedsRebuild = false;
-    public static boolean sortByCount = false;
+    public boolean sortByCount = false;
+    public boolean sortAscending = true;
 
     public record DrawerSlotRef(BlockPos pos, int slotIndex) {
         public static final StreamCodec<RegistryFriendlyByteBuf, DrawerSlotRef> STREAM_CODEC =
@@ -43,12 +48,13 @@ public class StorageViewerMenu extends AbstractContainerMenu {
                 );
     }
 
-    public record NetworkSlot(ItemStack stack, long count, List<DrawerSlotRef> sources) {
+    public record NetworkSlot(ItemStack stack, long count, List<DrawerSlotRef> sources, boolean isFluid) {
         public static final StreamCodec<RegistryFriendlyByteBuf, NetworkSlot> STREAM_CODEC =
                 StreamCodec.composite(
                         ItemStack.STREAM_CODEC, NetworkSlot::stack,
                         ByteBufCodecs.VAR_LONG, NetworkSlot::count,
                         DrawerSlotRef.STREAM_CODEC.apply(ByteBufCodecs.list()), NetworkSlot::sources,
+                        ByteBufCodecs.BOOL, NetworkSlot::isFluid,
                         NetworkSlot::new
                 );
     }
@@ -78,8 +84,10 @@ public class StorageViewerMenu extends AbstractContainerMenu {
             this.addSlot(new Slot(playerInventory, col, 8 + col * 18, 146));
         }
 
-        if (this.storageInterface != null && this.storageInterface.getLevel() != null && !this.storageInterface.getLevel().isClientSide()) {
+        if (this.storageInterface != null && this.storageInterface.getLevel() != null
+                && !this.storageInterface.getLevel().isClientSide()) {
             refreshNetworkSlots();
+            loadPreferences();
         }
     }
 
@@ -100,7 +108,7 @@ public class StorageViewerMenu extends AbstractContainerMenu {
                     ItemStack stored = drawer.getStoredItem(i);
                     if (!stored.isEmpty()) {
                         long count = drawer.getStoredCount(i);
-                        mergeIntoAgg(agg, stored, count, pos, i);
+                        mergeIntoAgg(agg, stored, count, pos, i, false);
                     }
                 }
             } else if (be instanceof CompactingDrawerBlockEntity compacting) {
@@ -108,20 +116,18 @@ public class StorageViewerMenu extends AbstractContainerMenu {
                     ItemStack stored = compacting.getStoredItem(i);
                     if (!stored.isEmpty()) {
                         long count = compacting.getStoredCount(i);
-                        mergeIntoAgg(agg, stored, count, pos, i);
+                        mergeIntoAgg(agg, stored, count, pos, i, false);
                     }
                 }
             } else if (be instanceof FluidDrawerBlockEntity fluidDrawer) {
                 for (int i = 0; i < fluidDrawer.getSlotCount(); i++) {
                     FluidStack fluidStack = fluidDrawer.getStoredFluid(i);
-
                     if (!fluidStack.isEmpty()) {
-                        long fluidCount = fluidStack.getAmount();
+                        long fluidCount = fluidDrawer.getStoredAmount(i);
                         Item bucketItem = fluidStack.getFluid().getBucket();
-
                         if (bucketItem != Items.AIR) {
                             ItemStack renderStack = new ItemStack(bucketItem);
-                            mergeIntoAgg(agg, renderStack, fluidCount, pos, i);
+                            mergeIntoAgg(agg, renderStack, fluidCount, pos, i, true);
                         }
                     }
                 }
@@ -129,11 +135,12 @@ public class StorageViewerMenu extends AbstractContainerMenu {
         }
 
         for (AggEntry entry : agg) {
-            networkSlots.add(new NetworkSlot(entry.representative, entry.totalCount, entry.sources));
+            networkSlots.add(new NetworkSlot(entry.representative, entry.totalCount, entry.sources, entry.isFluid));
         }
     }
 
-    public void mergeIntoAgg(List<AggEntry> agg, ItemStack stack, long count, BlockPos pos, int slot) {
+    public void mergeIntoAgg(List<AggEntry> agg, ItemStack stack, long count,
+                             BlockPos pos, int slot, boolean isFluid) {
         for (AggEntry entry : agg) {
             if (ItemStack.isSameItemSameComponents(entry.representative, stack)) {
                 entry.totalCount += count;
@@ -146,6 +153,7 @@ public class StorageViewerMenu extends AbstractContainerMenu {
         newEntry.totalCount = count;
         newEntry.sources = new ArrayList<>();
         newEntry.sources.add(new DrawerSlotRef(pos, slot));
+        newEntry.isFluid = isFluid;
         agg.add(newEntry);
     }
 
@@ -153,6 +161,7 @@ public class StorageViewerMenu extends AbstractContainerMenu {
         public ItemStack representative;
         public long totalCount;
         public List<DrawerSlotRef> sources;
+        public boolean isFluid;
     }
 
     public List<NetworkSlot> getNetworkSlots() {
@@ -178,11 +187,26 @@ public class StorageViewerMenu extends AbstractContainerMenu {
         ItemStack remainder = storageInterface.insertIntoNetwork(stack);
         refreshNetworkSlots();
 
-        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(
-                    serverPlayer,
-                    new SyncNetworkSlotsPayload(this.networkSlots)
-            );
+        if (player instanceof ServerPlayer serverPlayer) {
+            PacketDistributor.sendToPlayer(serverPlayer, new SyncNetworkSlotsPayload(this.networkSlots));
+        }
+
+        this.broadcastChanges();
+        return remainder;
+    }
+
+    public FluidStack insertFluidIntoNetwork(FluidStack fluidStack, Player player) {
+        if (storageInterface == null || fluidStack.isEmpty()) return fluidStack;
+
+        if (storageInterface.getLevel() != null && storageInterface.getLevel().isClientSide()) {
+            return FluidStack.EMPTY;
+        }
+
+        FluidStack remainder = storageInterface.insertFluidIntoNetwork(fluidStack);
+        refreshNetworkSlots();
+
+        if (player instanceof ServerPlayer serverPlayer) {
+            PacketDistributor.sendToPlayer(serverPlayer, new SyncNetworkSlotsPayload(this.networkSlots));
         }
 
         this.broadcastChanges();
@@ -191,7 +215,10 @@ public class StorageViewerMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
-        return player.distanceToSqr(viewerPos.getX() + 0.5D, viewerPos.getY() + 0.5D, viewerPos.getZ() + 0.5D) <= 64.0D;
+        return player.distanceToSqr(
+                viewerPos.getX() + 0.5D,
+                viewerPos.getY() + 0.5D,
+                viewerPos.getZ() + 0.5D) <= 64.0D;
     }
 
     @Override
@@ -236,14 +263,34 @@ public class StorageViewerMenu extends AbstractContainerMenu {
         if (this.player instanceof ServerPlayer serverPlayer) {
             syncTimer++;
 
-            if (syncTimer % 10 == 0) {
+            if (syncTimer == 1) {
+                loadPreferences();
                 refreshNetworkSlots();
-
-                PacketDistributor.sendToPlayer(
-                        serverPlayer,
-                        new SyncNetworkSlotsPayload(this.networkSlots)
-                );
+                PacketDistributor.sendToPlayer(serverPlayer, new SyncNetworkSlotsPayload(this.networkSlots));
+                PacketDistributor.sendToPlayer(serverPlayer, new SyncPreferencesPayload(this.sortByCount, this.sortAscending));
+            } else if (syncTimer % 10 == 0) {
+                refreshNetworkSlots();
+                PacketDistributor.sendToPlayer(serverPlayer, new SyncNetworkSlotsPayload(this.networkSlots));
             }
+        }
+    }
+
+    public void loadPreferences() {
+        if (player instanceof ServerPlayer serverPlayer) {
+            PlayerPreferences prefs = serverPlayer.getData(ModAttachments.PLAYER_PREFERENCES.get());
+            this.sortByCount = prefs.isSortByCount();
+            this.sortAscending = prefs.isSortAscending();
+            PacketDistributor.sendToPlayer(serverPlayer, new SyncPreferencesPayload(this.sortByCount, this.sortAscending));
+        }
+    }
+
+    public void saveSortPreference(boolean value) {
+        this.sortByCount = value;
+        if (player instanceof ServerPlayer serverPlayer) {
+            PlayerPreferences prefs = serverPlayer.getData(ModAttachments.PLAYER_PREFERENCES.get());
+            prefs.setSortByCount(value);
+            prefs.setSortAscending(this.sortAscending);
+            serverPlayer.setData(ModAttachments.PLAYER_PREFERENCES.get(), prefs);
         }
     }
 }

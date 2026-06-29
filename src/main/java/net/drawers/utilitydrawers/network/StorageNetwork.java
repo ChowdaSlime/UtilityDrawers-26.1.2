@@ -73,9 +73,7 @@ public class StorageNetwork {
                         mergeIntoAgg(agg, stored, count, pos, i);
                     }
                 }
-            }
-
-            else if (be instanceof CompactingDrawerBlockEntity compacting) {
+            } else if (be instanceof CompactingDrawerBlockEntity compacting) {
                 for (int i = 0; i < compacting.getSlotCount(); i++) {
                     ItemStack stored = compacting.getStoredItem(i);
                     if (!stored.isEmpty()) {
@@ -83,17 +81,15 @@ public class StorageNetwork {
                         mergeIntoAgg(agg, stored, count, pos, i);
                     }
                 }
-            }
-
-            else if (be instanceof FluidDrawerBlockEntity fluidDrawer) {
+            } else if (be instanceof FluidDrawerBlockEntity fluidDrawer) {
                 for (int i = 0; i < fluidDrawer.getSlotCount(); i++) {
-                    FluidStack fluid = fluidDrawer.getStoredFluid(i);
-                    if (!fluid.isEmpty()) {
-                        long amount = fluid.getAmount();
-                        Item bucket = fluid.getFluid().getBucket();
-
-                        if (bucket != Items.AIR) {
-                            mergeIntoAgg(agg, new ItemStack(bucket), amount, pos, i);
+                    FluidStack fluidStack = fluidDrawer.getStoredFluid(i);
+                    if (!fluidStack.isEmpty()) {
+                        long fluidCount = fluidDrawer.getStoredAmount(i);
+                        Item bucketItem = fluidStack.getFluid().getBucket();
+                        if (bucketItem != Items.AIR) {
+                            ItemStack renderStack = new ItemStack(bucketItem);
+                            mergeIntoAgg(agg, renderStack, fluidCount, pos, i);
                         }
                     }
                 }
@@ -105,8 +101,8 @@ public class StorageNetwork {
                     new StorageViewerMenu.NetworkSlot(
                             entry.representative,
                             entry.totalCount,
-                            entry.sources
-                    )
+                            entry.sources,
+                            entry.isFluid)
             );
         }
     }

@@ -25,6 +25,7 @@ public record StorageViewerSyncPayload(List<StorageViewerMenu.NetworkSlot> slots
             ItemStack.STREAM_CODEC, StorageViewerMenu.NetworkSlot::stack,
             ByteBufCodecs.VAR_LONG, StorageViewerMenu.NetworkSlot::count,
             REF_CODEC.apply(ByteBufCodecs.list()), StorageViewerMenu.NetworkSlot::sources,
+            ByteBufCodecs.BOOL, StorageViewerMenu.NetworkSlot::isFluid,
             StorageViewerMenu.NetworkSlot::new
     );
 

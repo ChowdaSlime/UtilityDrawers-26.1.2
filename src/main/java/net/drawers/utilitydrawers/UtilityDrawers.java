@@ -1,5 +1,6 @@
 package net.drawers.utilitydrawers;
 
+import net.drawers.utilitydrawers.attachment.ModAttachments;
 import net.drawers.utilitydrawers.block.ModBlocks;
 import net.drawers.utilitydrawers.block.entity.ModBlockEntities;
 import net.drawers.utilitydrawers.data.ModDataComponents;
@@ -30,6 +31,7 @@ public class UtilityDrawers {
         ModDataComponents.register(modEventBus);
         ModCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);
         ModMenuTypes.register(modEventBus);
+        ModAttachments.register(modEventBus);
 
 
         NeoForge.EVENT_BUS.register(this);

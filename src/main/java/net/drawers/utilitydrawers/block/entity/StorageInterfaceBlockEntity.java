@@ -11,6 +11,8 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.transfer.ResourceHandler;
 import net.neoforged.neoforge.transfer.fluid.FluidResource;
@@ -266,9 +268,9 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
     }
 
     @Override
-    protected void saveAdditional(net.minecraft.world.level.storage.ValueOutput output) {
+    protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
-        net.minecraft.world.level.storage.ValueOutput list = output.child("ConnectedDrawers");
+        ValueOutput list = output.child("ConnectedDrawers");
         for (int i = 0; i < connectedDrawers.size(); i++) {
             BlockPos pos = connectedDrawers.get(i);
             list.child(String.valueOf(i)).putLong("Pos", pos.asLong());
@@ -281,7 +283,7 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
     }
 
     @Override
-    protected void loadAdditional(net.minecraft.world.level.storage.ValueInput input) {
+    protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
         connectedDrawers.clear();
         input.child("ConnectedDrawers").ifPresent(list -> {

@@ -129,10 +129,7 @@ public class StorageViewerBlock extends BaseEntityBlock {
                 }
             }
 
-
             if (be instanceof StorageViewerBlockEntity viewer) {
-
-
                 BlockPos interfacePos = viewer.getStorageInterfacePos();
                 StorageInterfaceBlockEntity storageInterface = null;
                 if (interfacePos != null) {
@@ -142,15 +139,9 @@ public class StorageViewerBlock extends BaseEntityBlock {
                     }
                 }
 
-
-                final List<StorageViewerMenu.NetworkSlot> slots;
                 if (storageInterface != null) {
                     storageInterface.refreshNetworkNodes();
-                    slots = new ArrayList<>(storageInterface.getNetwork().getItems());
-                } else {
-                    slots = List.of();
                 }
-
 
                 player.openMenu(viewer, buf -> {
                     buf.writeBoolean(interfacePos != null);
@@ -159,12 +150,6 @@ public class StorageViewerBlock extends BaseEntityBlock {
                     }
                     buf.writeBlockPos(pos);
                 });
-
-
-                if (player instanceof ServerPlayer serverPlayer) {
-                    PacketDistributor.sendToPlayer(serverPlayer,
-                            new StorageViewerSyncPayload(slots));
-                }
             }
         }
         return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;

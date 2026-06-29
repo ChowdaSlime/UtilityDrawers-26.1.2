@@ -15,8 +15,11 @@ import java.util.List;
 public record StorageViewerExtractPayload(
         ItemStack stack,
         int amount,
-        List<StorageViewerMenu.DrawerSlotRef> sources
+        List<StorageViewerMenu.DrawerSlotRef> sources,
+        ExtractMode mode
 ) implements CustomPacketPayload {
+
+    public enum ExtractMode { CURSOR_FULL, CURSOR_HALF, SHIFT_MOVE }
 
     public static final Type<StorageViewerExtractPayload> TYPE = new Type<>(
             Identifier.fromNamespaceAndPath(UtilityDrawers.MODID, "storage_viewer_extract"));
@@ -28,11 +31,18 @@ public record StorageViewerExtractPayload(
                     StorageViewerMenu.DrawerSlotRef::new
             );
 
+    private static final StreamCodec<RegistryFriendlyByteBuf, ExtractMode> MODE_CODEC =
+            ByteBufCodecs.VAR_INT.<RegistryFriendlyByteBuf>cast().map(
+                    i -> ExtractMode.values()[i],
+                    Enum::ordinal
+            );
+
     public static final StreamCodec<RegistryFriendlyByteBuf, StorageViewerExtractPayload> STREAM_CODEC =
             StreamCodec.composite(
                     ItemStack.STREAM_CODEC, StorageViewerExtractPayload::stack,
                     ByteBufCodecs.INT, StorageViewerExtractPayload::amount,
                     REF_CODEC.apply(ByteBufCodecs.list()), StorageViewerExtractPayload::sources,
+                    MODE_CODEC, StorageViewerExtractPayload::mode,
                     StorageViewerExtractPayload::new
             );
 
