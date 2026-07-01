@@ -50,47 +50,32 @@ public class DrawerFramerScreen extends AbstractContainerScreen<DrawerFramerMenu
         int max = menu.getMaxProgress();
 
         if (max > 0) {
-            int fullBodyWidth = 175;
-            int tipTextureX = 691;
-            int tipTextureY = 212;
-            int tipWidth = 33;
-            int tipHeight = 57;
-            int tipYOffset = 227 - 212;
 
-            int filledBodyWidth = progress * fullBodyWidth / max;
+            int arrowTexX = 553;
+            int arrowTexY = 212;
+            int fullArrowWidth = 171;
+            int arrowHeight = 57;
 
-            int arrowOffsetX = 85;
-            int arrowOffsetY = 68;
+            int filledWidth = progress * fullArrowWidth / max;
 
-            graphics.pose().pushMatrix();
-            graphics.pose().translate(bx + arrowOffsetX, by + arrowOffsetY);
-            graphics.pose().scale(UI_SCALE, UI_SCALE);
+            if (filledWidth > 0) {
+                int arrowOffsetX = 86;
+                int arrowOffsetY = 61;
 
-            graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE,
-                    0, 0, 553, 227, filledBodyWidth, 28, 1024, 1024);
-            graphics.pose().popMatrix();
-
-            int totalWidth = fullBodyWidth + tipWidth;
-            int filledTotal = progress * totalWidth / max;
-            int filledTipWidth = Math.max(0, filledTotal - fullBodyWidth);
-
-            if (filledTipWidth > 0) {
                 graphics.pose().pushMatrix();
-                graphics.pose().translate(
-                        bx + arrowOffsetX + 70,
-                        by + arrowOffsetY - tipYOffset + 7
-                );
+                graphics.pose().translate(bx + arrowOffsetX, by + arrowOffsetY);
                 graphics.pose().scale(UI_SCALE, UI_SCALE);
 
                 graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE,
                         0, 0,
-                        tipTextureX, tipTextureY,
-                        filledTipWidth, tipHeight,
+                        arrowTexX, arrowTexY,
+                        filledWidth, arrowHeight,
                         1024, 1024);
 
                 graphics.pose().popMatrix();
             }
         }
+
         super.extractContents(graphics, mouseX, mouseY, partialTick);
     }
 }
