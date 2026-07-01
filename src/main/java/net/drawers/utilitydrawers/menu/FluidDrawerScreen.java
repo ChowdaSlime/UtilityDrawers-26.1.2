@@ -12,7 +12,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.fluids.FluidStack;
 
-public class FluidDrawerScreen extends AbstractContainerScreen<FluidDrawerMenu> {
+public class FluidDrawerScreen<T extends FluidDrawerMenu> extends AbstractContainerScreen<T> {
 
     private static final Identifier TEXTURE =
             Identifier.fromNamespaceAndPath(UtilityDrawers.MODID, "textures/gui/drawer_gui.png");
@@ -21,7 +21,7 @@ public class FluidDrawerScreen extends AbstractContainerScreen<FluidDrawerMenu> 
     private static final int UPGRADE_SLOT_Y_START = 8;
     private static final int UPGRADE_SLOT_SIZE = 18;
 
-    public FluidDrawerScreen(FluidDrawerMenu menu, Inventory playerInventory, Component title) {
+    public FluidDrawerScreen(T menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title, 176, 166);
     }
 
@@ -61,10 +61,12 @@ public class FluidDrawerScreen extends AbstractContainerScreen<FluidDrawerMenu> 
             drawSlotBorder(graphics, sx, sy, 16);
         }
 
-        for (int i = 0; i < 4; i++) {
-            int sx = bx + UPGRADE_SLOT_X;
-            int sy = by + UPGRADE_SLOT_Y_START + i * UPGRADE_SLOT_SIZE;
-            drawSlotBorder(graphics, sx, sy, 16);
+        if (this.menu.hasUpgrades()) {
+            for (int i = 0; i < 4; i++) {
+                int sx = bx + UPGRADE_SLOT_X;
+                int sy = by + UPGRADE_SLOT_Y_START + i * UPGRADE_SLOT_SIZE;
+                drawSlotBorder(graphics, sx, sy, 16);
+            }
         }
 
         FluidDrawerBlockEntity drawer = this.menu.getBlockEntity();

@@ -1,9 +1,11 @@
 package net.drawers.utilitydrawers.network;
 
 import net.drawers.utilitydrawers.UtilityDrawers;
+import net.drawers.utilitydrawers.block.entity.WirelessDrawerBlockEntity;
 import net.drawers.utilitydrawers.item.StorageRemoteItem;
 import net.drawers.utilitydrawers.menu.StorageViewerMenu;
 import net.drawers.utilitydrawers.menu.StorageViewerScreen;
+import net.drawers.utilitydrawers.menu.WirelessDrawerMenu;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -68,7 +70,7 @@ public class ModNetworking {
                     context.enqueueWork(() -> {
                         ServerPlayer player = (ServerPlayer) context.player();
                         if (player.containerMenu instanceof StorageViewerMenu menu) {
-                            menu.sortAscending = payload.sortAscending(); // add this
+                            menu.sortAscending = payload.sortAscending();
                             menu.saveSortPreference(payload.sortByCount());
                         }
                     });
@@ -79,6 +81,38 @@ public class ModNetworking {
                 ToggleSelectModePacket.TYPE,
                 ToggleSelectModePacket.STREAM_CODEC,
                 ToggleSelectModePacket::handle
+        );
+
+        registrar.playToServer(
+                UpdateWirelessDrawerPayload.TYPE,
+                UpdateWirelessDrawerPayload.STREAM_CODEC,
+                (payload, context) -> {
+                    context.enqueueWork(() -> {
+                        Player player = context.player();
+                        if (player.level().getBlockEntity(payload.pos()) instanceof WirelessDrawerBlockEntity wirelessBE) {
+                            wirelessBE.setNetworkKey(payload.key());
+                            if (player.containerMenu instanceof WirelessDrawerMenu wMenu) {
+                                wMenu.refreshFromBlockEntity();
+                            }
+                        }
+                    });
+                }
+        );
+
+        registrar.playToServer(
+                UpdateWirelessFluidDrawerPayload.TYPE,
+                UpdateWirelessFluidDrawerPayload.STREAM_CODEC,
+                (payload, context) -> {
+                    context.enqueueWork(() -> {
+                        Player player = context.player();
+                        if (player.level().getBlockEntity(payload.pos()) instanceof net.drawers.utilitydrawers.block.entity.WirelessFluidDrawerBlockEntity wirelessFluidBE) {
+                            wirelessFluidBE.setNetworkKey(payload.key());
+                            if (player.containerMenu instanceof net.drawers.utilitydrawers.menu.WirelessFluidDrawerMenu wMenu) {
+                                wMenu.refreshFromBlockEntity();
+                            }
+                        }
+                    });
+                }
         );
 
         registrar.playToClient(

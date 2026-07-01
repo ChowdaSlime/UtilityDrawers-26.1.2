@@ -8,6 +8,7 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -17,10 +18,11 @@ public class DrawerMenu extends AbstractContainerMenu {
     private final DrawerBlockEntity blockEntity;
     private final int slotCount;
     private final SimpleContainer upgradeContainer;
+    private final boolean hasUpgrades;
 
     private boolean isInitializing = true;
 
-    private static final int UPGRADE_SLOT_COUNT = 4;
+    protected static final int UPGRADE_SLOT_COUNT = 4;
 
     public DrawerMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
         this(containerId, playerInventory, playerInventory.player.level()
@@ -28,46 +30,57 @@ public class DrawerMenu extends AbstractContainerMenu {
     }
 
     public DrawerMenu(int containerId, Inventory playerInventory, BlockEntity blockEntity) {
-        super(ModMenuTypes.DRAWER_MENU.get(), containerId);
+        this(ModMenuTypes.DRAWER_MENU.get(), containerId, playerInventory, blockEntity, true);
+    }
+
+    protected DrawerMenu(MenuType<?> type, int containerId, Inventory playerInventory, BlockEntity blockEntity, boolean hasUpgrades) {
+        super(type, containerId);
 
         this.blockEntity = (DrawerBlockEntity) blockEntity;
         this.slotCount = this.blockEntity.getSlotCount();
+        this.hasUpgrades = hasUpgrades;
 
-        this.upgradeContainer = new SimpleContainer(UPGRADE_SLOT_COUNT) {
-            @Override
-            public void setChanged() {
-                super.setChanged();
-                if (!DrawerMenu.this.isInitializing) {
-                    for (int i = 0; i < UPGRADE_SLOT_COUNT; i++) {
-                        DrawerMenu.this.blockEntity.setUpgradeSlot(i, this.getItem(i).copy());
+        if (this.hasUpgrades) {
+            this.upgradeContainer = new SimpleContainer(UPGRADE_SLOT_COUNT) {
+                @Override
+                public void setChanged() {
+                    super.setChanged();
+                    if (!DrawerMenu.this.isInitializing) {
+                        for (int i = 0; i < UPGRADE_SLOT_COUNT; i++) {
+                            DrawerMenu.this.blockEntity.setUpgradeSlot(i, this.getItem(i).copy());
+                        }
                     }
                 }
+            };
+
+            for (int i = 0; i < UPGRADE_SLOT_COUNT; i++) {
+                this.upgradeContainer.setItem(i, this.blockEntity.getUpgradeSlot(i).copy());
             }
-        };
 
-        for (int i = 0; i < UPGRADE_SLOT_COUNT; i++) {
-            this.upgradeContainer.setItem(i, this.blockEntity.getUpgradeSlot(i).copy());
+            this.isInitializing = false;
+
+            for (int i = 0; i < UPGRADE_SLOT_COUNT; i++) {
+                int xPos = 152;
+                int yPos = 8 + (i * 18);
+                this.addSlot(new UpgradeSlot(this.upgradeContainer, i, xPos, yPos, this.blockEntity));
+            }
+        } else {
+            this.upgradeContainer = null;
+            this.isInitializing = false;
         }
 
-        this.isInitializing = false;
-
-        // Upgrade Slots
-        for (int i = 0; i < UPGRADE_SLOT_COUNT; i++) {
-            int xPos = 152;
-            int yPos = 8 + (i * 18);
-            this.addSlot(new UpgradeSlot(this.upgradeContainer, i, xPos, yPos, this.blockEntity));
-        }
-        // Inventory
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 this.addSlot(new Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18));
             }
         }
-        // Hotbar
         for (int col = 0; col < 9; col++) {
             this.addSlot(new Slot(playerInventory, col, 8 + col * 18, 142));
         }
+    }
 
+    public boolean hasUpgrades() {
+        return this.hasUpgrades;
     }
 
     public DrawerBlockEntity getBlockEntity() {
@@ -95,21 +108,26 @@ public class DrawerMenu extends AbstractContainerMenu {
             ItemStack stackInSlot = slot.getItem();
             originalStack = stackInSlot.copy();
 
-            if (index < UPGRADE_SLOT_COUNT) {
-                if (!this.moveItemStackTo(stackInSlot, UPGRADE_SLOT_COUNT, UPGRADE_SLOT_COUNT + 36, true)) {
+            int uCount = this.hasUpgrades ? UPGRADE_SLOT_COUNT : 0;
+            int invStart = uCount;
+            int hotbarStart = uCount + 27;
+            int invEnd = uCount + 36;
+
+            if (this.hasUpgrades && index < uCount) {
+                if (!this.moveItemStackTo(stackInSlot, invStart, invEnd, true)) {
                     return ItemStack.EMPTY;
                 }
             } else {
-                if (stackInSlot.getItem() instanceof DrawerUpgradeItem || stackInSlot.getItem() instanceof VoidUpgradeItem) {
-                    if (!this.moveItemStackTo(stackInSlot, 0, UPGRADE_SLOT_COUNT, false)) {
+                if (this.hasUpgrades && (stackInSlot.getItem() instanceof DrawerUpgradeItem || stackInSlot.getItem() instanceof VoidUpgradeItem)) {
+                    if (!this.moveItemStackTo(stackInSlot, 0, uCount, false)) {
                         return ItemStack.EMPTY;
                     }
-                } else if (index >= UPGRADE_SLOT_COUNT && index < UPGRADE_SLOT_COUNT + 27) {
-                    if (!this.moveItemStackTo(stackInSlot, UPGRADE_SLOT_COUNT + 27, UPGRADE_SLOT_COUNT + 36, false)) {
+                } else if (index >= invStart && index < hotbarStart) {
+                    if (!this.moveItemStackTo(stackInSlot, hotbarStart, invEnd, false)) {
                         return ItemStack.EMPTY;
                     }
-                } else if (index >= UPGRADE_SLOT_COUNT + 27 && index < UPGRADE_SLOT_COUNT + 36) {
-                    if (!this.moveItemStackTo(stackInSlot, UPGRADE_SLOT_COUNT, UPGRADE_SLOT_COUNT + 27, false)) {
+                } else if (index >= hotbarStart && index < invEnd) {
+                    if (!this.moveItemStackTo(stackInSlot, invStart, hotbarStart, false)) {
                         return ItemStack.EMPTY;
                     }
                 }

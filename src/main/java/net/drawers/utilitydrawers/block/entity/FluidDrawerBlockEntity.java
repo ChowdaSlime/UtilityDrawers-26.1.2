@@ -37,7 +37,7 @@ public class FluidDrawerBlockEntity extends BlockEntity {
             ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY
     };
 
-    private static final int BASE_FLUID_CAPACITY = 4000;
+    public static final int BASE_FLUID_CAPACITY = 4000;
     public long getMaxCapacity(int slot) {
         return maxCapacities[slot];
     }
@@ -518,6 +518,7 @@ public class FluidDrawerBlockEntity extends BlockEntity {
             }
         }
     }
+
 
     public ResourceHandler<FluidResource> createFluidHandler() {
         return new FluidHandler();

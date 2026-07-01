@@ -329,6 +329,92 @@ public class ModRecipeProvider extends RecipeProvider {
                 .define('D', Items.REDSTONE)
                 .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
                 .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.getWirelessDrawer(1).get())
+                .pattern("ABA")
+                .pattern("BCB")
+                .pattern("ABA")
+                .define('A', Items.STONE)
+                .define('B', Items.COMPARATOR)
+                .define('C', ModBlocks.DRAWER_BASE.get())
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.getWirelessDrawer(2).get())
+                .pattern("ABA")
+                .pattern("CDC")
+                .pattern("ABA")
+                .define('A', Items.STONE)
+                .define('B', Items.COMPARATOR)
+                .define('C', Items.CHEST)
+                .define('D', ModBlocks.DRAWER_BASE.get())
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.getWirelessDrawer(3).get())
+                .pattern("ABA")
+                .pattern("CDC")
+                .pattern("ABA")
+                .define('A', Items.STONE)
+                .define('B', Items.CHEST)
+                .define('C', Items.COMPARATOR)
+                .define('D', ModBlocks.DRAWER_BASE.get())
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.getWirelessDrawer(4).get())
+                .pattern("ABA")
+                .pattern("CDC")
+                .pattern("ABA")
+                .define('A', Items.CHEST)
+                .define('B', Items.STONE)
+                .define('C', Items.COMPARATOR)
+                .define('D', ModBlocks.DRAWER_BASE.get())
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.getWirelessFluidDrawer(1).get())
+                .pattern("ABA")
+                .pattern("BCB")
+                .pattern("ABA")
+                .define('A', Items.STONE)
+                .define('B', Items.REPEATER)
+                .define('C', ModBlocks.DRAWER_BASE.get())
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.getWirelessFluidDrawer(2).get())
+                .pattern("ABA")
+                .pattern("CDC")
+                .pattern("ABA")
+                .define('A', Items.STONE)
+                .define('B', Items.COMPARATOR)
+                .define('C', Items.BUCKET)
+                .define('D', ModBlocks.DRAWER_BASE.get())
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.getWirelessFluidDrawer(3).get())
+                .pattern("ABA")
+                .pattern("CDC")
+                .pattern("ABA")
+                .define('A', Items.STONE)
+                .define('B', Items.BUCKET)
+                .define('C', Items.COMPARATOR)
+                .define('D', ModBlocks.DRAWER_BASE.get())
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.getWirelessFluidDrawer(4).get())
+                .pattern("ABA")
+                .pattern("CDC")
+                .pattern("ABA")
+                .define('A', Items.BUCKET)
+                .define('B', Items.STONE)
+                .define('C', Items.COMPARATOR)
+                .define('D', ModBlocks.DRAWER_BASE.get())
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
     }
 
     private net.minecraft.world.item.crafting.Ingredient ingredient(Item item) {

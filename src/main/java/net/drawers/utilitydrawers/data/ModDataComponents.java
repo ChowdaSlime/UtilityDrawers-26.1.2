@@ -43,6 +43,20 @@ public class ModDataComponents {
                             .networkSynchronized(BlockPos.STREAM_CODEC)
                             .build());
 
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<WirelessNetworkKey>> WIRELESS_NETWORK_KEY =
+            DATA_COMPONENTS.register("wireless_network_key",
+                    () -> DataComponentType.<WirelessNetworkKey>builder()
+                            .persistent(WirelessNetworkKey.CODEC)
+                            .networkSynchronized(WirelessNetworkKey.STREAM_CODEC)
+                            .build());
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Boolean>> HAS_COPIED_SETTINGS =
+            DATA_COMPONENTS.register("has_copied_settings",
+                    () -> DataComponentType.<Boolean>builder()
+                            .persistent(Codec.BOOL)
+                            .networkSynchronized(ByteBufCodecs.BOOL)
+                            .build());
+
     public static void register(IEventBus eventBus) {
         DATA_COMPONENTS.register(eventBus);
     }

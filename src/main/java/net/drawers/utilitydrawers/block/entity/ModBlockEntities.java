@@ -38,6 +38,14 @@ public class ModBlockEntities {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FramedCompactingDrawerBlockEntity>> FRAMED_COMPACTING_DRAWER_BLOCK_ENTITY =
             BLOCK_ENTITIES.register("framed_compacting_drawer_block_entity", () ->
                     new BlockEntityType<>(FramedCompactingDrawerBlockEntity::new, Set.of(ModBlocks.FRAMED_COMPACTING_DRAWER.get())));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<WirelessDrawerBlockEntity>> WIRELESS_DRAWER_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("wireless_drawer_block_entity", () ->
+                    new BlockEntityType<>(WirelessDrawerBlockEntity::new,
+                            Set.copyOf(ModBlocks.getAllWirelessDrawerBlocks())));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<WirelessFluidDrawerBlockEntity>> WIRELESS_FLUID_DRAWER_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("wireless_fluid_drawer_block_entity", () ->
+                    new BlockEntityType<>(WirelessFluidDrawerBlockEntity::new,
+                            Set.copyOf(ModBlocks.getAllWirelessFluidDrawerBlocks())));
 
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StorageInterfaceBlockEntity>> STORAGE_INTERFACE_BLOCK_ENTITY =

@@ -1,9 +1,7 @@
 package net.drawers.utilitydrawers.block;
 
 import net.drawers.utilitydrawers.UtilityDrawers;
-import net.drawers.utilitydrawers.item.CompactingDrawerBlockItem;
-import net.drawers.utilitydrawers.item.DrawerBlockItem;
-import net.drawers.utilitydrawers.item.ModItems;
+import net.drawers.utilitydrawers.item.*;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
@@ -58,6 +56,8 @@ public class ModBlocks {
     private static final Map<Integer, DeferredBlock<Block>> FLUID_DRAWERS = new HashMap<>();
     private static final Map<Integer, DeferredBlock<Block>> FRAMED_DRAWERS = new HashMap<>();
     private static final Map<Integer, DeferredBlock<Block>> FRAMED_FLUID_DRAWERS = new HashMap<>();
+    private static final Map<Integer, DeferredBlock<Block>> WIRELESS_DRAWERS = new HashMap<>();
+    private static final Map<Integer, DeferredBlock<Block>> WIRELESS_FLUID_DRAWERS = new HashMap<>();
 
     static {
         for (WoodType wood : WoodType.values()) {
@@ -88,6 +88,19 @@ public class ModBlocks {
             FRAMED_FLUID_DRAWERS.put(slotCount, registerDrawerBlock("framed_fluid_drawer_" + slotCount,
                     properties -> new FramedFluidDrawerBlock(properties.strength(1.5f).noOcclusion(), sc)));
         }
+
+        for (int slotCount = 1; slotCount <= 4; slotCount++) {
+            final int sc = slotCount;
+            WIRELESS_DRAWERS.put(slotCount, registerWirelessDrawerBlock("wireless_drawer_" + slotCount,
+                    properties -> new WirelessDrawerBlock(properties.strength(1.5f), sc)));
+        }
+
+        for (int slotCount = 1; slotCount <= 4; slotCount++) {
+            final int sc = slotCount;
+            WIRELESS_FLUID_DRAWERS.put(slotCount, registerWirelessFluidDrawerBlock("wireless_fluid_drawer_" + slotCount,
+                    properties -> new WirelessFluidDrawerBlock(properties.strength(1.5f), sc)));
+        }
+
     }
 
     public static DeferredBlock<Block> getDrawer(WoodType wood, int slotCount) {
@@ -135,6 +148,28 @@ public class ModBlocks {
         return list;
     }
 
+    public static DeferredBlock<Block> getWirelessDrawer(int slotCount) {
+        return WIRELESS_DRAWERS.get(slotCount);
+    }
+
+    public static DeferredBlock<Block> getWirelessFluidDrawer(int slotCount) {
+        return WIRELESS_FLUID_DRAWERS.get(slotCount);
+    }
+
+    public static List<Block> getAllWirelessDrawerBlocks() {
+        List<Block> list = new ArrayList<>();
+        for (var entry : WIRELESS_DRAWERS.entrySet())
+            list.add(entry.getValue().get());
+        return list;
+    }
+
+    public static List<Block> getAllWirelessFluidDrawerBlocks() {
+        List<Block> list = new ArrayList<>();
+        for (var entry : WIRELESS_FLUID_DRAWERS.entrySet())
+            list.add(entry.getValue().get());
+        return list;
+    }
+
     private static <T extends Block> DeferredBlock<T> registerDrawerBlock(
             String name, Function<BlockBehaviour.Properties, T> function) {
         DeferredBlock<T> toReturn = BLOCKS.registerBlock(name, function);
@@ -148,6 +183,26 @@ public class ModBlocks {
         DeferredBlock<T> toReturn = BLOCKS.registerBlock(name, function);
         ModItems.ITEMS.registerItem(name,
                 properties -> new CompactingDrawerBlockItem(toReturn.value(), properties.useBlockDescriptionPrefix()));
+        return toReturn;
+    }
+
+    private static <T extends Block> DeferredBlock<T> registerWirelessDrawerBlock(
+            String name, Function<BlockBehaviour.Properties, T> function) {
+        DeferredBlock<T> toReturn = BLOCKS.registerBlock(name, function);
+        ModItems.ITEMS.registerItem(name,
+                properties -> new WirelessDrawerBlockItem(
+                        toReturn.value(), properties.useBlockDescriptionPrefix()
+                ));
+        return toReturn;
+    }
+
+    private static <T extends Block> DeferredBlock<T> registerWirelessFluidDrawerBlock(
+            String name, Function<BlockBehaviour.Properties, T> function) {
+        DeferredBlock<T> toReturn = BLOCKS.registerBlock(name, function);
+        ModItems.ITEMS.registerItem(name,
+                properties -> new WirelessFluidDrawerBlockItem(
+                        toReturn.value(), properties.useBlockDescriptionPrefix()
+                ));
         return toReturn;
     }
 

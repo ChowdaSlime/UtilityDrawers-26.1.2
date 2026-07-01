@@ -45,6 +45,8 @@ public class ModClientEvents {
         event.registerBlockEntityRenderer(ModBlockEntities.FRAMED_FLUID_DRAWER_BLOCK_ENTITY.get(), FluidDrawerRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.COMPACTING_DRAWER_BLOCK_ENTITY.get(), CompactingDrawerRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.FRAMED_COMPACTING_DRAWER_BLOCK_ENTITY.get(), CompactingDrawerRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.WIRELESS_DRAWER_BLOCK_ENTITY.get(), DrawerRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.WIRELESS_FLUID_DRAWER_BLOCK_ENTITY.get(), FluidDrawerRenderer::new);
     }
 
     @SubscribeEvent
@@ -56,12 +58,14 @@ public class ModClientEvents {
 
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
-        event.register(ModMenuTypes.DRAWER_MENU.get(), DrawerScreen::new);
-        event.register(ModMenuTypes.FLUID_DRAWER_MENU.get(), FluidDrawerScreen::new);
+        event.register(ModMenuTypes.DRAWER_MENU.get(), DrawerScreen<DrawerMenu>::new);
+        event.register(ModMenuTypes.FLUID_DRAWER_MENU.get(), FluidDrawerScreen<FluidDrawerMenu>::new);
         event.register(ModMenuTypes.COMPACTING_DRAWER_MENU.get(), CompactingDrawerScreen::new);
         event.register(ModMenuTypes.STORAGE_INTERFACE_MENU.get(), StorageInterfaceScreen::new);
         event.register(ModMenuTypes.DRAWER_FRAMER_MENU.get(), DrawerFramerScreen::new);
         event.register(ModMenuTypes.STORAGE_VIEWER_MENU.get(), StorageViewerScreen::new);
+        event.register(ModMenuTypes.WIRELESS_DRAWER_MENU.get(), WirelessDrawerScreen::new);
+        event.register(ModMenuTypes.WIRELESS_FLUID_DRAWER_MENU.get(), WirelessFluidDrawerScreen::new);
     }
 
     @SubscribeEvent

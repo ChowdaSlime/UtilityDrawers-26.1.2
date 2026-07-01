@@ -101,6 +101,18 @@
   "config.jade.plugin_utilitydrawers.fluid_drawer": "Fluid Drawer Contents",
   "config.jade.plugin_utilitydrawers.storage_interface": "Storage Interface Info",
 
+  "container.utilitydrawers.wireless_drawer": "Wireless Drawer",
+  "block.utilitydrawers.wireless_drawer_1": "Wireless Drawer 1x",
+  "block.utilitydrawers.wireless_drawer_2": "Wireless Drawer 2x",
+  "block.utilitydrawers.wireless_drawer_3": "Wireless Drawer 3x",
+  "block.utilitydrawers.wireless_drawer_4": "Wireless Drawer 4x",
+
+  "container.utilitydrawers.wireless_fluid_drawer": "Wireless Fluid Drawer",
+  "block.utilitydrawers.wireless_fluid_drawer_1": "Wireless Fluid Drawer 1x",
+  "block.utilitydrawers.wireless_fluid_drawer_2": "Wireless Fluid Drawer 2x",
+  "block.utilitydrawers.wireless_fluid_drawer_3": "Wireless Fluid Drawer 3x",
+  "block.utilitydrawers.wireless_fluid_drawer_4": "Wireless Fluid Drawer 4x",
+
   "creativetab.utility_drawers_tab": "Utility Drawers",
 
   "config.jade.plugin_utilitydrawers.framed_drawer_icon": "Framed Drawer Icon"

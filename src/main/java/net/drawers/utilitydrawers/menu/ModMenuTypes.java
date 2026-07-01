@@ -31,6 +31,12 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<StorageViewerMenu>> STORAGE_VIEWER_MENU =
             MENU_TYPES.register("storage_viewer_menu",
                     () -> IMenuTypeExtension.create(StorageViewerMenu::new));
+    public static final DeferredHolder<MenuType<?>, MenuType<WirelessDrawerMenu>> WIRELESS_DRAWER_MENU =
+            MENU_TYPES.register("wireless_drawer_menu",
+                    () -> IMenuTypeExtension.create(WirelessDrawerMenu::new));
+    public static final DeferredHolder<MenuType<?>, MenuType<WirelessFluidDrawerMenu>> WIRELESS_FLUID_DRAWER_MENU =
+            MENU_TYPES.register("wireless_fluid_drawer_menu",
+                    () -> IMenuTypeExtension.create(WirelessFluidDrawerMenu::new));
 
     public static void register(IEventBus eventBus) {
         MENU_TYPES.register(eventBus);

@@ -204,7 +204,6 @@ public class StorageRemoteItem extends Item {
                 for (int z = minZ; z <= maxZ; z++) {
                     BlockPos target = new BlockPos(x, y, z);
 
-                    // Range check
                     double dx = target.getX() - boundPos.getX();
                     double dy = target.getY() - boundPos.getY();
                     double dz = target.getZ() - boundPos.getZ();
@@ -237,6 +236,16 @@ public class StorageRemoteItem extends Item {
                                     StorageInterfaceBlockEntity interfaceEntity) {
         var blockEntity = level.getBlockEntity(target);
         if (blockEntity == null) return false;
+
+        if (blockEntity instanceof WirelessDrawerBlockEntity wirelessDrawer) {
+            return linkIfFree(wirelessDrawer.getConnectedInterface(), boundPos, target, interfaceEntity,
+                    () -> wirelessDrawer.clearConnectedInterface());
+        }
+
+        if (blockEntity instanceof WirelessFluidDrawerBlockEntity wirelessFluidDrawer) {
+            return linkIfFree(wirelessFluidDrawer.getConnectedInterface(), boundPos, target, interfaceEntity,
+                    () -> wirelessFluidDrawer.clearConnectedInterface());
+        }
 
         if (blockEntity instanceof DrawerBlockEntity drawer) {
             return linkIfFree(drawer.getConnectedInterface(), boundPos, target, interfaceEntity,
@@ -285,7 +294,49 @@ public class StorageRemoteItem extends Item {
             return InteractionResult.FAIL;
         }
 
-        if (blockEntity instanceof DrawerBlockEntity drawer) {
+        if (blockEntity instanceof WirelessDrawerBlockEntity wirelessDrawer) {
+            BlockPos currentInterface = wirelessDrawer.getConnectedInterface();
+            if (currentInterface != null) {
+                if (!(level.getBlockEntity(currentInterface) instanceof StorageInterfaceBlockEntity)) {
+                    wirelessDrawer.clearConnectedInterface();
+                } else if (boundPos.equals(currentInterface)) {
+                    interfaceEntity.tryUnlinkDrawer(pos);
+                    player.sendOverlayMessage(Component.literal("Wireless Drawer unlinked!").withStyle(ChatFormatting.YELLOW));
+                    return InteractionResult.SUCCESS;
+                } else {
+                    player.sendOverlayMessage(
+                            Component.literal("Drawer already linked to another interface!").withStyle(ChatFormatting.RED));
+                    return InteractionResult.FAIL;
+                }
+            }
+            if (interfaceEntity.tryLinkDrawer(pos)) {
+                player.sendOverlayMessage(Component.literal("Wireless Drawer linked!").withStyle(ChatFormatting.GREEN));
+                return InteractionResult.SUCCESS;
+            }
+            return InteractionResult.FAIL;
+
+        } else if (blockEntity instanceof WirelessFluidDrawerBlockEntity wirelessFluidDrawer) {
+            BlockPos currentInterface = wirelessFluidDrawer.getConnectedInterface();
+            if (currentInterface != null) {
+                if (!(level.getBlockEntity(currentInterface) instanceof StorageInterfaceBlockEntity)) {
+                    wirelessFluidDrawer.clearConnectedInterface();
+                } else if (boundPos.equals(currentInterface)) {
+                    interfaceEntity.tryUnlinkDrawer(pos);
+                    player.sendOverlayMessage(Component.literal("Wireless Fluid Drawer unlinked!").withStyle(ChatFormatting.YELLOW));
+                    return InteractionResult.SUCCESS;
+                } else {
+                    player.sendOverlayMessage(
+                            Component.literal("Drawer already linked to another interface!").withStyle(ChatFormatting.RED));
+                    return InteractionResult.FAIL;
+                }
+            }
+            if (interfaceEntity.tryLinkDrawer(pos)) {
+                player.sendOverlayMessage(Component.literal("Wireless Fluid Drawer linked!").withStyle(ChatFormatting.GREEN));
+                return InteractionResult.SUCCESS;
+            }
+            return InteractionResult.FAIL;
+
+        } else if (blockEntity instanceof DrawerBlockEntity drawer) {
             BlockPos currentInterface = drawer.getConnectedInterface();
             if (currentInterface != null) {
                 if (!(level.getBlockEntity(currentInterface) instanceof StorageInterfaceBlockEntity)) {

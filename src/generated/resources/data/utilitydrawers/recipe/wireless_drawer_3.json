@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "minecraft:stone",
+    "B": "minecraft:chest",
+    "C": "minecraft:comparator",
+    "D": "utilitydrawers:drawer_base"
+  },
+  "pattern": [
+    "ABA",
+    "CDC",
+    "ABA"
+  ],
+  "result": {
+    "id": "utilitydrawers:wireless_drawer_3"
+  }
+}

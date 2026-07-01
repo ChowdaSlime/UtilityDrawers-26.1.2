@@ -25,6 +25,14 @@ public class ModBlockTagsProvider extends BlockTagsProvider {
             this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(fluidDrawer);
             this.tag(BlockTags.NEEDS_STONE_TOOL).add(fluidDrawer);
         }
+        for (Block wirelessDrawer : ModBlocks.getAllWirelessDrawerBlocks()) {
+            this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(wirelessDrawer);
+            this.tag(BlockTags.NEEDS_STONE_TOOL).add(wirelessDrawer);
+        }
+        for (Block wirelessFluidDrawer : ModBlocks.getAllWirelessFluidDrawerBlocks()) {
+            this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(wirelessFluidDrawer);
+            this.tag(BlockTags.NEEDS_STONE_TOOL).add(wirelessFluidDrawer);
+        }
 
         this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ModBlocks.STORAGE_INTERFACE.get());
         this.tag(BlockTags.NEEDS_STONE_TOOL).add(ModBlocks.STORAGE_INTERFACE.get());

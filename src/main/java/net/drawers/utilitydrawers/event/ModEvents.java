@@ -235,6 +235,28 @@ public class ModEvents {
                 ModBlockEntities.FRAMED_COMPACTING_DRAWER_BLOCK_ENTITY.get(),
                 (drawer, side) -> drawer.createItemHandler()
         );
+        event.registerBlockEntity(
+                Capabilities.Item.BLOCK,
+                ModBlockEntities.WIRELESS_DRAWER_BLOCK_ENTITY.get(),
+                (drawer, side) -> drawer.createItemHandler()
+        );
+        event.registerBlockEntity(
+                AECapabilities.ME_STORAGE,
+                ModBlockEntities.WIRELESS_DRAWER_BLOCK_ENTITY.get(),
+                (drawer, side) -> new DrawerMEStorage(drawer)
+        );
+
+        event.registerBlockEntity(
+                Capabilities.Fluid.BLOCK,
+                ModBlockEntities.WIRELESS_FLUID_DRAWER_BLOCK_ENTITY.get(),
+                (drawer, side) -> drawer.createFluidHandler()
+        );
+
+        event.registerBlockEntity(
+                AECapabilities.ME_STORAGE,
+                ModBlockEntities.WIRELESS_FLUID_DRAWER_BLOCK_ENTITY.get(),
+                (drawer, side) -> new FluidDrawerMEStorage(drawer)
+        );
     }
 
     @SubscribeEvent

@@ -1,6 +1,8 @@
 package net.drawers.utilitydrawers.item;
 
 import net.drawers.utilitydrawers.client.DrawerTooltipComponent;
+import net.drawers.utilitydrawers.data.ModDataComponents;
+import net.drawers.utilitydrawers.data.WirelessNetworkKey;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -23,34 +25,36 @@ public class DrawerBlockItem extends BlockItem {
 
     @Override
     public Optional<TooltipComponent> getTooltipImage(ItemStack stack) {
-        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        if (customData == null) return Optional.empty();
-
-        CompoundTag tag = customData.copyTag();
         List<ItemStack> items = new ArrayList<>();
         List<Long> counts = new ArrayList<>();
 
-        for (int i = 0; i < 4; i++) {
-            String slotKey = "Slot" + i;
-            if (tag.contains(slotKey)) {
-                tag.getCompound(slotKey).ifPresent(slotTag -> {
-                    slotTag.getCompound("Item").ifPresent(itemTag -> {
-                        var registries = Minecraft.getInstance().level.registryAccess();
-                        var ops = registries.createSerializationContext(NbtOps.INSTANCE);
-                        Optional<ItemStack> parsedOpt = ItemStack.CODEC.parse(ops, itemTag).resultOrPartial();
-                        if (parsedOpt.isPresent() && !parsedOpt.get().isEmpty()) {
-                            long count = slotTag.getLong("Count").orElse((long) parsedOpt.get().getCount());
-                            if (count > 0) {
-                                items.add(parsedOpt.get());
-                                counts.add(count);
+        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        if (customData != null) {
+            CompoundTag tag = customData.copyTag();
+
+            for (int i = 0; i < 4; i++) {
+                String slotKey = "Slot" + i;
+                if (tag.contains(slotKey)) {
+                    tag.getCompound(slotKey).ifPresent(slotTag -> {
+                        slotTag.getCompound("Item").ifPresent(itemTag -> {
+                            var registries = Minecraft.getInstance().level.registryAccess();
+                            var ops = registries.createSerializationContext(NbtOps.INSTANCE);
+                            Optional<ItemStack> parsedOpt = ItemStack.CODEC.parse(ops, itemTag).resultOrPartial();
+                            if (parsedOpt.isPresent() && !parsedOpt.get().isEmpty()) {
+                                long count = slotTag.getLong("Count").orElse((long) parsedOpt.get().getCount());
+                                if (count > 0) {
+                                    items.add(parsedOpt.get());
+                                    counts.add(count);
+                                }
                             }
-                        }
+                        });
                     });
-                });
+                }
             }
         }
 
-        if (items.isEmpty()) return Optional.empty();
-        return Optional.of(new DrawerTooltipComponent(items, counts));
+        WirelessNetworkKey networkKey = stack.get(ModDataComponents.WIRELESS_NETWORK_KEY);
+        if (items.isEmpty() && networkKey == null) return Optional.empty();
+        return Optional.of(new DrawerTooltipComponent(items, counts, networkKey));
     }
 }

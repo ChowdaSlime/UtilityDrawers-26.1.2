@@ -36,6 +36,8 @@ public class ModCreativeTabs {
                         ModBlocks.getAllFluidDrawerBlocks().forEach(output::accept);
                         ModBlocks.getAllFramedDrawerBlocks().forEach(output::accept);
                         ModBlocks.getAllFramedFluidDrawerBlocks().forEach(output::accept);
+                        ModBlocks.getAllWirelessDrawerBlocks().forEach(output::accept);
+                        ModBlocks.getAllWirelessFluidDrawerBlocks().forEach(output::accept);
                         output.accept(ModBlocks.STORAGE_INTERFACE.get());
                         output.accept(ModBlocks.DRAWER_FRAMER.get());
                     })

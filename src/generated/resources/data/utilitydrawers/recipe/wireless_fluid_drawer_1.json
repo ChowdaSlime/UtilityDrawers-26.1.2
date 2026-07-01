@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "minecraft:stone",
+    "B": "minecraft:repeater",
+    "C": "utilitydrawers:drawer_base"
+  },
+  "pattern": [
+    "ABA",
+    "BCB",
+    "ABA"
+  ],
+  "result": {
+    "id": "utilitydrawers:wireless_fluid_drawer_1"
+  }
+}

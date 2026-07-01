@@ -1,6 +1,5 @@
 package net.drawers.utilitydrawers.client;
 
-import com.mojang.datafixers.util.Either;
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.FluidDrawerBlock;
 import net.minecraft.client.Minecraft;
@@ -14,28 +13,32 @@ import net.minecraft.world.item.component.CustomData;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RenderTooltipEvent;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.neoforge.fluids.FluidStack;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @EventBusSubscriber(modid = UtilityDrawers.MODID, value = Dist.CLIENT)
 public class FluidDrawerTooltipEvent {
 
     @SubscribeEvent
-    public static void onGatherTooltipComponents(RenderTooltipEvent.GatherComponents event) {
+    public static void onTooltip(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
 
         if (!(stack.getItem() instanceof BlockItem blockItem)) return;
-        if (!(blockItem.getBlock() instanceof FluidDrawerBlock)) return;
 
+        if (blockItem.getBlock() instanceof FluidDrawerBlock) {
+            handleFluidDrawerTooltip(event, stack);
+        }
+    }
+
+    private static void handleFluidDrawerTooltip(ItemTooltipEvent event, ItemStack stack) {
         CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         if (customData == null) return;
 
         CompoundTag tag = customData.copyTag();
-        List<FluidStack> fluids = new ArrayList<>();
-        List<Long> amounts = new ArrayList<>();
+        AtomicBoolean hasFluids = new AtomicBoolean(false);
 
         for (int i = 0; i < 4; i++) {
             String slotKey = "Slot" + i;
@@ -45,32 +48,28 @@ public class FluidDrawerTooltipEvent {
                     slotTag.getCompound("Fluid").ifPresent(fluidTag -> {
                         var registries = Minecraft.getInstance().level.registryAccess();
                         var ops = registries.createSerializationContext(NbtOps.INSTANCE);
+                        Optional<FluidStack> parsedOpt = FluidStack.CODEC.parse(ops, fluidTag).resultOrPartial();
 
-                        FluidStack.CODEC.parse(ops, fluidTag).resultOrPartial().ifPresent(fluid -> {
-                            if (!fluid.isEmpty()) {
-                                long amount = slotTag.getLong("Amount").orElse((long) fluid.getAmount());
-                                if (amount > 0) {
-                                    fluids.add(fluid);
-                                    amounts.add(amount);
-                                }
+                        if (parsedOpt.isPresent() && !parsedOpt.get().isEmpty()) {
+                            FluidStack storedFluid = parsedOpt.get();
+                            long amount = slotTag.getLong("Amount").orElse((long) storedFluid.getAmount());
+
+                            if (amount > 0) {
+                                hasFluids.set(true);
+                                event.getToolTip().add(Component.literal(
+                                        "§7- " + formatMillibuckets(amount) + " §b" + storedFluid.getHoverName().getString()
+                                ));
                             }
-                        });
+                        }
                     })
             );
         }
 
-        if (fluids.isEmpty()) {
-            event.getTooltipElements().add(Either.left(Component.literal("§7(Empty)")));
-        } else {
-            event.getTooltipElements().add(Either.right(new FluidDrawerTooltipComponent(fluids, amounts)));
-            for (int i = 0; i < fluids.size(); i++) {
-                String displayAmount = formatMillibuckets(amounts.get(i));
-                event.getTooltipElements().add(Either.left(
-                        Component.literal("§7- " + displayAmount + " §b" + fluids.get(i).getHoverName().getString())
-                ));
-            }
+        if (!hasFluids.get()) {
+            event.getToolTip().add(Component.literal("§7(Empty)"));
         }
     }
+
     private static String formatMillibuckets(long mb) {
         if (mb >= 1000) {
             long whole = mb / 1000;

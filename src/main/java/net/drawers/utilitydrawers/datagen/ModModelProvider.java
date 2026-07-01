@@ -184,5 +184,31 @@ public class ModModelProvider extends ModelProvider {
                                 })
                         )
         );
+
+        for (Block wirelessDrawer : ModBlocks.getAllWirelessDrawerBlocks()) {
+            var modelLoc = ModelLocationUtils.getModelLocation(wirelessDrawer);
+
+            blockModels.blockStateOutput.accept(
+                    MultiVariantGenerator.dispatch(wirelessDrawer, BlockModelGenerators.plainVariant(modelLoc))
+                            .with(PropertyDispatch.modify(DrawerBlock.FACING)
+                                    .select(Direction.NORTH, v -> v)
+                                    .select(Direction.EAST, BlockModelGenerators.Y_ROT_90)
+                                    .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
+                                    .select(Direction.WEST, BlockModelGenerators.Y_ROT_270))
+            );
+        }
+
+        for (Block wirelessFluidDrawer : ModBlocks.getAllWirelessFluidDrawerBlocks()) {
+            var modelLoc = ModelLocationUtils.getModelLocation(wirelessFluidDrawer);
+
+            blockModels.blockStateOutput.accept(
+                    MultiVariantGenerator.dispatch(wirelessFluidDrawer, BlockModelGenerators.plainVariant(modelLoc))
+                            .with(PropertyDispatch.modify(FluidDrawerBlock.FACING)
+                                    .select(Direction.NORTH, v -> v)
+                                    .select(Direction.EAST, BlockModelGenerators.Y_ROT_90)
+                                    .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
+                                    .select(Direction.WEST, BlockModelGenerators.Y_ROT_270))
+            );
+        }
     }
 }
