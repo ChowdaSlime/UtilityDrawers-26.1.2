@@ -242,7 +242,28 @@ public class WirelessDrawerBlockEntity extends DrawerBlockEntity implements Menu
                 tag.put("Upgrade" + i, upgradeTag);
             }
         }
+
+        if (this.networkKey != null) {
+            tag.putInt("NetColor1", this.networkKey.color1());
+            tag.putInt("NetColor2", this.networkKey.color2());
+            tag.putInt("NetColor3", this.networkKey.color3());
+            tag.putBoolean("NetPublic", this.networkKey.isPublic());
+            this.networkKey.owner().ifPresent(uuid -> tag.putString("NetOwner", uuid.toString()));
+        }
+
         return tag;
+    }
+
+    @Override
+    public void loadContentsFromTag(CompoundTag tag) {
+        super.loadContentsFromTag(tag);
+        int c1 = tag.getIntOr("NetColor1", 0);
+        int c2 = tag.getIntOr("NetColor2", 0);
+        int c3 = tag.getIntOr("NetColor3", 0);
+        boolean pub = tag.getBooleanOr("NetPublic", true);
+        String ownerStr = tag.getStringOr("NetOwner", "");
+        Optional<UUID> owner = ownerStr.isEmpty() ? Optional.empty() : Optional.of(UUID.fromString(ownerStr));
+        this.networkKey = new WirelessNetworkKey(c1, c2, c3, pub, owner, this.getSlotCount());
     }
 
     @Override

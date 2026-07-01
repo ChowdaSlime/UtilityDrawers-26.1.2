@@ -1,10 +1,7 @@
 package net.drawers.utilitydrawers.jade;
 
 import net.drawers.utilitydrawers.block.*;
-import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
-import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
-import net.drawers.utilitydrawers.block.entity.IFramedBlockEntity;
-import net.drawers.utilitydrawers.block.entity.StorageInterfaceBlockEntity;
+import net.drawers.utilitydrawers.block.entity.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -49,6 +46,16 @@ public class UtilityDrawersJadePlugin implements IWailaPlugin {
             if (drawer.isLocked()) {
                 tooltip.add(Component.literal("Locked").withStyle(ChatFormatting.RED));
             }
+
+            if (drawer instanceof WirelessDrawerBlockEntity wireless) {
+                var key = wireless.getNetworkKey();
+                if (!key.isPublic()) {
+                    key.owner().ifPresent(uuid -> {
+                        String name = resolveOwnerName(accessor, uuid);
+                        tooltip.add(Component.literal("Owned By: " + name).withStyle(ChatFormatting.GRAY));
+                    });
+                }
+            }
         }
 
         @Override
@@ -66,6 +73,16 @@ public class UtilityDrawersJadePlugin implements IWailaPlugin {
 
             if (drawer.isLocked()) {
                 tooltip.add(Component.literal("Locked").withStyle(ChatFormatting.RED));
+            }
+
+            if (drawer instanceof WirelessFluidDrawerBlockEntity wireless) {
+                var key = wireless.getNetworkKey();
+                if (!key.isPublic()) {
+                    key.owner().ifPresent(uuid -> {
+                        String name = resolveOwnerName(accessor, uuid);
+                        tooltip.add(Component.literal("Owned By: " + name).withStyle(ChatFormatting.GRAY));
+                    });
+                }
             }
         }
 
@@ -130,5 +147,16 @@ public class UtilityDrawersJadePlugin implements IWailaPlugin {
         public Identifier getUid() {
             return Identifier.fromNamespaceAndPath("utilitydrawers", "framed_drawer_icon");
         }
+    }
+
+    private static String resolveOwnerName(BlockAccessor accessor, java.util.UUID uuid) {
+        var connection = net.minecraft.client.Minecraft.getInstance().getConnection();
+        if (connection != null) {
+            var playerInfo = connection.getPlayerInfo(uuid);
+            if (playerInfo != null) {
+                return playerInfo.getProfile().name();
+            }
+        }
+        return uuid.toString();
     }
 }

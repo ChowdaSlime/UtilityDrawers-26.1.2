@@ -16,6 +16,7 @@ public class WirelessFluidDrawerMenu extends FluidDrawerMenu {
 
     private final ContainerData networkData;
     private final WirelessFluidDrawerBlockEntity wirelessEntity;
+    private final Inventory playerInv;
 
     public WirelessFluidDrawerMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
         this(containerId, playerInventory, playerInventory.player.level()
@@ -25,6 +26,7 @@ public class WirelessFluidDrawerMenu extends FluidDrawerMenu {
     public WirelessFluidDrawerMenu(int containerId, Inventory playerInventory, BlockEntity blockEntity) {
         super(ModMenuTypes.WIRELESS_FLUID_DRAWER_MENU.get(), containerId, playerInventory, blockEntity, false);
         this.wirelessEntity = (WirelessFluidDrawerBlockEntity) blockEntity;
+        this.playerInv = playerInventory;
 
         WirelessNetworkKey key = this.wirelessEntity.getNetworkKey();
 
@@ -80,7 +82,7 @@ public class WirelessFluidDrawerMenu extends FluidDrawerMenu {
 
         Optional<UUID> owner = pub
                 ? Optional.empty()
-                : wirelessEntity.getNetworkKey().owner();
+                : Optional.of(playerInv.player.getUUID());
 
         return new WirelessNetworkKey(c1, c2, c3, pub, owner, getDrawerSlotCount());
     }

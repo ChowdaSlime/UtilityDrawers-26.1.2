@@ -2,10 +2,13 @@ package net.drawers.utilitydrawers.network;
 
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.entity.WirelessDrawerBlockEntity;
+import net.drawers.utilitydrawers.block.entity.WirelessFluidDrawerBlockEntity;
+import net.drawers.utilitydrawers.data.WirelessNetworkKey;
 import net.drawers.utilitydrawers.item.StorageRemoteItem;
 import net.drawers.utilitydrawers.menu.StorageViewerMenu;
 import net.drawers.utilitydrawers.menu.StorageViewerScreen;
 import net.drawers.utilitydrawers.menu.WirelessDrawerMenu;
+import net.drawers.utilitydrawers.menu.WirelessFluidDrawerMenu;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -16,6 +19,8 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+
+import java.util.Optional;
 
 @EventBusSubscriber(modid = UtilityDrawers.MODID)
 public class ModNetworking {
@@ -90,7 +95,16 @@ public class ModNetworking {
                     context.enqueueWork(() -> {
                         Player player = context.player();
                         if (player.level().getBlockEntity(payload.pos()) instanceof WirelessDrawerBlockEntity wirelessBE) {
-                            wirelessBE.setNetworkKey(payload.key());
+                            WirelessNetworkKey received = payload.key();
+                            WirelessNetworkKey trusted = received.isPublic()
+                                    ? received
+                                    : new WirelessNetworkKey(
+                                    received.color1(), received.color2(), received.color3(),
+                                    false,
+                                    Optional.of(player.getUUID()),
+                                    received.slotCount()
+                            );
+                            wirelessBE.setNetworkKey(trusted);
                             if (player.containerMenu instanceof WirelessDrawerMenu wMenu) {
                                 wMenu.refreshFromBlockEntity();
                             }
@@ -105,9 +119,18 @@ public class ModNetworking {
                 (payload, context) -> {
                     context.enqueueWork(() -> {
                         Player player = context.player();
-                        if (player.level().getBlockEntity(payload.pos()) instanceof net.drawers.utilitydrawers.block.entity.WirelessFluidDrawerBlockEntity wirelessFluidBE) {
-                            wirelessFluidBE.setNetworkKey(payload.key());
-                            if (player.containerMenu instanceof net.drawers.utilitydrawers.menu.WirelessFluidDrawerMenu wMenu) {
+                        if (player.level().getBlockEntity(payload.pos()) instanceof WirelessFluidDrawerBlockEntity wirelessBE) {
+                            WirelessNetworkKey received = payload.key();
+                            WirelessNetworkKey trusted = received.isPublic()
+                                    ? received
+                                    : new WirelessNetworkKey(
+                                    received.color1(), received.color2(), received.color3(),
+                                    false,
+                                    Optional.of(player.getUUID()),
+                                    received.slotCount()
+                            );
+                            wirelessBE.setNetworkKey(trusted);
+                            if (player.containerMenu instanceof WirelessFluidDrawerMenu wMenu) {
                                 wMenu.refreshFromBlockEntity();
                             }
                         }

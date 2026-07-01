@@ -16,6 +16,7 @@ public class WirelessDrawerMenu extends DrawerMenu {
 
     private final ContainerData networkData;
     private final WirelessDrawerBlockEntity wirelessEntity;
+    private final Inventory playerInv;
 
     public static final int[] NETWORK_COLORS = {
             0xFF5555, // Red
@@ -40,6 +41,7 @@ public class WirelessDrawerMenu extends DrawerMenu {
     public WirelessDrawerMenu(int containerId, Inventory playerInventory, BlockEntity blockEntity) {
         super(ModMenuTypes.WIRELESS_DRAWER_MENU.get(), containerId, playerInventory, blockEntity, false);
         this.wirelessEntity = (WirelessDrawerBlockEntity) blockEntity;
+        this.playerInv = playerInventory;
 
         WirelessNetworkKey key = this.wirelessEntity.getNetworkKey();
 
@@ -88,14 +90,14 @@ public class WirelessDrawerMenu extends DrawerMenu {
     }
 
     public WirelessNetworkKey buildCurrentKey() {
-        int c1 = NETWORK_COLORS[networkData.get(0)];
-        int c2 = NETWORK_COLORS[networkData.get(1)];
-        int c3 = NETWORK_COLORS[networkData.get(2)];
+        int c1 = WirelessDrawerMenu.NETWORK_COLORS[networkData.get(0)];
+        int c2 = WirelessDrawerMenu.NETWORK_COLORS[networkData.get(1)];
+        int c3 = WirelessDrawerMenu.NETWORK_COLORS[networkData.get(2)];
         boolean pub = networkData.get(3) == 1;
 
         Optional<UUID> owner = pub
                 ? Optional.empty()
-                : wirelessEntity.getNetworkKey().owner();
+                : Optional.of(playerInv.player.getUUID());
 
         return new WirelessNetworkKey(c1, c2, c3, pub, owner, getDrawerSlotCount());
     }
