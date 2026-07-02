@@ -2,6 +2,8 @@ package net.drawers.utilitydrawers.client;
 
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.DrawerBlock;
+import net.drawers.utilitydrawers.block.FramedDrawerBlock;
+import net.drawers.utilitydrawers.block.FramedCompactingDrawerBlock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -27,7 +29,9 @@ public class DrawerTooltipEvent {
 
         if (!(stack.getItem() instanceof BlockItem blockItem)) return;
 
-        if (blockItem.getBlock() instanceof DrawerBlock) {
+        if (blockItem.getBlock() instanceof DrawerBlock ||
+                blockItem.getBlock() instanceof FramedDrawerBlock ||
+                blockItem.getBlock() instanceof FramedCompactingDrawerBlock) {
             handleItemDrawerTooltip(event, stack);
         }
     }

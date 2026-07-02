@@ -1,5 +1,6 @@
 package net.drawers.utilitydrawers.block.entity;
 
+import net.drawers.utilitydrawers.UtilityDrawersConfig;
 import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
 import net.drawers.utilitydrawers.network.StorageNetwork;
 import net.minecraft.core.BlockPos;
@@ -263,7 +264,7 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
     }
 
     public double getMaxRangeSq() {
-        double range = 16.0 * getRangeMultiplier();
+        double range = UtilityDrawersConfig.STORAGE_INTERFACE_BASE_RANGE.get() * getRangeMultiplier();
         return range * range;
     }
 

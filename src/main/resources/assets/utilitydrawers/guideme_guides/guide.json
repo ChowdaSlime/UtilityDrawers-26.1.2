@@ -1,0 +1,14 @@
+{
+  "item_settings": {
+    "display_name": {
+      "type": "translatable",
+      "translate": "utilitydrawers.guide_name"
+    },
+    "tooltip_lines": [
+      {
+        "text": "Everything you need to know about Utility Drawers.",
+        "color": "dark_gray"
+      }
+    ]
+  }
+}

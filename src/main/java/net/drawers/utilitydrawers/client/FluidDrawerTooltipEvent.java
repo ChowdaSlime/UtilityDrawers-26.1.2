@@ -2,6 +2,7 @@ package net.drawers.utilitydrawers.client;
 
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.FluidDrawerBlock;
+import net.drawers.utilitydrawers.block.FramedFluidDrawerBlock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -28,7 +29,9 @@ public class FluidDrawerTooltipEvent {
 
         if (!(stack.getItem() instanceof BlockItem blockItem)) return;
 
-        if (blockItem.getBlock() instanceof FluidDrawerBlock) {
+        // Expanded to catch the framed fluid variants
+        if (blockItem.getBlock() instanceof FluidDrawerBlock ||
+                blockItem.getBlock() instanceof FramedFluidDrawerBlock) {
             handleFluidDrawerTooltip(event, stack);
         }
     }

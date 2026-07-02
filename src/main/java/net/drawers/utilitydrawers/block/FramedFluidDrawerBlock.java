@@ -232,8 +232,10 @@ public class FramedFluidDrawerBlock extends Block implements SlotCountProvider, 
         var customData = stack.get(DataComponents.CUSTOM_DATA);
         if (customData != null) {
             BlockEntity blockEntity = level.getBlockEntity(pos);
-            if (blockEntity instanceof FluidDrawerBlockEntity drawerEntity) {
-                drawerEntity.loadContentsFromTag(customData.copyTag());
+            if (blockEntity instanceof FramedFluidDrawerBlockEntity be) {
+                be.loadContentsFromTag(customData.copyTag());
+                be.requestModelDataUpdate();
+                level.sendBlockUpdated(pos, state, state, 3);
             }
         }
     }

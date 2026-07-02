@@ -1,5 +1,6 @@
 package net.drawers.utilitydrawers.block.entity;
 
+import net.drawers.utilitydrawers.UtilityDrawersConfig;
 import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
 import net.drawers.utilitydrawers.item.StorageRemoteItem;
 import net.drawers.utilitydrawers.item.VoidUpgradeItem;
@@ -134,7 +135,7 @@ public class CompactingDrawerBlockEntity extends BlockEntity {
     }
 
     private long getBaseCapacityInRawUnits() {
-        return 10L * 64 * ratio0 * ratio1;
+        return (long) UtilityDrawersConfig.COMPACTING_DRAWER_BASE_MULTIPLIER.get() * 64 * ratio0 * ratio1;
     }
 
     private void recalculateCapacity() {

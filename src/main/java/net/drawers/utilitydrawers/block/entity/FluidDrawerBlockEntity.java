@@ -1,5 +1,6 @@
 package net.drawers.utilitydrawers.block.entity;
 
+import net.drawers.utilitydrawers.UtilityDrawersConfig;
 import net.drawers.utilitydrawers.block.DrawerBlock;
 import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
 import net.drawers.utilitydrawers.item.StorageRemoteItem;
@@ -37,7 +38,9 @@ public class FluidDrawerBlockEntity extends BlockEntity {
             ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY
     };
 
-    public static final int BASE_FLUID_CAPACITY = 4000;
+    public static int getBaseFluidCapacity() {
+        return UtilityDrawersConfig.FLUID_DRAWER_BASE_CAPACITY.get();
+    }
     public long getMaxCapacity(int slot) {
         return maxCapacities[slot];
     }
@@ -54,7 +57,7 @@ public class FluidDrawerBlockEntity extends BlockEntity {
         for (int i = 0; i < slotCount; i++) {
             storedFluids[i] = FluidStack.EMPTY;
             storedAmounts[i] = 0L;
-            maxCapacities[i] = (long) getBaseStackMultiplier() * BASE_FLUID_CAPACITY;
+            maxCapacities[i] = (long) getBaseStackMultiplier() * getBaseFluidCapacity();
         }
     }
 
@@ -67,7 +70,7 @@ public class FluidDrawerBlockEntity extends BlockEntity {
         for (int i = 0; i < slotCount; i++) {
             storedFluids[i] = FluidStack.EMPTY;
             storedAmounts[i] = 0L;
-            maxCapacities[i] = (long) getBaseStackMultiplier() * BASE_FLUID_CAPACITY;
+            maxCapacities[i] = (long) getBaseStackMultiplier() * getBaseFluidCapacity();
         }
     }
 
@@ -91,11 +94,11 @@ public class FluidDrawerBlockEntity extends BlockEntity {
 
     public int getBaseStackMultiplier() {
         return switch (this.slotCount) {
-            case 1 -> 32;
-            case 2 -> 16;
-            case 3 -> 10;
-            case 4 -> 8;
-            default -> 32;
+            case 1 -> UtilityDrawersConfig.DRAWER_MULT_1_SLOT.get();
+            case 2 -> UtilityDrawersConfig.DRAWER_MULT_2_SLOT.get();
+            case 3 -> UtilityDrawersConfig.DRAWER_MULT_3_SLOT.get();
+            case 4 -> UtilityDrawersConfig.DRAWER_MULT_4_SLOT.get();
+            default -> UtilityDrawersConfig.DRAWER_MULT_1_SLOT.get();
         };
     }
 
@@ -122,7 +125,7 @@ public class FluidDrawerBlockEntity extends BlockEntity {
             for (int i = 0; i < slotCount; i++) {
                 if (storedAmounts[i] <= 0) {
                     storedFluids[i] = FluidStack.EMPTY;
-                    maxCapacities[i] = (long) getBaseStackMultiplier() * BASE_FLUID_CAPACITY * getUpgradeMultiplier();
+                    maxCapacities[i] = (long) getBaseStackMultiplier() * getBaseFluidCapacity() * getUpgradeMultiplier();
                 }
             }
         }
@@ -146,7 +149,7 @@ public class FluidDrawerBlockEntity extends BlockEntity {
         storedFluids[slot] = stack.copyWithAmount(1);
         storedAmounts[slot] = 0;
 
-        maxCapacities[slot] = (long) getBaseStackMultiplier() * BASE_FLUID_CAPACITY * getUpgradeMultiplier();
+        maxCapacities[slot] = (long) getBaseStackMultiplier() * getBaseFluidCapacity() * getUpgradeMultiplier();
 
         setChanged();
 
@@ -174,7 +177,7 @@ public class FluidDrawerBlockEntity extends BlockEntity {
 
     private FluidStack insertIntoSlot(int slot, FluidStack stack, boolean simulate) {
         if (storedFluids[slot].isEmpty()) {
-            maxCapacities[slot] = (long) getBaseStackMultiplier() * BASE_FLUID_CAPACITY * getUpgradeMultiplier();
+            maxCapacities[slot] = (long) getBaseStackMultiplier() * getBaseFluidCapacity() * getUpgradeMultiplier();
         }
 
         if (locked && storedFluids[slot].isEmpty()) {
@@ -240,7 +243,7 @@ public class FluidDrawerBlockEntity extends BlockEntity {
 
                 if (!locked) {
                     storedFluids[slot] = FluidStack.EMPTY;
-                    maxCapacities[slot] = (long) getBaseStackMultiplier() * BASE_FLUID_CAPACITY * getUpgradeMultiplier();
+                    maxCapacities[slot] = (long) getBaseStackMultiplier() * getBaseFluidCapacity() * getUpgradeMultiplier();
                 }
             }
             setChanged();
@@ -284,7 +287,7 @@ public class FluidDrawerBlockEntity extends BlockEntity {
         }
         for (int i = 0; i < slotCount; i++) {
             if (!storedFluids[i].isEmpty()) {
-                long newCapacity = (long) getBaseStackMultiplier() * BASE_FLUID_CAPACITY * newMultiplier;
+                long newCapacity = (long) getBaseStackMultiplier() * getBaseFluidCapacity() * newMultiplier;
 
                 if (storedAmounts[i] > newCapacity)
                     return false;
@@ -305,7 +308,7 @@ public class FluidDrawerBlockEntity extends BlockEntity {
 
     private void recalculateCapacities() {
         for (int i = 0; i < slotCount; i++) {
-            maxCapacities[i] = (long) getBaseStackMultiplier() * BASE_FLUID_CAPACITY * getUpgradeMultiplier();
+            maxCapacities[i] = (long) getBaseStackMultiplier() * getBaseFluidCapacity() * getUpgradeMultiplier();
         }
     }
 

@@ -1,5 +1,6 @@
 package net.drawers.utilitydrawers.block.entity;
 
+import net.drawers.utilitydrawers.UtilityDrawersConfig;
 import net.drawers.utilitydrawers.data.WirelessNetworkKey;
 import net.drawers.utilitydrawers.data.WirelessNetworkSavedData;
 import net.drawers.utilitydrawers.menu.WirelessDrawerMenu;
@@ -337,7 +338,7 @@ public class WirelessDrawerBlockEntity extends DrawerBlockEntity implements Menu
 
     }
     @Override public int getBaseStackMultiplier() {
-        return super.getBaseStackMultiplier() * 2;
+        return super.getBaseStackMultiplier() * UtilityDrawersConfig.WIRELESS_DRAWER_CAPACITY_MULTIPLIER.get();
     }
 
     @Override public boolean hasTemplate(int slot) {

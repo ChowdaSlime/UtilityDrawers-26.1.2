@@ -1,6 +1,7 @@
 package net.drawers.utilitydrawers.block.entity;
 
 import net.drawers.utilitydrawers.UtilityDrawers;
+import net.drawers.utilitydrawers.UtilityDrawersConfig;
 import net.drawers.utilitydrawers.block.DrawerBlock;
 import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
 import net.drawers.utilitydrawers.item.StorageRemoteItem;
@@ -86,11 +87,11 @@ public class DrawerBlockEntity extends BlockEntity {
 
     public int getBaseStackMultiplier() {
         return switch (this.slotCount) {
-            case 1 -> 32;
-            case 2 -> 16;
-            case 3 -> 10;
-            case 4 -> 8;
-            default -> 32;
+            case 1 -> UtilityDrawersConfig.DRAWER_MULT_1_SLOT.get();
+            case 2 -> UtilityDrawersConfig.DRAWER_MULT_2_SLOT.get();
+            case 3 -> UtilityDrawersConfig.DRAWER_MULT_3_SLOT.get();
+            case 4 -> UtilityDrawersConfig.DRAWER_MULT_4_SLOT.get();
+            default -> UtilityDrawersConfig.DRAWER_MULT_1_SLOT.get();
         };
     }
 

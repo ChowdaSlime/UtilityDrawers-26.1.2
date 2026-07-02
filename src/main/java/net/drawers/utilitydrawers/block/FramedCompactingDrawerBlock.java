@@ -228,8 +228,10 @@ public class FramedCompactingDrawerBlock extends Block implements EntityBlock {
         super.setPlacedBy(level, pos, state, placer, stack);
         var customData = stack.get(DataComponents.CUSTOM_DATA);
         if (customData != null
-                && level.getBlockEntity(pos) instanceof CompactingDrawerBlockEntity drawer) {
+                && level.getBlockEntity(pos) instanceof FramedCompactingDrawerBlockEntity drawer) {
             drawer.loadContentsFromTag(customData.copyTag());
+            drawer.requestModelDataUpdate();
+            level.sendBlockUpdated(pos, state, state, 3);
         }
     }
 }

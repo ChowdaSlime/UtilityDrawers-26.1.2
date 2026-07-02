@@ -1,5 +1,6 @@
 package net.drawers.utilitydrawers.block.entity;
 
+import net.drawers.utilitydrawers.UtilityDrawersConfig;
 import net.drawers.utilitydrawers.data.WirelessNetworkKey;
 import net.drawers.utilitydrawers.data.WirelessNetworkSavedData;
 import net.drawers.utilitydrawers.menu.WirelessFluidDrawerMenu;
@@ -130,7 +131,7 @@ public class WirelessFluidDrawerBlockEntity extends FluidDrawerBlockEntity imple
             return stack;
         if (state.locked && state.fluids[slot].isEmpty()) return stack;
 
-        long capacity = (long) getBaseStackMultiplier() * BASE_FLUID_CAPACITY;
+        long capacity = (long) getBaseStackMultiplier() * getBaseFluidCapacity();
         long space = capacity - state.amounts[slot];
         if (space <= 0) return stack;
 
@@ -203,12 +204,11 @@ public class WirelessFluidDrawerBlockEntity extends FluidDrawerBlockEntity imple
     public long getMaxCapacity(int slot) {
         if (level == null || level.isClientSide())
             return super.getMaxCapacity(slot);
-        return (long) getBaseStackMultiplier() * BASE_FLUID_CAPACITY;
+        return (long) getBaseStackMultiplier() * getBaseFluidCapacity();
     }
 
-    @Override
-    public int getBaseStackMultiplier() {
-        return super.getBaseStackMultiplier() * 2;
+    @Override public int getBaseStackMultiplier() {
+        return super.getBaseStackMultiplier() * UtilityDrawersConfig.WIRELESS_DRAWER_CAPACITY_MULTIPLIER.get();
     }
 
     @Override

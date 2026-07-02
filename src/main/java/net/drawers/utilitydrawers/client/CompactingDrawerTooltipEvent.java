@@ -2,6 +2,7 @@ package net.drawers.utilitydrawers.client;
 
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.CompactingDrawerBlock;
+import net.drawers.utilitydrawers.block.FramedCompactingDrawerBlock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -24,7 +25,9 @@ public class CompactingDrawerTooltipEvent {
     public static void onTooltip(ItemTooltipEvent event) {
         ItemStack stack = event.getItemStack();
         if (!(stack.getItem() instanceof BlockItem blockItem)) return;
-        if (!(blockItem.getBlock() instanceof CompactingDrawerBlock)) return;
+
+        if (!(blockItem.getBlock() instanceof CompactingDrawerBlock ||
+                blockItem.getBlock() instanceof FramedCompactingDrawerBlock)) return;
 
         CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         if (customData == null) return;

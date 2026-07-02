@@ -43,7 +43,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 public class FramedDrawerBlock extends Block implements SlotCountProvider, EntityBlock {
 
     public static final EnumProperty<Direction> FACING =

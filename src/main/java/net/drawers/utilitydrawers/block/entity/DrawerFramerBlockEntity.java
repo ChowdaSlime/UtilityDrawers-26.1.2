@@ -152,15 +152,16 @@ public class DrawerFramerBlockEntity extends BlockEntity implements Container, M
     private void processOutput() {
         BlockState sidesState = ((BlockItem) inventory[SLOT_SIDES].getItem()).getBlock().defaultBlockState();
         BlockState faceState  = ((BlockItem) inventory[SLOT_FACE].getItem()).getBlock().defaultBlockState();
-        ItemStack result = inventory[SLOT_INPUT].getItem().getDefaultInstance();
-        result.setCount(1);
+
+        ItemStack result = inventory[SLOT_INPUT].copyWithCount(1);
         inventory[SLOT_INPUT].shrink(1);
         if (inventory[SLOT_INPUT].isEmpty()) inventory[SLOT_INPUT] = ItemStack.EMPTY;
         inventory[SLOT_SIDES].shrink(1);
         if (inventory[SLOT_SIDES].isEmpty()) inventory[SLOT_SIDES] = ItemStack.EMPTY;
         inventory[SLOT_FACE].shrink(1);
         if (inventory[SLOT_FACE].isEmpty()) inventory[SLOT_FACE] = ItemStack.EMPTY;
-        CompoundTag tag = new CompoundTag();
+        CustomData customData = result.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+        CompoundTag tag = customData.copyTag();
         if (level != null) {
             var ops = level.registryAccess().createSerializationContext(NbtOps.INSTANCE);
             tag.put("FrameState", BlockState.CODEC.encodeStart(ops, sidesState).getOrThrow());

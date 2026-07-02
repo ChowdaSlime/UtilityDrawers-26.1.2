@@ -34,8 +34,9 @@ public class UtilityDrawers {
         ModAttachments.register(modEventBus);
 
 
+
         NeoForge.EVENT_BUS.register(this);
-        modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+        modContainer.registerConfig(ModConfig.Type.COMMON, UtilityDrawersConfig.SPEC);
     }
 
     @SubscribeEvent
