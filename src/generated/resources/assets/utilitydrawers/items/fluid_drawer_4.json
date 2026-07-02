@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "utilitydrawers:block/fluid_drawer_4"
+    "model": "utilitydrawers:item/fluid_drawer_4"
   }
 }

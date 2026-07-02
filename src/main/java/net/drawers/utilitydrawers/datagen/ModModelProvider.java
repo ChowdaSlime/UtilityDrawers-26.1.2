@@ -36,7 +36,6 @@ public class ModModelProvider extends ModelProvider {
         blockModels.createTrivialCube(ModBlocks.TEST_BLOCK.get());
 
 
-
         for (Block drawer : ModBlocks.getAllDrawerBlocks()) {
             var modelLoc = ModelLocationUtils.getModelLocation(drawer);
 
@@ -48,6 +47,7 @@ public class ModModelProvider extends ModelProvider {
                                     .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
                                     .select(Direction.WEST,  BlockModelGenerators.Y_ROT_270))
             );
+            generateDrawerItemModel(blockModels, drawer);
         }
 
         for (Block fluidDrawer : ModBlocks.getAllFluidDrawerBlocks()) {
@@ -61,6 +61,7 @@ public class ModModelProvider extends ModelProvider {
                                     .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
                                     .select(Direction.WEST,  BlockModelGenerators.Y_ROT_270))
             );
+            generateDrawerItemModel(blockModels, fluidDrawer);
         }
 
         Block compactingDrawer = ModBlocks.COMPACTING_DRAWER.get();
@@ -74,6 +75,7 @@ public class ModModelProvider extends ModelProvider {
                                 .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
                                 .select(Direction.WEST,  BlockModelGenerators.Y_ROT_270))
         );
+        generateDrawerItemModel(blockModels, compactingDrawer);
 
         Block storageInterface = ModBlocks.STORAGE_INTERFACE.get();
         Identifier unlockedModel = Identifier.fromNamespaceAndPath(UtilityDrawers.MODID, "block/storage_interface");
@@ -90,6 +92,7 @@ public class ModModelProvider extends ModelProvider {
                                 .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
                                 .select(Direction.WEST,  BlockModelGenerators.Y_ROT_270))
         );
+        generateDrawerItemModel(blockModels, storageInterface);
 
         Block drawerFramer = ModBlocks.DRAWER_FRAMER.get();
         var framerModelLoc = ModelLocationUtils.getModelLocation(drawerFramer);
@@ -102,6 +105,7 @@ public class ModModelProvider extends ModelProvider {
                                 .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
                                 .select(Direction.WEST,  BlockModelGenerators.Y_ROT_270))
         );
+        generateDrawerItemModel(blockModels, drawerFramer);
 
 
         for (Block framedDrawer : ModBlocks.getAllFramedDrawerBlocks()) {
@@ -115,6 +119,7 @@ public class ModModelProvider extends ModelProvider {
                                     .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
                                     .select(Direction.WEST,  BlockModelGenerators.Y_ROT_270))
             );
+            generateDrawerItemModel(blockModels, framedDrawer);
         }
 
         for (Block framedFluidDrawer : ModBlocks.getAllFramedFluidDrawerBlocks()) {
@@ -128,6 +133,7 @@ public class ModModelProvider extends ModelProvider {
                                     .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
                                     .select(Direction.WEST,  BlockModelGenerators.Y_ROT_270))
             );
+            generateDrawerItemModel(blockModels, framedFluidDrawer);
         }
 
         Block framedCompactingDrawer = ModBlocks.FRAMED_COMPACTING_DRAWER.get();
@@ -141,6 +147,7 @@ public class ModModelProvider extends ModelProvider {
                                 .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
                                 .select(Direction.WEST,  BlockModelGenerators.Y_ROT_270))
         );
+        generateDrawerItemModel(blockModels, framedCompactingDrawer);
 
         Block storageViewer = ModBlocks.STORAGE_VIEWER.get();
         var viewerModelLoc = ModelLocationUtils.getModelLocation(storageViewer);
@@ -184,6 +191,7 @@ public class ModModelProvider extends ModelProvider {
                                 })
                         )
         );
+        generateDrawerItemModel(blockModels, storageViewer);
 
         for (Block wirelessDrawer : ModBlocks.getAllWirelessDrawerBlocks()) {
             var modelLoc = ModelLocationUtils.getModelLocation(wirelessDrawer);
@@ -196,6 +204,7 @@ public class ModModelProvider extends ModelProvider {
                                     .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
                                     .select(Direction.WEST, BlockModelGenerators.Y_ROT_270))
             );
+            generateDrawerItemModel(blockModels, wirelessDrawer);
         }
 
         for (Block wirelessFluidDrawer : ModBlocks.getAllWirelessFluidDrawerBlocks()) {
@@ -209,6 +218,13 @@ public class ModModelProvider extends ModelProvider {
                                     .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
                                     .select(Direction.WEST, BlockModelGenerators.Y_ROT_270))
             );
+            generateDrawerItemModel(blockModels, wirelessFluidDrawer);
         }
+    }
+
+    private void generateDrawerItemModel(BlockModelGenerators blockModels, Block block) {
+        Identifier blockLoc = ModelLocationUtils.getModelLocation(block);
+        Identifier itemLoc = Identifier.fromNamespaceAndPath(UtilityDrawers.MODID, blockLoc.getPath().replaceFirst("block/", "item/"));
+        blockModels.registerSimpleItemModel(block.asItem(), itemLoc);
     }
 }

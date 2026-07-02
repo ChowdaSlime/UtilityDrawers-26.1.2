@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "utilitydrawers:block/spruce_drawer_4"
+    "model": "utilitydrawers:item/spruce_drawer_4"
   }
 }

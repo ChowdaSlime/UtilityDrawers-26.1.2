@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "utilitydrawers:block/pale_oak_drawer_3"
+    "model": "utilitydrawers:item/pale_oak_drawer_3"
   }
 }

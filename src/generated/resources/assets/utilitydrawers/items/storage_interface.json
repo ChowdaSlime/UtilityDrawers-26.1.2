@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "utilitydrawers:block/storage_interface"
+    "model": "utilitydrawers:item/storage_interface"
   }
 }

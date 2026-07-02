@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "utilitydrawers:block/jungle_drawer_4"
+    "model": "utilitydrawers:item/jungle_drawer_4"
   }
 }
