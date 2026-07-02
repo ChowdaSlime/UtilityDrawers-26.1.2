@@ -34,7 +34,7 @@ New textures can be applied to the framed drawers using the **Drawer Framer**. T
 
 <GameScene zoom={3} interactive={true}>
   <ImportStructure src="framed_drawers.snbt" />
-  <IsometricCamera yaw="45" pitch="30" />
+  <IsometricCamera yaw="135" pitch="30" />
 </GameScene>
 
 ### Slots
