@@ -1,8 +1,8 @@
 ---
 navigation:
-parent: index.md
-title: Storage Remote
-icon: storage_remote
+  parent: index.md
+  title: Storage Remote
+  icon: storage_remote
 item_ids:
 - utilitydrawers:storage_remote
 ---
