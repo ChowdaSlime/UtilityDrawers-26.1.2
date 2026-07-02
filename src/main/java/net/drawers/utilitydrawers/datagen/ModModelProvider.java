@@ -191,7 +191,6 @@ public class ModModelProvider extends ModelProvider {
                                 })
                         )
         );
-        generateDrawerItemModel(blockModels, storageViewer);
 
         for (Block wirelessDrawer : ModBlocks.getAllWirelessDrawerBlocks()) {
             var modelLoc = ModelLocationUtils.getModelLocation(wirelessDrawer);
