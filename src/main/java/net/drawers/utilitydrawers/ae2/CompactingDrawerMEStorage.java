@@ -25,10 +25,8 @@ public class CompactingDrawerMEStorage implements MEStorage {
         for (int i = 0; i < drawer.getSlotCount(); i++) {
             var stored = drawer.getStoredItem(i);
 
-            // If the slot has an item but it's not the one AE2 is pushing, skip to the next tier
             if (!stored.isEmpty() && !itemKey.matches(stored)) continue;
 
-            // If the drawer is completely empty but locked, reject insertion
             if (stored.isEmpty() && drawer.isLocked()) continue;
 
             var toInsert = itemKey.toStack((int) Math.min(amount - inserted, Integer.MAX_VALUE));

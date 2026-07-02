@@ -29,7 +29,6 @@ public class FluidDrawerTooltipEvent {
 
         if (!(stack.getItem() instanceof BlockItem blockItem)) return;
 
-        // Expanded to catch the framed fluid variants
         if (blockItem.getBlock() instanceof FluidDrawerBlock ||
                 blockItem.getBlock() instanceof FramedFluidDrawerBlock) {
             handleFluidDrawerTooltip(event, stack);
