@@ -1,4 +1,4 @@
-**---
+---
 navigation:
 parent: index.md
 title: Storage Remote
