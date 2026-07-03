@@ -1,8 +1,6 @@
 package net.drawers.utilitydrawers.menu;
 
-import net.drawers.utilitydrawers.block.FramedCompactingDrawerBlock;
-import net.drawers.utilitydrawers.block.FramedDrawerBlock;
-import net.drawers.utilitydrawers.block.FramedFluidDrawerBlock;
+import net.drawers.utilitydrawers.block.*;
 import net.drawers.utilitydrawers.block.entity.DrawerFramerBlockEntity;
 import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -24,7 +22,7 @@ public class DrawerFramerMenu extends AbstractContainerMenu {
     public DrawerFramerMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
         this(containerId, playerInventory,
                 playerInventory.player.level().getBlockEntity(buf.readBlockPos()),
-                new SimpleContainerData(2)); // Dummy data for the client
+                new SimpleContainerData(2));
     }
 
     public DrawerFramerMenu(int containerId, Inventory playerInventory, BlockEntity blockEntity, ContainerData data) {
@@ -33,8 +31,9 @@ public class DrawerFramerMenu extends AbstractContainerMenu {
         this.data = data;
 
         this.addSlot(new Slot(this.blockEntity, DrawerFramerBlockEntity.SLOT_SIDES, 121, 48) {
-            @Override public boolean mayPlace(ItemStack stack) {
-                return stack.getItem() instanceof BlockItem;
+            @Override
+            public boolean mayPlace(ItemStack stack) {
+                return stack.getItem() instanceof BlockItem bi && !isDrawerBlock(bi);
             }
 
             @Override
@@ -46,7 +45,7 @@ public class DrawerFramerMenu extends AbstractContainerMenu {
         this.addSlot(new Slot(this.blockEntity, DrawerFramerBlockEntity.SLOT_FACE, 121, 88) {
             @Override
             public boolean mayPlace(ItemStack stack) {
-                return stack.getItem() instanceof BlockItem;
+                return stack.getItem() instanceof BlockItem bi && !isDrawerBlock(bi);
             }
 
             @Override
@@ -58,11 +57,9 @@ public class DrawerFramerMenu extends AbstractContainerMenu {
         this.addSlot(new Slot(this.blockEntity, DrawerFramerBlockEntity.SLOT_INPUT, 41, 68) {
             @Override
             public boolean mayPlace(ItemStack stack) {
-                return stack.getItem() instanceof BlockItem bi &&
-                        (bi.getBlock() instanceof net.drawers.utilitydrawers.block.FramedDrawerBlock ||
-                                bi.getBlock() instanceof net.drawers.utilitydrawers.block.FramedFluidDrawerBlock ||
-                                bi.getBlock() instanceof net.drawers.utilitydrawers.block.FramedCompactingDrawerBlock);
+                return stack.getItem() instanceof BlockItem bi && isFramedDrawerBlock(bi);
             }
+
             @Override
             public int getMaxStackSize() {
                 return 1;
@@ -110,6 +107,22 @@ public class DrawerFramerMenu extends AbstractContainerMenu {
         this.addDataSlots(this.data);
     }
 
+    private static boolean isFramedDrawerBlock(BlockItem bi) {
+        return bi.getBlock() instanceof FramedDrawerBlock
+                || bi.getBlock() instanceof FramedFluidDrawerBlock
+                || bi.getBlock() instanceof FramedCompactingDrawerBlock;
+    }
+
+    private static boolean isDrawerBlock(BlockItem bi) {
+        return bi.getBlock() instanceof DrawerBlock
+                || bi.getBlock() instanceof FluidDrawerBlock
+                || bi.getBlock() instanceof CompactingDrawerBlock
+                || bi.getBlock() instanceof WirelessDrawerBlock
+                || bi.getBlock() instanceof WirelessFluidDrawerBlock
+                || bi.getBlock() instanceof DrawerFramerBlock
+                || isFramedDrawerBlock(bi);
+    }
+
     public DrawerFramerBlockEntity getBlockEntity() {
         return blockEntity;
     }
@@ -139,13 +152,10 @@ public class DrawerFramerMenu extends AbstractContainerMenu {
                 if (stack.getItem() instanceof DrawerUpgradeItem) {
                     if (!this.moveItemStackTo(stack, DrawerFramerBlockEntity.SLOT_UPGRADE, DrawerFramerBlockEntity.SLOT_UPGRADE + 1, false))
                         return ItemStack.EMPTY;
-                } else if (stack.getItem() instanceof BlockItem bi &&
-                        (bi.getBlock() instanceof FramedDrawerBlock ||
-                                bi.getBlock() instanceof FramedFluidDrawerBlock ||
-                                bi.getBlock() instanceof FramedCompactingDrawerBlock)) {
+                } else if (stack.getItem() instanceof BlockItem bi && isFramedDrawerBlock(bi)) {
                     if (!this.moveItemStackTo(stack, DrawerFramerBlockEntity.SLOT_INPUT, DrawerFramerBlockEntity.SLOT_INPUT + 1, false))
                         return ItemStack.EMPTY;
-                } else if (stack.getItem() instanceof BlockItem) {
+                } else if (stack.getItem() instanceof BlockItem bi && !isDrawerBlock(bi)) {
                     if (!this.moveItemStackTo(stack, DrawerFramerBlockEntity.SLOT_SIDES, DrawerFramerBlockEntity.SLOT_SIDES + 1, false))
                         if (!this.moveItemStackTo(stack, DrawerFramerBlockEntity.SLOT_FACE, DrawerFramerBlockEntity.SLOT_FACE + 1, false))
                             return ItemStack.EMPTY;

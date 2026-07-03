@@ -1,8 +1,6 @@
 package net.drawers.utilitydrawers.block.entity;
 
-import net.drawers.utilitydrawers.block.FramedCompactingDrawerBlock;
-import net.drawers.utilitydrawers.block.FramedDrawerBlock;
-import net.drawers.utilitydrawers.block.FramedFluidDrawerBlock;
+import net.drawers.utilitydrawers.block.*;
 import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
 import net.drawers.utilitydrawers.menu.DrawerFramerMenu;
 import net.minecraft.core.BlockPos;
@@ -37,7 +35,7 @@ public class DrawerFramerBlockEntity extends BlockEntity implements Container, M
     public static final int SLOT_OUTPUT  = 3;
     public static final int SLOT_UPGRADE = 4;
 
-    private static final int BASE_PROCESS_TICKS = 100; // 5 seconds
+    private static final int BASE_PROCESS_TICKS = 100;
 
     private final ItemStack[] inventory = new ItemStack[]{
             ItemStack.EMPTY,
@@ -104,8 +102,8 @@ public class DrawerFramerBlockEntity extends BlockEntity implements Container, M
         if (inventory[SLOT_SIDES].isEmpty())  return false;
         if (inventory[SLOT_FACE].isEmpty())   return false;
         if (inventory[SLOT_INPUT].isEmpty())  return false;
-        if (!(inventory[SLOT_SIDES].getItem() instanceof BlockItem)) return false;
-        if (!(inventory[SLOT_FACE].getItem()  instanceof BlockItem)) return false;
+        if (!isValidFrameOrFaceBlock(inventory[SLOT_SIDES])) return false;
+        if (!isValidFrameOrFaceBlock(inventory[SLOT_FACE]))  return false;
         if (!isFramedDrawer(inventory[SLOT_INPUT])) return false;
         if (!inventory[SLOT_OUTPUT].isEmpty()) return false;
 
@@ -113,10 +111,27 @@ public class DrawerFramerBlockEntity extends BlockEntity implements Container, M
     }
 
     private boolean isFramedDrawer(ItemStack stack) {
-        return stack.getItem() instanceof BlockItem bi &&
-                (bi.getBlock() instanceof FramedDrawerBlock ||
-                        bi.getBlock() instanceof FramedFluidDrawerBlock ||
-                        bi.getBlock() instanceof FramedCompactingDrawerBlock);
+        return stack.getItem() instanceof BlockItem bi && isFramedDrawerBlock(bi);
+    }
+
+    private boolean isValidFrameOrFaceBlock(ItemStack stack) {
+        return stack.getItem() instanceof BlockItem bi && !isDrawerBlock(bi);
+    }
+
+    private static boolean isFramedDrawerBlock(BlockItem bi) {
+        return bi.getBlock() instanceof FramedDrawerBlock
+                || bi.getBlock() instanceof FramedFluidDrawerBlock
+                || bi.getBlock() instanceof FramedCompactingDrawerBlock;
+    }
+
+    private static boolean isDrawerBlock(BlockItem bi) {
+        return bi.getBlock() instanceof DrawerBlock
+                || bi.getBlock() instanceof FluidDrawerBlock
+                || bi.getBlock() instanceof CompactingDrawerBlock
+                || bi.getBlock() instanceof WirelessDrawerBlock
+                || bi.getBlock() instanceof WirelessFluidDrawerBlock
+                || bi.getBlock() instanceof DrawerFramerBlock
+                || isFramedDrawerBlock(bi);
     }
 
     public void tick() {

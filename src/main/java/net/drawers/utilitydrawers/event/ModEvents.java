@@ -1,11 +1,7 @@
 package net.drawers.utilitydrawers.event;
 
 import appeng.api.AECapabilities;
-import net.drawers.utilitydrawers.ae2.CompactingDrawerMEStorage;
-import net.drawers.utilitydrawers.ae2.DrawerMEStorage;
-import net.drawers.utilitydrawers.ae2.FluidDrawerMEStorage;
 import net.drawers.utilitydrawers.UtilityDrawers;
-import net.drawers.utilitydrawers.ae2.StorageInterfaceMEStorage;
 import net.drawers.utilitydrawers.block.CompactingDrawerBlock;
 import net.drawers.utilitydrawers.block.DrawerBlock;
 import net.drawers.utilitydrawers.block.FramedCompactingDrawerBlock;
@@ -175,26 +171,7 @@ public class ModEvents {
 
     @SubscribeEvent
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(
-                AECapabilities.ME_STORAGE,
-                ModBlockEntities.DRAWER_BLOCK_ENTITY.get(),
-                (drawer, side) -> new DrawerMEStorage(drawer)
-        );
-        event.registerBlockEntity(
-                AECapabilities.ME_STORAGE,
-                ModBlockEntities.FLUID_DRAWER_BLOCK_ENTITY.get(),
-                (drawer, side) -> new FluidDrawerMEStorage(drawer)
-        );
-        event.registerBlockEntity(
-                AECapabilities.ME_STORAGE,
-                ModBlockEntities.STORAGE_INTERFACE_BLOCK_ENTITY.get(),
-                (interfaceEntity, side) -> new StorageInterfaceMEStorage(interfaceEntity)
-        );
-        event.registerBlockEntity(
-                AECapabilities.ME_STORAGE,
-                ModBlockEntities.COMPACTING_DRAWER_BLOCK_ENTITY.get(),
-                (interfaceEntity, side) -> new CompactingDrawerMEStorage(interfaceEntity)
-        );
+
         event.registerBlockEntity(
                 Capabilities.Item.BLOCK,
                 ModBlockEntities.DRAWER_BLOCK_ENTITY.get(),
@@ -241,22 +218,11 @@ public class ModEvents {
                 (drawer, side) -> drawer.createItemHandler()
         );
         event.registerBlockEntity(
-                AECapabilities.ME_STORAGE,
-                ModBlockEntities.WIRELESS_DRAWER_BLOCK_ENTITY.get(),
-                (drawer, side) -> new DrawerMEStorage(drawer)
-        );
-
-        event.registerBlockEntity(
                 Capabilities.Fluid.BLOCK,
                 ModBlockEntities.WIRELESS_FLUID_DRAWER_BLOCK_ENTITY.get(),
                 (drawer, side) -> drawer.createFluidHandler()
         );
 
-        event.registerBlockEntity(
-                AECapabilities.ME_STORAGE,
-                ModBlockEntities.WIRELESS_FLUID_DRAWER_BLOCK_ENTITY.get(),
-                (drawer, side) -> new FluidDrawerMEStorage(drawer)
-        );
     }
 
     @SubscribeEvent
