@@ -92,7 +92,9 @@ public class FramedFluidDrawerBlock extends Block implements SlotCountProvider, 
             return InteractionResult.PASS;
         }
 
-        if (!handStack.isEmpty() && (handStack.getItem() instanceof DrawerUpgradeItem || handStack.getItem() instanceof VoidUpgradeItem)) {
+        if (!handStack.isEmpty()
+                && (handStack.getItem() instanceof DrawerUpgradeItem
+                || handStack.getItem() instanceof VoidUpgradeItem)) {
             if (level.getBlockEntity(pos) instanceof FluidDrawerBlockEntity drawer) {
                 if (drawer.insertUpgrade(handStack)) {
                     if (!level.isClientSide() && !player.isCreative()) {

@@ -84,53 +84,26 @@ public class FramedDrawerBlock extends Block implements SlotCountProvider, Entit
     }
 
     @Override
-    protected InteractionResult useItemOn(
-            ItemStack stack,
-            BlockState state,
-            Level level,
-            BlockPos pos,
-            Player player,
-            InteractionHand hand,
-            BlockHitResult hit) {
+    protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
 
-        return handleInteraction(
-                state, level, pos, player, hit, stack, hand
-        );
+        return handleInteraction(state, level, pos, player, hit, stack, hand);
     }
 
     @Override
-    protected InteractionResult useWithoutItem(
-            BlockState state,
-            Level level,
-            BlockPos pos,
-            Player player,
-            BlockHitResult hit) {
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
 
-        return handleInteraction(
-                state,
-                level,
-                pos,
-                player,
-                hit,
-                ItemStack.EMPTY,
-                InteractionHand.MAIN_HAND
-        );
+        return handleInteraction(state, level, pos, player, hit, ItemStack.EMPTY, InteractionHand.MAIN_HAND);
     }
 
-    private InteractionResult handleInteraction(
-            BlockState state,
-            Level level,
-            BlockPos pos,
-            Player player,
-            BlockHitResult hit,
-            ItemStack handStack,
-            InteractionHand hand) {
+    private InteractionResult handleInteraction(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit, ItemStack handStack, InteractionHand hand) {
 
         if (handStack.getItem() instanceof StorageRemoteItem) {
             return InteractionResult.PASS;
         }
 
-        if (!handStack.isEmpty() && handStack.getItem() instanceof DrawerUpgradeItem || handStack.getItem() instanceof VoidUpgradeItem) {
+        if (!handStack.isEmpty()
+                && (handStack.getItem() instanceof DrawerUpgradeItem
+                || handStack.getItem() instanceof VoidUpgradeItem)) {
             if (level.getBlockEntity(pos) instanceof DrawerBlockEntity drawer) {
                 if (drawer.insertUpgrade(handStack)) {
                     if (!level.isClientSide() && !player.isCreative()) {

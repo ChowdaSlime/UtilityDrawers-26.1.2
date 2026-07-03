@@ -122,7 +122,7 @@ public class StorageViewerScreen extends AbstractContainerScreen<StorageViewerMe
         List<StorageViewerMenu.NetworkSlot> all = menu.getNetworkSlots();
 
         Comparator<StorageViewerMenu.NetworkSlot> comparator = menu.sortByCount
-                ? Comparator.comparingLong(StorageViewerMenu.NetworkSlot::count)
+                ? Comparator.comparingLong(ns -> ns.isFluid() ? ns.count() / 1000 : ns.count())
                 : Comparator.comparing(ns -> ns.stack().getHoverName().getString().toLowerCase());
 
         if (!menu.sortAscending) {
@@ -618,7 +618,7 @@ public class StorageViewerScreen extends AbstractContainerScreen<StorageViewerMe
                     }
 
                     if (!isGhost) {
-                        String countStr = formatCount(ns.count());
+                        String countStr = formatCount(ns.count(), ns.isFluid());
                         graphics.nextStratum();
                         graphics.pose().pushMatrix();
                         float textScale = 0.75f;
@@ -650,8 +650,18 @@ public class StorageViewerScreen extends AbstractContainerScreen<StorageViewerMe
                 this.inventoryLabelX, this.inventoryLabelY + 2, 0xFFF2F3E5, false);
     }
 
-    private String formatCount(long count) {
-        if (count >= 1_000_000_000L) return (count / 1_000_000_000L) + "B";
+    private String formatCount(long count, boolean isFluid) {
+        if (isFluid) {
+            if (count == 0) return "0";
+            if (count >= 1000) {
+                if (count % 1000 == 0) {
+                    return (count / 1000) + "B";
+                }
+                return String.format("%.1fB", count / 1000.0f);
+            }
+            return count + "mB";
+        }
+        if (count >= 1_000_000_000L) return (count / 1_000_000_000L) + "G";
         if (count >= 1_000_000L) return (count / 1_000_000L) + "M";
         if (count >= 1_000L) return (count / 1_000L) + "k";
         return String.valueOf(count);
