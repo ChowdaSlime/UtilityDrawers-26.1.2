@@ -2,6 +2,7 @@ package net.drawers.utilitydrawers.menu;
 
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
@@ -37,6 +38,9 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<WirelessFluidDrawerMenu>> WIRELESS_FLUID_DRAWER_MENU =
             MENU_TYPES.register("wireless_fluid_drawer_menu",
                     () -> IMenuTypeExtension.create(WirelessFluidDrawerMenu::new));
+    public static final DeferredHolder<MenuType<?>, MenuType<UpgradeConfigMenu>> UPGRADE_CONFIG_MENU =
+            MENU_TYPES.register("upgrade_config_menu",
+                    () -> new MenuType<>(UpgradeConfigMenu::new, FeatureFlags.DEFAULT_FLAGS));
 
     public static void register(IEventBus eventBus) {
         MENU_TYPES.register(eventBus);

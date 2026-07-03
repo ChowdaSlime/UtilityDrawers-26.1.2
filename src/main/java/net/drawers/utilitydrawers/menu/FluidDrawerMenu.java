@@ -2,6 +2,8 @@ package net.drawers.utilitydrawers.menu;
 
 import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
 import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
+import net.drawers.utilitydrawers.item.ExtractUpgradeItem;
+import net.drawers.utilitydrawers.item.InsertUpgradeItem;
 import net.drawers.utilitydrawers.item.VoidUpgradeItem;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.SimpleContainer;
@@ -22,7 +24,9 @@ public class FluidDrawerMenu extends AbstractContainerMenu {
 
     private boolean isInitializing = true;
 
-    protected static final int UPGRADE_SLOT_COUNT = 4;
+    protected static final int UTILITY_SLOT_COUNT = 3;
+    protected static final int TIER_SLOT_COUNT = 4;
+    protected static final int TOTAL_UPGRADE_SLOTS = UTILITY_SLOT_COUNT + TIER_SLOT_COUNT;
 
     public FluidDrawerMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
         this(containerId, playerInventory, playerInventory.player.level()
@@ -41,28 +45,30 @@ public class FluidDrawerMenu extends AbstractContainerMenu {
         this.hasUpgrades = hasUpgrades;
 
         if (this.hasUpgrades) {
-            this.upgradeContainer = new SimpleContainer(UPGRADE_SLOT_COUNT) {
+            this.upgradeContainer = new SimpleContainer(TOTAL_UPGRADE_SLOTS) {
                 @Override
                 public void setChanged() {
                     super.setChanged();
                     if (!FluidDrawerMenu.this.isInitializing) {
-                        for (int i = 0; i < UPGRADE_SLOT_COUNT; i++) {
+                        for (int i = 0; i < TOTAL_UPGRADE_SLOTS; i++) {
                             FluidDrawerMenu.this.blockEntity.setUpgradeSlot(i, this.getItem(i).copy());
                         }
                     }
                 }
             };
 
-            for (int i = 0; i < UPGRADE_SLOT_COUNT; i++) {
+            for (int i = 0; i < TOTAL_UPGRADE_SLOTS; i++) {
                 this.upgradeContainer.setItem(i, this.blockEntity.getUpgradeSlot(i).copy());
             }
 
             this.isInitializing = false;
 
-            for (int i = 0; i < UPGRADE_SLOT_COUNT; i++) {
-                int xPos = 152;
-                int yPos = 8 + (i * 18);
-                this.addSlot(new UpgradeSlot(this.upgradeContainer, i, xPos, yPos, this.blockEntity));
+            for (int i = 0; i < UTILITY_SLOT_COUNT; i++) {
+                this.addSlot(new UtilityUpgradeSlot(this.upgradeContainer, i, 8, 16 + (i * 18), this.blockEntity));
+            }
+
+            for (int i = 0; i < TIER_SLOT_COUNT; i++) {
+                this.addSlot(new TierUpgradeSlot(this.upgradeContainer, i + UTILITY_SLOT_COUNT, 152, 8 + (i * 18), this.blockEntity));
             }
         } else {
             this.upgradeContainer = null;
@@ -109,7 +115,7 @@ public class FluidDrawerMenu extends AbstractContainerMenu {
             ItemStack stackInSlot = slot.getItem();
             originalStack = stackInSlot.copy();
 
-            int uCount = this.hasUpgrades ? UPGRADE_SLOT_COUNT : 0;
+            int uCount = this.hasUpgrades ? TOTAL_UPGRADE_SLOTS : 0;
             int invStart = uCount;
             int hotbarStart = uCount + 27;
             int invEnd = uCount + 36;
@@ -119,8 +125,12 @@ public class FluidDrawerMenu extends AbstractContainerMenu {
                     return ItemStack.EMPTY;
                 }
             } else {
-                if (this.hasUpgrades && (stackInSlot.getItem() instanceof DrawerUpgradeItem || stackInSlot.getItem() instanceof VoidUpgradeItem)) {
-                    if (!this.moveItemStackTo(stackInSlot, 0, uCount, false)) {
+                if (this.hasUpgrades && isUtilityUpgrade(stackInSlot)) {
+                    if (!this.moveItemStackTo(stackInSlot, 0, UTILITY_SLOT_COUNT, false)) {
+                        return ItemStack.EMPTY;
+                    }
+                } else if (this.hasUpgrades && stackInSlot.getItem() instanceof DrawerUpgradeItem) {
+                    if (!this.moveItemStackTo(stackInSlot, UTILITY_SLOT_COUNT, TOTAL_UPGRADE_SLOTS, false)) {
                         return ItemStack.EMPTY;
                     }
                 } else if (index >= invStart && index < hotbarStart) {
@@ -149,17 +159,47 @@ public class FluidDrawerMenu extends AbstractContainerMenu {
         return originalStack;
     }
 
-    private static class UpgradeSlot extends Slot {
+    public static boolean isUtilityUpgrade(ItemStack stack) {
+        return stack.getItem() instanceof VoidUpgradeItem ||
+                stack.getItem() instanceof InsertUpgradeItem ||
+                stack.getItem() instanceof ExtractUpgradeItem;
+    }
+
+    private static class UtilityUpgradeSlot extends Slot {
         private final FluidDrawerBlockEntity blockEntity;
 
-        public UpgradeSlot(SimpleContainer container, int index, int x, int y, FluidDrawerBlockEntity blockEntity) {
+        public UtilityUpgradeSlot(SimpleContainer container, int index, int x, int y, FluidDrawerBlockEntity blockEntity) {
             super(container, index, x, y);
             this.blockEntity = blockEntity;
         }
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return stack.getItem() instanceof DrawerUpgradeItem || stack.getItem() instanceof VoidUpgradeItem;
+            return isUtilityUpgrade(stack);
+        }
+
+        @Override
+        public boolean mayPickup(Player player) {
+            return blockEntity.canRemoveUpgrade(this.getSlotIndex());
+        }
+
+        @Override
+        public int getMaxStackSize() {
+            return 1;
+        }
+    }
+
+    private static class TierUpgradeSlot extends Slot {
+        private final FluidDrawerBlockEntity blockEntity;
+
+        public TierUpgradeSlot(SimpleContainer container, int index, int x, int y, FluidDrawerBlockEntity blockEntity) {
+            super(container, index, x, y);
+            this.blockEntity = blockEntity;
+        }
+
+        @Override
+        public boolean mayPlace(ItemStack stack) {
+            return stack.getItem() instanceof DrawerUpgradeItem;
         }
 
         @Override

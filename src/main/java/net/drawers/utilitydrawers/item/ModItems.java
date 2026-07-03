@@ -22,10 +22,16 @@ public class ModItems {
             ITEMS.registerItem("drawer_upgrade_t4", properties -> new DrawerUpgradeItem(properties, 4));
     public static final DeferredItem<VoidUpgradeItem> VOID_UPGRADE =
             ITEMS.registerItem("void_upgrade", properties -> new VoidUpgradeItem(properties));
-    public static final DeferredItem<StorageRemoteItem> STORAGE_REMOTE =
-            ITEMS.registerItem("storage_remote", properties -> new StorageRemoteItem(properties));
     public static final DeferredItem<Item> UPGRADE_BASE =
             ITEMS.registerSimpleItem("upgrade_base");
+    public static final DeferredItem<InsertUpgradeItem> INSERT_UPGRADE =
+            ITEMS.registerItem("insert_upgrade", properties -> new InsertUpgradeItem(properties));
+    public static final DeferredItem<ExtractUpgradeItem> EXTRACT_UPGRADE =
+            ITEMS.registerItem("extract_upgrade", properties -> new ExtractUpgradeItem(properties));
+
+    public static final DeferredItem<StorageRemoteItem> STORAGE_REMOTE =
+            ITEMS.registerItem("storage_remote", properties -> new StorageRemoteItem(properties));
+
 
 
     public static void register(IEventBus eventBus) {

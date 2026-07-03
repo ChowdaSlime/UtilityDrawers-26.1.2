@@ -15,6 +15,8 @@ public class CompactingDrawerScreen extends AbstractContainerScreen<CompactingDr
     private static final Identifier TEXTURE =
             Identifier.fromNamespaceAndPath(UtilityDrawers.MODID, "textures/gui/drawer_gui.png");
 
+    private static final int UTILITY_SLOT_X      = 8;
+    private static final int UTILITY_SLOT_Y_START = 16;
     private static final int UPGRADE_SLOT_X      = 152;
     private static final int UPGRADE_SLOT_Y_START = 8;
     private static final int UPGRADE_SLOT_SIZE    = 18;
@@ -32,12 +34,8 @@ public class CompactingDrawerScreen extends AbstractContainerScreen<CompactingDr
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
-        int titleColor = -12566464;
-        graphics.text(this.font,
-                Component.literal("Compacting"), this.titleLabelX, this.titleLabelY, titleColor, false);
-        graphics.text(this.font,
-                Component.literal("Drawer"), this.titleLabelX, this.titleLabelY + this.font.lineHeight, titleColor, false);
-        graphics.text(this.font, this.playerInventoryTitle, this.inventoryLabelX, this.imageHeight - 94, titleColor, false);
+        graphics.text(this.font, this.title, this.titleLabelX, this.titleLabelY, -12566464, false);
+        graphics.text(this.font, this.playerInventoryTitle, this.inventoryLabelX, this.imageHeight - 94, -12566464, false);
     }
 
     @Override
@@ -57,14 +55,19 @@ public class CompactingDrawerScreen extends AbstractContainerScreen<CompactingDr
             drawSlotBorder(graphics, bx + 8 + col * 18, by + 142, 16);
         }
 
-        for (int i = 0; i < 4; i++) {
-            drawSlotBorder(graphics, bx + UPGRADE_SLOT_X, by + UPGRADE_SLOT_Y_START + i * UPGRADE_SLOT_SIZE, 16);
+        if (this.menu.hasUpgrades()) {
+            for (int i = 0; i < 3; i++) {
+                drawSlotBorder(graphics, bx + UTILITY_SLOT_X, by + UTILITY_SLOT_Y_START + i * UPGRADE_SLOT_SIZE, 16);
+            }
+            for (int i = 0; i < 4; i++) {
+                drawSlotBorder(graphics, bx + UPGRADE_SLOT_X, by + UPGRADE_SLOT_Y_START + i * UPGRADE_SLOT_SIZE, 16);
+            }
         }
 
         int[][] slotPositions = {
-                {75, 12, 24},
-                {62, 37, 24},
-                {88, 37, 24},
+                {80, 20, 16},
+                {69, 43, 16},
+                {91, 43, 16},
         };
 
         CompactingDrawerBlockEntity drawer = this.menu.getBlockEntity();
@@ -72,15 +75,14 @@ public class CompactingDrawerScreen extends AbstractContainerScreen<CompactingDr
         for (int i = 0; i < 3; i++) {
             int slotX    = bx + slotPositions[i][0];
             int slotY    = by + slotPositions[i][1];
-            int slotSize =      slotPositions[i][2];
+            int slotSize = slotPositions[i][2];
 
-            drawSlotBorder(graphics, slotX, slotY, slotSize - 2);
+            drawSlotBorder(graphics, slotX, slotY, slotSize);
 
             if (!drawer.isSlotEmpty(i)) {
                 ItemStack stack = drawer.getStoredItem(i);
-                int itemX = slotX + slotSize / 2 - 9;
-                int itemY = slotY + slotSize / 2 - 9;
-                graphics.item(stack, itemX, itemY);
+
+                graphics.item(stack, slotX, slotY);
 
                 long count = drawer.getStoredCount(i);
 

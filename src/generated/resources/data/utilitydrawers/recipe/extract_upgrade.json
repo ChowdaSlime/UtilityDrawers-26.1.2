@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "minecraft:stone",
+    "B": "minecraft:hopper",
+    "C": "minecraft:chest",
+    "D": "utilitydrawers:upgrade_base"
+  },
+  "pattern": [
+    "ACA",
+    "ADA",
+    "ABA"
+  ],
+  "result": {
+    "id": "utilitydrawers:extract_upgrade"
+  }
+}

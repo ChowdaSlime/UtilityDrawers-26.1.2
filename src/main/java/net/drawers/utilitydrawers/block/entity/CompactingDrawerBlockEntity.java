@@ -1,9 +1,7 @@
 package net.drawers.utilitydrawers.block.entity;
 
 import net.drawers.utilitydrawers.UtilityDrawersConfig;
-import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
-import net.drawers.utilitydrawers.item.StorageRemoteItem;
-import net.drawers.utilitydrawers.item.VoidUpgradeItem;
+import net.drawers.utilitydrawers.item.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.network.Connection;
@@ -16,6 +14,7 @@ import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -31,7 +30,7 @@ import net.neoforged.neoforge.transfer.item.ItemResource;
 import java.util.List;
 import java.util.Optional;
 
-public class CompactingDrawerBlockEntity extends BlockEntity {
+public class CompactingDrawerBlockEntity extends BlockEntity implements ItemDrawerAccess {
 
     public static final int SLOT_BLOCK  = 0;
     public static final int SLOT_MID    = 1;
@@ -48,7 +47,8 @@ public class CompactingDrawerBlockEntity extends BlockEntity {
     protected BlockPos connectedInterface;
 
     protected final ItemStack[] upgradeSlots = new ItemStack[]{
-            ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY
+            ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY,
+            ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY
     };
 
     public CompactingDrawerBlockEntity(BlockPos pos, BlockState state) {
@@ -102,8 +102,44 @@ public class CompactingDrawerBlockEntity extends BlockEntity {
         return false;
     }
 
+    public boolean hasInsertUpgrade() {
+        for (ItemStack upgrade : upgradeSlots) {
+            if (upgrade.getItem() instanceof InsertUpgradeItem) return true;
+        }
+        return false;
+    }
+
+    public boolean hasExtractUpgrade() {
+        for (ItemStack upgrade : upgradeSlots) {
+            if (upgrade.getItem() instanceof ExtractUpgradeItem) return true;
+        }
+        return false;
+    }
+
+    public static void serverTick(Level level, BlockPos pos, BlockState state, CompactingDrawerBlockEntity be) {
+        if ((level.getGameTime() + Math.abs(pos.asLong())) % 8 != 0) return;
+
+        ItemStack insertUpgrade = ItemStack.EMPTY;
+        ItemStack extractUpgrade = ItemStack.EMPTY;
+
+        for (ItemStack upgrade : be.upgradeSlots) {
+            if (upgrade.getItem() instanceof InsertUpgradeItem) {
+                insertUpgrade = upgrade;
+            } else if (upgrade.getItem() instanceof ExtractUpgradeItem) {
+                extractUpgrade = upgrade;
+            }
+        }
+
+        if (!insertUpgrade.isEmpty()) {
+            InsertUpgradeItem.tryInsert(level, pos, insertUpgrade, be);
+        }
+        if (!extractUpgrade.isEmpty()) {
+            ExtractUpgradeItem.tryExtract(level, pos, extractUpgrade, be);
+        }
+    }
+
     public boolean insertUpgrade(ItemStack upgrade) {
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 7; i++) {
             if (upgradeSlots[i].isEmpty()) {
                 upgradeSlots[i] = upgrade.copyWithCount(1);
                 recalculateCapacity();
@@ -118,7 +154,7 @@ public class CompactingDrawerBlockEntity extends BlockEntity {
     public boolean canRemoveUpgrade(int upgradeSlot) {
         if (upgradeSlots[upgradeSlot].isEmpty()) return false;
         int newMult = 1;
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 7; i++) {
             if (i == upgradeSlot) continue;
             if (!upgradeSlots[i].isEmpty() && upgradeSlots[i].getItem() instanceof DrawerUpgradeItem u)
                 newMult *= u.getMultiplier();
@@ -411,7 +447,7 @@ public class CompactingDrawerBlockEntity extends BlockEntity {
         if (!midItem.isEmpty())   output.store("MidItem",   ItemStack.CODEC, midItem);
         if (!blockItem.isEmpty()) output.store("BlockItem", ItemStack.CODEC, blockItem);
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 7; i++) {
             if (!upgradeSlots[i].isEmpty()) {
                 output.child("Upgrade" + i).store("Item", ItemStack.CODEC, upgradeSlots[i]);
             }
@@ -433,7 +469,7 @@ public class CompactingDrawerBlockEntity extends BlockEntity {
         midItem   = input.read("MidItem",   ItemStack.CODEC).orElse(ItemStack.EMPTY);
         blockItem = input.read("BlockItem", ItemStack.CODEC).orElse(ItemStack.EMPTY);
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 7; i++) {
             final int idx = i;
             upgradeSlots[idx] = ItemStack.EMPTY;
             input.child("Upgrade" + idx).ifPresent(u ->
@@ -460,7 +496,7 @@ public class CompactingDrawerBlockEntity extends BlockEntity {
         if (!blockItem.isEmpty())
             tag.put("BlockItem", ItemStack.CODEC.encodeStart(ops, blockItem).getOrThrow().copy());
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 7; i++) {
             if (!upgradeSlots[i].isEmpty()) {
                 CompoundTag u = new CompoundTag();
                 u.put("Item", ItemStack.CODEC.encodeStart(ops, upgradeSlots[i]).getOrThrow().copy());
@@ -488,7 +524,7 @@ public class CompactingDrawerBlockEntity extends BlockEntity {
                     ? ItemStack.CODEC.parse(ops, tag.get("BlockItem")).resultOrPartial().orElse(ItemStack.EMPTY)
                     : ItemStack.EMPTY;
 
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 7; i++) {
                 upgradeSlots[i] = ItemStack.EMPTY;
                 final int idx = i;
                 tag.getCompound("Upgrade" + i).ifPresent(u -> {

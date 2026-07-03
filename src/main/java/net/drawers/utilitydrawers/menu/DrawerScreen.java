@@ -15,6 +15,8 @@ public class DrawerScreen<T extends DrawerMenu> extends AbstractContainerScreen<
     private static final Identifier TEXTURE =
             Identifier.fromNamespaceAndPath(UtilityDrawers.MODID, "textures/gui/drawer_gui.png");
 
+    private static final int UTILITY_SLOT_X = 8;
+    private static final int UTILITY_SLOT_Y_START = 16;
     private static final int UPGRADE_SLOT_X = 152;
     private static final int UPGRADE_SLOT_Y_START = 8;
     private static final int UPGRADE_SLOT_SIZE = 18;
@@ -29,7 +31,6 @@ public class DrawerScreen<T extends DrawerMenu> extends AbstractContainerScreen<
         this.topPos = (this.height - this.imageHeight) / 2;
         super.init();
     }
-
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
@@ -48,23 +49,21 @@ public class DrawerScreen<T extends DrawerMenu> extends AbstractContainerScreen<
 
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                int sx = bx + 8 + col * 18;
-                int sy = by + 84 + row * 18;
-                drawSlotBorder(graphics, sx, sy, 16);
+                drawSlotBorder(graphics, bx + 8 + col * 18, by + 84 + row * 18, 16);
             }
         }
 
         for (int col = 0; col < 9; col++) {
-            int sx = bx + 8 + col * 18;
-            int sy = by + 142;
-            drawSlotBorder(graphics, sx, sy, 16);
+            drawSlotBorder(graphics, bx + 8 + col * 18, by + 142, 16);
         }
 
         if (this.menu.hasUpgrades()) {
+            for (int i = 0; i < 3; i++) {
+                drawSlotBorder(graphics, bx + UTILITY_SLOT_X, by + UTILITY_SLOT_Y_START + i * UPGRADE_SLOT_SIZE, 16);
+            }
+
             for (int i = 0; i < 4; i++) {
-                int sx = bx + UPGRADE_SLOT_X;
-                int sy = by + UPGRADE_SLOT_Y_START + i * UPGRADE_SLOT_SIZE;
-                drawSlotBorder(graphics, sx, sy, 16);
+                drawSlotBorder(graphics, bx + UPGRADE_SLOT_X, by + UPGRADE_SLOT_Y_START + i * UPGRADE_SLOT_SIZE, 16);
             }
         }
 
@@ -77,15 +76,12 @@ public class DrawerScreen<T extends DrawerMenu> extends AbstractContainerScreen<
             int slotY = by + slotPositions[i][1];
             int slotSize = slotPositions[i][2];
 
-            drawSlotBorder(graphics, slotX, slotY, slotSize - 2);
+            drawSlotBorder(graphics, slotX, slotY, slotSize);
 
             if (!drawer.isSlotEmpty(i)) {
                 ItemStack stack = drawer.getStoredItem(i);
-                int itemX = slotX + slotSize / 2 - 9;
-                int itemY = slotY + slotSize / 2 - 9;
-                graphics.item(stack, itemX, itemY);
 
-
+                graphics.item(stack, slotX, slotY);
 
                 if (mouseX >= slotX && mouseX < slotX + slotSize
                         && mouseY >= slotY && mouseY < slotY + slotSize) {
@@ -110,25 +106,11 @@ public class DrawerScreen<T extends DrawerMenu> extends AbstractContainerScreen<
 
     private int[][] getSlotPositions(int slotCount) {
         return switch (slotCount) {
-            case 1 -> new int[][]{
-                    {75, 28, 24}
-            };
-            case 2 -> new int[][]{
-                    {75, 17, 24},
-                    {75, 43, 24}
-            };
-            case 3 -> new int[][]{
-                    {75, 12, 24},
-                    {62, 37, 24},
-                    {88, 37, 24}
-            };
-            case 4 -> new int[][]{
-                    {62, 12, 24},
-                    {88, 12, 24},
-                    {62, 37, 24},
-                    {88, 37, 24}
-            };
-            default -> new int[][]{{75, 28, 24}};
+            case 1 -> new int[][]{{80, 34, 16}};
+            case 2 -> new int[][]{{80, 23, 16}, {80, 45, 16}};
+            case 3 -> new int[][]{{80, 20, 16}, {69, 43, 16}, {91, 43, 16}};
+            case 4 -> new int[][]{{69, 23, 16}, {91, 23, 16}, {69, 45, 16}, {91, 45, 16}};
+            default -> new int[][]{{80, 34, 16}};
         };
     }
 }

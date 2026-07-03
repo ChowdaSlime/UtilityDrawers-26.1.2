@@ -9,6 +9,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.block.Blocks;
 
 import java.util.concurrent.CompletableFuture;
@@ -415,10 +416,32 @@ public class ModRecipeProvider extends RecipeProvider {
                 .define('D', ModBlocks.DRAWER_BASE.get())
                 .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
                 .save(output);
+
+        shaped(RecipeCategory.MISC, ModItems.INSERT_UPGRADE.get())
+                .pattern("ABA")
+                .pattern("ADA")
+                .pattern("ACA")
+                .define('A', Items.STONE)
+                .define('B', Items.HOPPER)
+                .define('C', Items.CHEST)
+                .define('D', ModItems.UPGRADE_BASE.get())
+                .unlockedBy("has_upgrade_base", has(ModItems.UPGRADE_BASE.get()))
+                .save(output);
+
+        shaped(RecipeCategory.MISC, ModItems.EXTRACT_UPGRADE.get())
+                .pattern("ACA")
+                .pattern("ADA")
+                .pattern("ABA")
+                .define('A', Items.STONE)
+                .define('B', Items.HOPPER)
+                .define('C', Items.CHEST)
+                .define('D', ModItems.UPGRADE_BASE.get())
+                .unlockedBy("has_upgrade_base", has(ModItems.UPGRADE_BASE.get()))
+                .save(output);
     }
 
-    private net.minecraft.world.item.crafting.Ingredient ingredient(Item item) {
-        return net.minecraft.world.item.crafting.Ingredient.of(item);
+    private Ingredient ingredient(Item item) {
+        return Ingredient.of(item);
     }
 
     private Item getStrippedLog(ModBlocks.WoodType wood) {

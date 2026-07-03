@@ -1,11 +1,7 @@
 package net.drawers.utilitydrawers.block.entity;
 
-import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.UtilityDrawersConfig;
-import net.drawers.utilitydrawers.block.DrawerBlock;
-import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
-import net.drawers.utilitydrawers.item.StorageRemoteItem;
-import net.drawers.utilitydrawers.item.VoidUpgradeItem;
+import net.drawers.utilitydrawers.item.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.network.Connection;
@@ -13,6 +9,7 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -25,7 +22,7 @@ import net.neoforged.neoforge.transfer.transaction.SnapshotJournal;
 import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 import net.neoforged.neoforge.transfer.item.ItemResource;
 
-public class DrawerBlockEntity extends BlockEntity {
+public class DrawerBlockEntity extends BlockEntity implements ItemDrawerAccess{
 
     protected final int slotCount;
     protected final ItemStack[] storedStacks;
@@ -35,7 +32,8 @@ public class DrawerBlockEntity extends BlockEntity {
     protected BlockPos connectedInterface;
 
     protected final ItemStack[] upgradeSlots = new ItemStack[]{
-            ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY
+            ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY,
+            ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY
     };
 
     public DrawerBlockEntity(BlockPos pos, BlockState state) {
@@ -180,6 +178,42 @@ public class DrawerBlockEntity extends BlockEntity {
         return false;
     }
 
+    public boolean hasInsertUpgrade() {
+        for (ItemStack upgrade : upgradeSlots) {
+            if (upgrade.getItem() instanceof InsertUpgradeItem) return true;
+        }
+        return false;
+    }
+
+    public boolean hasExtractUpgrade() {
+        for (ItemStack upgrade : upgradeSlots) {
+            if (upgrade.getItem() instanceof ExtractUpgradeItem) return true;
+        }
+        return false;
+    }
+
+    public static void serverTick(Level level, BlockPos pos, BlockState state, DrawerBlockEntity be) {
+        if ((level.getGameTime() + Math.abs(pos.asLong())) % 8 != 0) return;
+
+        ItemStack insertUpgrade = ItemStack.EMPTY;
+        ItemStack extractUpgrade = ItemStack.EMPTY;
+
+        for (ItemStack upgrade : be.upgradeSlots) {
+            if (upgrade.getItem() instanceof InsertUpgradeItem) {
+                insertUpgrade = upgrade;
+            } else if (upgrade.getItem() instanceof ExtractUpgradeItem) {
+                extractUpgrade = upgrade;
+            }
+        }
+
+        if (!insertUpgrade.isEmpty()) {
+            InsertUpgradeItem.tryInsert(level, pos, insertUpgrade, be);
+        }
+        if (!extractUpgrade.isEmpty()) {
+            ExtractUpgradeItem.tryExtract(level, pos, extractUpgrade, be);
+        }
+    }
+
     private ItemStack insertIntoSlot(int slot, ItemStack stack, boolean simulate) {
         if (stack.getItem() instanceof StorageRemoteItem) {
             return stack;
@@ -280,7 +314,7 @@ public class DrawerBlockEntity extends BlockEntity {
     }
 
     public boolean insertUpgrade(ItemStack upgrade) {
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 7; i++) {
             if (upgradeSlots[i].isEmpty()) {
                 upgradeSlots[i] = upgrade.copyWithCount(1);
                 recalculateCapacities();
@@ -297,7 +331,7 @@ public class DrawerBlockEntity extends BlockEntity {
         if (upgradeSlots[upgradeSlot].isEmpty())
             return false;
         int newMultiplier = 1;
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 7; i++) {
             if (i == upgradeSlot) continue;
 
             if (!upgradeSlots[i].isEmpty() && upgradeSlots[i].getItem() instanceof DrawerUpgradeItem upgrade) {
@@ -372,7 +406,7 @@ public class DrawerBlockEntity extends BlockEntity {
                 slotOutput.putLong("Count", storedCounts[i]);
             }
         }
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 7; i++) {
             ValueOutput upgradeOutput = output.child("Upgrade" + i);
             if (!upgradeSlots[i].isEmpty()) {
                 upgradeOutput.store("Item", ItemStack.CODEC, upgradeSlots[i]);
@@ -395,7 +429,7 @@ public class DrawerBlockEntity extends BlockEntity {
                 storedCounts[slot] = slotInput.getLongOr("Count", 0L);
             });
         }
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 7; i++) {
             final int upgradeIndex = i;
             upgradeSlots[upgradeIndex] = ItemStack.EMPTY;
             input.child("Upgrade" + upgradeIndex).ifPresent(upgradeInput -> {
@@ -416,7 +450,7 @@ public class DrawerBlockEntity extends BlockEntity {
                 storedCounts[i] = slotTag.getLongOr("Count", 0L);
             }
         }
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 7; i++) {
             upgradeSlots[i] = ItemStack.EMPTY;
             if (tag.getCompound("Upgrade" + i).isPresent()) {
                 CompoundTag upgradeTag = tag.getCompound("Upgrade" + i).orElseThrow();
@@ -441,7 +475,7 @@ public class DrawerBlockEntity extends BlockEntity {
                 tag.put("Slot" + i, slotTag);
             }
         }
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 7; i++) {
             if (!upgradeSlots[i].isEmpty()) {
                 CompoundTag upgradeTag = new CompoundTag();
                 upgradeTag.put("Item", ItemStack.CODEC.encodeStart(provider.createSerializationContext(NbtOps.INSTANCE), upgradeSlots[i]).getOrThrow().copy());

@@ -1,6 +1,7 @@
 package net.drawers.utilitydrawers.block;
 
 import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
+import net.drawers.utilitydrawers.block.entity.ModBlockEntities;
 import net.drawers.utilitydrawers.block.entity.SlotCountProvider;
 import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
 import net.drawers.utilitydrawers.item.StorageRemoteItem;
@@ -28,6 +29,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -38,6 +41,7 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -302,4 +306,15 @@ InteractionHand hand) {
         };
     }
 
+    @Nullable
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+        if (level.isClientSide()) return null;
+
+        if (type == ModBlockEntities.DRAWER_BLOCK_ENTITY.get()) {
+            return (BlockEntityTicker<T>) (lvl, pos, st, be) ->
+                    DrawerBlockEntity.serverTick(lvl, pos, st, (DrawerBlockEntity) be);
+        }
+        return null;
+    }
 }

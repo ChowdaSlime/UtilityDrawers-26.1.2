@@ -30,6 +30,10 @@ public class UtilityDrawersConfig {
     public static final ModConfigSpec.IntValue UPGRADE_TIER_3_MULTIPLIER;
     public static final ModConfigSpec.IntValue UPGRADE_TIER_4_MULTIPLIER;
 
+    // Transfer upgrade max amounts
+    public static final ModConfigSpec.IntValue UPGRADE_TRANSFER_ITEM_AMOUNT;
+    public static final ModConfigSpec.IntValue UPGRADE_TRANSFER_FLUID_AMOUNT;
+
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
 
@@ -110,6 +114,14 @@ public class UtilityDrawersConfig {
         UPGRADE_TIER_4_MULTIPLIER = builder
                 .comment("Multiplier for tier 4 drawer upgrade")
                 .defineInRange("upgradeTier4Multiplier", 32, 1, Integer.MAX_VALUE);
+
+        UPGRADE_TRANSFER_ITEM_AMOUNT = builder
+                .comment("Maximum number of items transferred per tick by the Insert and Extract upgrades")
+                .defineInRange("upgradeTransferItemAmount", 8, 1, Integer.MAX_VALUE);
+
+        UPGRADE_TRANSFER_FLUID_AMOUNT = builder
+                .comment("Maximum amount of fluid (in mB) transferred per tick by the Insert and Extract upgrades")
+                .defineInRange("upgradeTransferFluidAmount", 4000, 1, Integer.MAX_VALUE);
 
         builder.pop();
 

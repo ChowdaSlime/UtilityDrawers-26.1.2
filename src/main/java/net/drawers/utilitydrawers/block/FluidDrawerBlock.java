@@ -1,6 +1,7 @@
 package net.drawers.utilitydrawers.block;
 
 import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
+import net.drawers.utilitydrawers.block.entity.ModBlockEntities;
 import net.drawers.utilitydrawers.block.entity.SlotCountProvider;
 import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
 import net.drawers.utilitydrawers.item.StorageRemoteItem;
@@ -28,6 +29,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -44,6 +47,7 @@ import net.neoforged.neoforge.transfer.access.ItemAccess;
 import net.neoforged.neoforge.transfer.fluid.FluidResource;
 import net.neoforged.neoforge.transfer.transaction.Transaction;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 public class FluidDrawerBlock extends Block implements SlotCountProvider, EntityBlock {
@@ -281,5 +285,17 @@ public class FluidDrawerBlock extends Block implements SlotCountProvider, Entity
             }
             default -> 0;
         };
+    }
+
+    @Nullable
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+        if (level.isClientSide()) return null;
+
+        if (type == ModBlockEntities.FLUID_DRAWER_BLOCK_ENTITY.get()) {
+            return (BlockEntityTicker<T>) (lvl, pos, st, be) ->
+                    FluidDrawerBlockEntity.serverTick(lvl, pos, st, (FluidDrawerBlockEntity) be);
+        }
+        return null;
     }
 }

@@ -3,12 +3,15 @@ package net.drawers.utilitydrawers.data;
 import com.mojang.serialization.Codec;
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
+
+import java.util.List;
 
 public class ModDataComponents {
 
@@ -55,6 +58,13 @@ public class ModDataComponents {
                     () -> DataComponentType.<Boolean>builder()
                             .persistent(Codec.BOOL)
                             .networkSynchronized(ByteBufCodecs.BOOL)
+                            .build());
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<List<Direction>>> ACTIVE_DIRECTIONS =
+            DATA_COMPONENTS.register("active_directions",
+                    () -> DataComponentType.<List<Direction>>builder()
+                            .persistent(Direction.CODEC.listOf())
+                            .networkSynchronized(Direction.STREAM_CODEC.apply(ByteBufCodecs.list()))
                             .build());
 
     public static void register(IEventBus eventBus) {

@@ -66,6 +66,7 @@ public class ModClientEvents {
         event.register(ModMenuTypes.STORAGE_VIEWER_MENU.get(), StorageViewerScreen::new);
         event.register(ModMenuTypes.WIRELESS_DRAWER_MENU.get(), WirelessDrawerScreen::new);
         event.register(ModMenuTypes.WIRELESS_FLUID_DRAWER_MENU.get(), WirelessFluidDrawerScreen::new);
+        event.register(ModMenuTypes.UPGRADE_CONFIG_MENU.get(), UpgradeConfigScreen::new);
     }
 
     @SubscribeEvent

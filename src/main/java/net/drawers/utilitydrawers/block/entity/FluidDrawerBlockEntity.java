@@ -1,10 +1,7 @@
 package net.drawers.utilitydrawers.block.entity;
 
 import net.drawers.utilitydrawers.UtilityDrawersConfig;
-import net.drawers.utilitydrawers.block.DrawerBlock;
-import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
-import net.drawers.utilitydrawers.item.StorageRemoteItem;
-import net.drawers.utilitydrawers.item.VoidUpgradeItem;
+import net.drawers.utilitydrawers.item.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -14,6 +11,7 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -25,7 +23,7 @@ import net.neoforged.neoforge.transfer.fluid.FluidResource;
 import net.neoforged.neoforge.transfer.transaction.SnapshotJournal;
 import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 
-public class FluidDrawerBlockEntity extends BlockEntity {
+public class FluidDrawerBlockEntity extends BlockEntity implements FluidDrawerAccess {
 
     protected final int slotCount;
     FluidStack[] storedFluids;
@@ -35,7 +33,8 @@ public class FluidDrawerBlockEntity extends BlockEntity {
     protected BlockPos connectedInterface;
 
     protected final ItemStack[] upgradeSlots = new ItemStack[]{
-            ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY
+            ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY,
+            ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY
     };
 
     public static int getBaseFluidCapacity() {
@@ -167,6 +166,42 @@ public class FluidDrawerBlockEntity extends BlockEntity {
         return false;
     }
 
+    public boolean hasInsertUpgrade() {
+        for (ItemStack upgrade : upgradeSlots) {
+            if (upgrade.getItem() instanceof InsertUpgradeItem) return true;
+        }
+        return false;
+    }
+
+    public boolean hasExtractUpgrade() {
+        for (ItemStack upgrade : upgradeSlots) {
+            if (upgrade.getItem() instanceof ExtractUpgradeItem) return true;
+        }
+        return false;
+    }
+
+    public static void serverTick(Level level, BlockPos pos, BlockState state, FluidDrawerBlockEntity be) {
+        if ((level.getGameTime() + Math.abs(pos.asLong())) % 8 != 0) return;
+
+        ItemStack insertUpgrade = ItemStack.EMPTY;
+        ItemStack extractUpgrade = ItemStack.EMPTY;
+
+        for (ItemStack upgrade : be.upgradeSlots) {
+            if (upgrade.getItem() instanceof InsertUpgradeItem) {
+                insertUpgrade = upgrade;
+            } else if (upgrade.getItem() instanceof ExtractUpgradeItem) {
+                extractUpgrade = upgrade;
+            }
+        }
+
+        if (!insertUpgrade.isEmpty()) {
+            InsertUpgradeItem.tryInsert(level, pos, insertUpgrade, be);
+        }
+        if (!extractUpgrade.isEmpty()) {
+            ExtractUpgradeItem.tryExtract(level, pos, extractUpgrade, be);
+        }
+    }
+
     public boolean isFramed() {
         return this instanceof IFramedBlockEntity;
     }
@@ -260,7 +295,7 @@ public class FluidDrawerBlockEntity extends BlockEntity {
     }
 
     public boolean insertUpgrade(ItemStack upgrade) {
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 7; i++) {
             if (upgradeSlots[i].isEmpty()) {
                 upgradeSlots[i] = upgrade.copyWithCount(1);
                 recalculateCapacities();
@@ -278,7 +313,7 @@ public class FluidDrawerBlockEntity extends BlockEntity {
         if (upgradeSlots[upgradeSlot].isEmpty())
             return false;
         int newMultiplier = 1;
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 7; i++) {
             if (i == upgradeSlot) continue;
 
             if (!upgradeSlots[i].isEmpty() && upgradeSlots[i].getItem() instanceof DrawerUpgradeItem upgrade) {
@@ -351,7 +386,7 @@ public class FluidDrawerBlockEntity extends BlockEntity {
                 slotOutput.putLong("Amount", storedAmounts[i]);
             }
         }
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 7; i++) {
             ValueOutput upgradeOutput = output.child("Upgrade" + i);
             if (!upgradeSlots[i].isEmpty()) {
                 upgradeOutput.store("Item", ItemStack.CODEC, upgradeSlots[i]);
@@ -374,7 +409,7 @@ public class FluidDrawerBlockEntity extends BlockEntity {
                 storedAmounts[slot] = slotInput.getLongOr("Amount", 0L);
             });
         }
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 7; i++) {
             final int upgradeIndex = i;
             upgradeSlots[upgradeIndex] = ItemStack.EMPTY;
             input.child("Upgrade" + upgradeIndex).ifPresent(upgradeInput -> {
@@ -395,7 +430,7 @@ public class FluidDrawerBlockEntity extends BlockEntity {
                 storedAmounts[i] = slotTag.getLongOr("Amount", 0L);
             }
         }
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 7; i++) {
             upgradeSlots[i] = ItemStack.EMPTY;
             if (tag.getCompound("Upgrade" + i).isPresent()) {
                 CompoundTag upgradeTag = tag.getCompound("Upgrade" + i).orElseThrow();
@@ -420,7 +455,7 @@ public class FluidDrawerBlockEntity extends BlockEntity {
                 tag.put("Slot" + i, slotTag);
             }
         }
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 7; i++) {
             if (!upgradeSlots[i].isEmpty()) {
                 CompoundTag upgradeTag = new CompoundTag();
                 upgradeTag.put("Item", ItemStack.CODEC.encodeStart(provider.createSerializationContext(NbtOps.INSTANCE), upgradeSlots[i]).getOrThrow().copy());

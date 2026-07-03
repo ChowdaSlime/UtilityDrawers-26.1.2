@@ -88,6 +88,8 @@
   "item.utilitydrawers.drawer_upgrade_t3": "Diamond Upgrade",
   "item.utilitydrawers.drawer_upgrade_t4": "Netherite Upgrade",
   "item.utilitydrawers.void_upgrade": "Void Upgrade",
+  "item.utilitydrawers.insert_upgrade": "Insert Upgrade",
+  "item.utilitydrawers.extract_upgrade": "Extract Upgrade",
 
   "item.utilitydrawers.storage_remote": "Storage Remote",
   "block.utilitydrawers.storage_interface": "Storage Interface",

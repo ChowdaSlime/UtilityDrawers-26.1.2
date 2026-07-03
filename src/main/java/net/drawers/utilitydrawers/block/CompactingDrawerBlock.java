@@ -1,6 +1,7 @@
 package net.drawers.utilitydrawers.block;
 
 import net.drawers.utilitydrawers.block.entity.CompactingDrawerBlockEntity;
+import net.drawers.utilitydrawers.block.entity.ModBlockEntities;
 import net.drawers.utilitydrawers.item.DrawerUpgradeItem;
 import net.drawers.utilitydrawers.item.StorageRemoteItem;
 import net.drawers.utilitydrawers.item.VoidUpgradeItem;
@@ -27,6 +28,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -37,6 +40,7 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -231,5 +235,17 @@ public class CompactingDrawerBlock extends Block implements EntityBlock {
                 && level.getBlockEntity(pos) instanceof CompactingDrawerBlockEntity drawer) {
             drawer.loadContentsFromTag(customData.copyTag());
         }
+    }
+
+    @Nullable
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+        if (level.isClientSide()) return null;
+
+        if (type == ModBlockEntities.COMPACTING_DRAWER_BLOCK_ENTITY.get()) {
+            return (BlockEntityTicker<T>) (lvl, pos, st, be) ->
+                    CompactingDrawerBlockEntity.serverTick(lvl, pos, st, (CompactingDrawerBlockEntity) be);
+        }
+        return null;
     }
 }
