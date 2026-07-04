@@ -30,6 +30,8 @@ import java.util.List;
 
 public class InsertUpgradeItem extends Item {
 
+    private static final int SLOTS_PER_DIRECTION = 9;
+
     public InsertUpgradeItem(Properties properties) {
         super(properties.component(ModDataComponents.ACTIVE_DIRECTIONS, List.of()).component(DataComponents.CONTAINER, ItemContainerContents.EMPTY));
     }
@@ -53,18 +55,18 @@ public class InsertUpgradeItem extends Item {
                     level.getCapability(Capabilities.Item.BLOCK, neighborPos, dir.getOpposite());
             if (neighbor == null) continue;
 
-            if (pullOne(drawer, neighbor, upgrade)) return true;
+            if (pullOne(drawer, neighbor, upgrade, dir)) return true;
         }
         return false;
     }
 
-    private static boolean pullOne(ItemDrawerAccess drawer, ResourceHandler<ItemResource> neighbor, ItemStack upgrade) {
+    private static boolean pullOne(ItemDrawerAccess drawer, ResourceHandler<ItemResource> neighbor, ItemStack upgrade, Direction dir) {
         for (int nSlot = 0; nSlot < neighbor.size(); nSlot++) {
             ItemResource resource = neighbor.getResource(nSlot);
             if (resource.isEmpty()) continue;
 
             ItemStack candidateStack = resource.toStack(1);
-            if (!matchesFilter(upgrade, candidateStack)) continue;
+            if (!matchesFilter(upgrade, candidateStack, dir)) continue;
 
             int drawerSlot = findMatchingOrEmptySlot(drawer, resource);
             if (drawerSlot == -1) continue;
@@ -112,18 +114,18 @@ public class InsertUpgradeItem extends Item {
                     level.getCapability(Capabilities.Fluid.BLOCK, neighborPos, dir.getOpposite());
             if (neighbor == null) continue;
 
-            if (pullOneFluid(drawer, neighbor, upgrade)) return true;
+            if (pullOneFluid(drawer, neighbor, upgrade, dir)) return true;
         }
         return false;
     }
 
-    private static boolean pullOneFluid(FluidDrawerAccess drawer, ResourceHandler<FluidResource> neighbor, ItemStack upgrade) {
+    private static boolean pullOneFluid(FluidDrawerAccess drawer, ResourceHandler<FluidResource> neighbor, ItemStack upgrade, Direction dir) {
         for (int nSlot = 0; nSlot < neighbor.size(); nSlot++) {
             FluidResource resource = neighbor.getResource(nSlot);
             if (resource.isEmpty()) continue;
 
             FluidStack candidateStack = resource.toStack(1);
-            if (!matchesFilterFluid(upgrade, candidateStack)) continue;
+            if (!matchesFilterFluid(upgrade, candidateStack, dir)) continue;
 
             int drawerSlot = findMatchingOrEmptyFluidSlot(drawer, resource);
             if (drawerSlot == -1) continue;
@@ -162,12 +164,23 @@ public class InsertUpgradeItem extends Item {
         return firstEmpty;
     }
 
-
-    private static boolean matchesFilter(ItemStack upgrade, ItemStack candidate) {
+    private static boolean matchesFilter(ItemStack upgrade, ItemStack candidate, Direction dir) {
         ItemContainerContents filter = upgrade.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY);
-        if (filter.getSlots() == 0) return true;
 
-        for (int i = 0; i < filter.getSlots(); i++) {
+        int startSlot = dir.get3DDataValue() * SLOTS_PER_DIRECTION;
+        int endSlot = Math.min(startSlot + SLOTS_PER_DIRECTION, filter.getSlots());
+        if (startSlot >= filter.getSlots()) return true;
+
+        boolean hasAnyFilterForDirection = false;
+        for (int i = startSlot; i < endSlot; i++) {
+            if (!filter.getStackInSlot(i).isEmpty()) {
+                hasAnyFilterForDirection = true;
+                break;
+            }
+        }
+        if (!hasAnyFilterForDirection) return true;
+
+        for (int i = startSlot; i < endSlot; i++) {
             ItemStack filterStack = filter.getStackInSlot(i);
             if (!filterStack.isEmpty() && ItemStack.isSameItemSameComponents(filterStack, candidate)) {
                 return true;
@@ -176,13 +189,25 @@ public class InsertUpgradeItem extends Item {
         return false;
     }
 
-    private static boolean matchesFilterFluid(ItemStack upgrade, FluidStack candidate) {
+    private static boolean matchesFilterFluid(ItemStack upgrade, FluidStack candidate, Direction dir) {
         ItemContainerContents filter = upgrade.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY);
-        if (filter.getSlots() == 0) return true;
+
+        int startSlot = dir.get3DDataValue() * SLOTS_PER_DIRECTION;
+        int endSlot = Math.min(startSlot + SLOTS_PER_DIRECTION, filter.getSlots());
+        if (startSlot >= filter.getSlots()) return true;
+
+        boolean hasAnyFilterForDirection = false;
+        for (int i = startSlot; i < endSlot; i++) {
+            if (!filter.getStackInSlot(i).isEmpty()) {
+                hasAnyFilterForDirection = true;
+                break;
+            }
+        }
+        if (!hasAnyFilterForDirection) return true;
 
         FluidResource candidateResource = FluidResource.of(candidate);
 
-        for (int i = 0; i < filter.getSlots(); i++) {
+        for (int i = startSlot; i < endSlot; i++) {
             ItemStack filterStack = filter.getStackInSlot(i);
             if (filterStack.isEmpty()) continue;
 

@@ -18,7 +18,7 @@ issueTrackerURL="https://github.com/ChowdaSlime/UtilityDrawers-26.1.2/issues" #o
 modId="utilitydrawers" #mandatory
 
 # The version number of the mod
-version="1.2.3" #mandatory
+version="1.2.4" #mandatory
 
 # A display name for the mod
 displayName="Utility Drawers" #mandatory
@@ -120,6 +120,14 @@ type="optional"
 versionRange="*"
 ordering="NONE"
 side="BOTH"
+
+[[dependencies.utilitydrawers]]
+modId="jei"
+type="optional"
+# This version range declares a minimum of the current minecraft version up to but not including the next major version
+versionRange="*"
+ordering="NONE"
+side="CLIENT"
 
 # Features are specific properties of the game environment, that you may want to declare you require. This example declares
 # that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't

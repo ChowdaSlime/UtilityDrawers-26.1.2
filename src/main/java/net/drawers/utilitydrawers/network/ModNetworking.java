@@ -5,10 +5,7 @@ import net.drawers.utilitydrawers.block.entity.WirelessDrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.WirelessFluidDrawerBlockEntity;
 import net.drawers.utilitydrawers.data.WirelessNetworkKey;
 import net.drawers.utilitydrawers.item.StorageRemoteItem;
-import net.drawers.utilitydrawers.menu.StorageViewerMenu;
-import net.drawers.utilitydrawers.menu.StorageViewerScreen;
-import net.drawers.utilitydrawers.menu.WirelessDrawerMenu;
-import net.drawers.utilitydrawers.menu.WirelessFluidDrawerMenu;
+import net.drawers.utilitydrawers.menu.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -151,6 +148,17 @@ public class ModNetworking {
                             screen.rebuildFilteredSlots();
                         }
                     });
+                }
+        );
+
+        registrar.playToServer(
+                SetFilterSlotPayload.TYPE,
+                SetFilterSlotPayload.STREAM_CODEC,
+                (payload, context) -> {
+                    if (context.player().containerMenu instanceof UpgradeConfigMenu menu
+                            && menu.containerId == payload.containerId()) {
+                        menu.setFilterSlotFromNetwork(payload.slotIndex(), payload.stack());
+                    }
                 }
         );
     }

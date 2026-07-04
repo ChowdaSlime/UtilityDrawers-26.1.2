@@ -6,7 +6,6 @@ import net.drawers.utilitydrawers.item.InsertUpgradeItem;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -207,5 +206,11 @@ public class UpgradeConfigMenu extends AbstractContainerMenu {
             mask |= (1 << dir.get3DDataValue());
         }
         activeSidesMask.set(mask);
+    }
+
+    public void setFilterSlotFromNetwork(int slotIndex, ItemStack stack) {
+        if (slotIndex < 0 || slotIndex >= 9) return;
+        visibleFilter.setItem(slotIndex, stack.copyWithCount(1));
+        saveTab();
     }
 }

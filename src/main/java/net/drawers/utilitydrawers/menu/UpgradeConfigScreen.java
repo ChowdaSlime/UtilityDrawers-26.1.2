@@ -1,14 +1,25 @@
 package net.drawers.utilitydrawers.menu;
 
 import net.drawers.utilitydrawers.UtilityDrawers;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.access.ItemAccess;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
+
+import javax.annotation.Nullable;
 
 public class UpgradeConfigScreen extends AbstractContainerScreen<UpgradeConfigMenu> {
 
@@ -101,6 +112,53 @@ public class UpgradeConfigScreen extends AbstractContainerScreen<UpgradeConfigMe
         graphics.fill(x - 2, y - 2, x + 18, y + 18, 0x44FFFFFF);
 
         super.extractContents(graphics, mouseX, mouseY, a);
+    }
+
+    @Override
+    protected void renderSlotContents(GuiGraphicsExtractor graphics, ItemStack itemStack, Slot slot, @Nullable String itemCount) {
+        if (slot.index < 9 && !itemStack.isEmpty()) {
+            ResourceHandler<FluidResource> fluidHandler =
+                    ItemAccess.forStack(itemStack).getCapability(Capabilities.Fluid.ITEM);
+
+            if (fluidHandler != null) {
+                FluidResource resource = null;
+                for (int j = 0; j < fluidHandler.size(); j++) {
+                    FluidResource candidate = fluidHandler.getResource(j);
+                    if (!candidate.isEmpty()) {
+                        resource = candidate;
+                        break;
+                    }
+                }
+
+                if (resource != null) {
+                    FluidStack fluidStack = resource.toStack(1);
+                    drawFluid(graphics, fluidStack, slot.x, slot.y, 16, 16);
+                    return; // skip vanilla item render entirely — no bucket drawn
+                }
+            }
+        }
+
+        super.renderSlotContents(graphics, itemStack, slot, itemCount);
+    }
+
+    private void drawFluid(GuiGraphicsExtractor graphics, FluidStack stack, int x, int y, int width, int height) {
+        if (stack.isEmpty()) return;
+
+        Minecraft mc = Minecraft.getInstance();
+        TextureAtlasSprite sprite;
+        int color;
+        try {
+            var fluidModel = mc.getModelManager()
+                    .getFluidStateModelSet()
+                    .get(stack.getFluid().defaultFluidState());
+            sprite = fluidModel.stillMaterial().sprite();
+            var tintSource = fluidModel.fluidTintSource();
+            color = tintSource != null ? tintSource.colorAsStack(stack) : 0xFFFFFFFF;
+        } catch (Exception e) {
+            return;
+        }
+
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, x, y, width, height, color);
     }
 
     private void drawSlotBorder(GuiGraphicsExtractor graphics, int x, int y, int size) {
