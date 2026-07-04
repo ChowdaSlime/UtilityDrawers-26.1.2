@@ -135,6 +135,22 @@ public class ModNetworking {
                 }
         );
 
+        registrar.playToServer(
+                SetFilterSlotPayload.TYPE,
+                SetFilterSlotPayload.STREAM_CODEC,
+                (payload, context) -> {
+                    if (context.player().containerMenu instanceof UpgradeConfigMenu menu
+                            && menu.containerId == payload.containerId()) {
+                        menu.setFilterSlotFromNetwork(payload.slotIndex(), payload.stack());
+                    }
+                }
+        );
+
+        registrar.playToServer(
+                OpenUpgradeConfigPayload.TYPE,
+                OpenUpgradeConfigPayload.STREAM_CODEC,
+                OpenUpgradeConfigPayloadHandler::handle);
+
         registrar.playToClient(
                 SyncPreferencesPayload.TYPE,
                 SyncPreferencesPayload.STREAM_CODEC,
@@ -148,17 +164,6 @@ public class ModNetworking {
                             screen.rebuildFilteredSlots();
                         }
                     });
-                }
-        );
-
-        registrar.playToServer(
-                SetFilterSlotPayload.TYPE,
-                SetFilterSlotPayload.STREAM_CODEC,
-                (payload, context) -> {
-                    if (context.player().containerMenu instanceof UpgradeConfigMenu menu
-                            && menu.containerId == payload.containerId()) {
-                        menu.setFilterSlotFromNetwork(payload.slotIndex(), payload.stack());
-                    }
                 }
         );
     }

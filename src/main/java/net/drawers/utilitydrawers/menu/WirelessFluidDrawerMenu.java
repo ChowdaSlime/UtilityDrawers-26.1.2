@@ -24,7 +24,7 @@ public class WirelessFluidDrawerMenu extends FluidDrawerMenu {
     }
 
     public WirelessFluidDrawerMenu(int containerId, Inventory playerInventory, BlockEntity blockEntity) {
-        super(ModMenuTypes.WIRELESS_FLUID_DRAWER_MENU.get(), containerId, playerInventory, blockEntity, false);
+        super(ModMenuTypes.WIRELESS_FLUID_DRAWER_MENU.get(), containerId, playerInventory, blockEntity, true, false);
         this.wirelessEntity = (WirelessFluidDrawerBlockEntity) blockEntity;
         this.playerInv = playerInventory;
 

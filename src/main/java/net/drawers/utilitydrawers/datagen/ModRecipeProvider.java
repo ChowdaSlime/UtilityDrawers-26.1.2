@@ -438,6 +438,16 @@ public class ModRecipeProvider extends RecipeProvider {
                 .define('D', ModItems.UPGRADE_BASE.get())
                 .unlockedBy("has_upgrade_base", has(ModItems.UPGRADE_BASE.get()))
                 .save(output);
+
+        shapeless(RecipeCategory.MISC, ModItems.EXTRACT_UPGRADE.get())
+                .requires(ModItems.EXTRACT_UPGRADE.get())
+                .unlockedBy("has_extract_upgrade", has(ModItems.EXTRACT_UPGRADE.get()))
+                .save(output, "utilitydrawers:reset_extract_upgrade");
+
+        shapeless(RecipeCategory.MISC, ModItems.INSERT_UPGRADE.get())
+                .requires(ModItems.INSERT_UPGRADE.get())
+                .unlockedBy("has_insert_upgrade", has(ModItems.INSERT_UPGRADE.get()))
+                .save(output, "utilitydrawers:reset_insert_upgrade");
     }
 
     private Ingredient ingredient(Item item) {

@@ -1,11 +1,15 @@
 package net.drawers.utilitydrawers.menu;
 
+import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
+import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
 import net.drawers.utilitydrawers.data.ModDataComponents;
 import net.drawers.utilitydrawers.item.ExtractUpgradeItem;
 import net.drawers.utilitydrawers.item.InsertUpgradeItem;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -16,32 +20,53 @@ import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class UpgradeConfigMenu extends AbstractContainerMenu {
 
+    private final Player owningPlayer;
     private final ItemStack upgradeStack;
     private final SimpleContainer visibleFilter;
 
     private final DataSlot currentTab = DataSlot.standalone();
     private final DataSlot activeSidesMask = DataSlot.standalone();
 
+    @Nullable private final BlockPos targetPos;
+    private final int targetSlotIndex;
+    @Nullable private final InteractionHand targetHand;
+
+    private record Target(ItemStack stack, @Nullable BlockPos pos, int slotIndex, @Nullable InteractionHand hand) {}
+
     public UpgradeConfigMenu(int containerId, Inventory playerInventory) {
-        this(containerId, playerInventory, InteractionHand.MAIN_HAND);
+        this(containerId, playerInventory, resolveHandTarget(playerInventory.player, InteractionHand.MAIN_HAND));
     }
 
     public UpgradeConfigMenu(int containerId, Inventory playerInventory, InteractionHand hand) {
-        super(ModMenuTypes.UPGRADE_CONFIG_MENU.get(), containerId);
-        Player player = playerInventory.player;
+        this(containerId, playerInventory, resolveHandTarget(playerInventory.player, hand));
+    }
 
-        if (player.getMainHandItem().getItem() instanceof InsertUpgradeItem
-                || player.getMainHandItem().getItem() instanceof ExtractUpgradeItem) {
-            this.upgradeStack = player.getMainHandItem();
-        } else {
-            this.upgradeStack = player.getItemInHand(hand);
-        }
+    public UpgradeConfigMenu(int containerId, Inventory playerInventory, BlockPos pos, int slotIndex) {
+        this(containerId, playerInventory, resolveBlockTarget(playerInventory.player.level(), pos, slotIndex));
+    }
+
+    public UpgradeConfigMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
+        this(containerId, playerInventory, readTarget(playerInventory, buf));
+    }
+
+    private UpgradeConfigMenu(int containerId, Inventory playerInventory, Target target) {
+        super(ModMenuTypes.UPGRADE_CONFIG_MENU.get(), containerId);
+
+        this.owningPlayer = playerInventory.player;
+        this.upgradeStack = target.stack();
+        this.targetPos = target.pos();
+        this.targetSlotIndex = target.slotIndex();
+        this.targetHand = target.hand();
+
         this.visibleFilter = new SimpleContainer(9);
 
         for (int row = 0; row < 3; row++) {
@@ -66,6 +91,40 @@ public class UpgradeConfigMenu extends AbstractContainerMenu {
         if (!playerInventory.player.level().isClientSide()) {
             loadTab(0);
             updateActiveMask();
+        }
+    }
+
+    private static Target resolveHandTarget(Player player, InteractionHand hand) {
+        ItemStack stack;
+        if (player.getMainHandItem().getItem() instanceof InsertUpgradeItem
+                || player.getMainHandItem().getItem() instanceof ExtractUpgradeItem) {
+            stack = player.getMainHandItem();
+        } else {
+            stack = player.getItemInHand(hand);
+        }
+        return new Target(stack, null, -1, hand);
+    }
+
+    private static Target resolveBlockTarget(Level level, BlockPos pos, int slotIndex) {
+        ItemStack stack = ItemStack.EMPTY;
+        BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof DrawerBlockEntity drawer) {
+            stack = drawer.getUpgradeSlot(slotIndex);
+        } else if (be instanceof FluidDrawerBlockEntity fluid) {
+            stack = fluid.getUpgradeSlot(slotIndex);
+        }
+        return new Target(stack, pos, slotIndex, null);
+    }
+
+    private static Target readTarget(Inventory playerInventory, RegistryFriendlyByteBuf buf) {
+        boolean blockBased = buf.readBoolean();
+        if (blockBased) {
+            BlockPos pos = buf.readBlockPos();
+            int slotIndex = buf.readVarInt();
+            return resolveBlockTarget(playerInventory.player.level(), pos, slotIndex);
+        } else {
+            InteractionHand hand = buf.readEnum(InteractionHand.class);
+            return resolveHandTarget(playerInventory.player, hand);
         }
     }
 
@@ -153,9 +212,22 @@ public class UpgradeConfigMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
-        return player.getMainHandItem() == upgradeStack || player.getOffhandItem() == upgradeStack;
+        if (targetPos != null) {
+            BlockEntity be = player.level().getBlockEntity(targetPos);
+            ItemStack current = resolveCurrentBlockStack(be);
+            if (current != upgradeStack || current.isEmpty()) return false;
+            return player.distanceToSqr(
+                    targetPos.getX() + 0.5, targetPos.getY() + 0.5, targetPos.getZ() + 0.5) < 64;
+        } else {
+            return player.getMainHandItem() == upgradeStack || player.getOffhandItem() == upgradeStack;
+        }
     }
 
+    private ItemStack resolveCurrentBlockStack(@Nullable BlockEntity be) {
+        if (be instanceof DrawerBlockEntity drawer) return drawer.getUpgradeSlot(targetSlotIndex);
+        if (be instanceof FluidDrawerBlockEntity fluid) return fluid.getUpgradeSlot(targetSlotIndex);
+        return ItemStack.EMPTY;
+    }
 
     private NonNullList<ItemStack> getFullFilterList() {
         NonNullList<ItemStack> list = NonNullList.withSize(54, ItemStack.EMPTY);
@@ -181,6 +253,7 @@ public class UpgradeConfigMenu extends AbstractContainerMenu {
             list.set(startIndex + i, visibleFilter.getItem(i).copy());
         }
         upgradeStack.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(list));
+        notifyBlockEntityChanged();
     }
 
     private void toggleCurrentSide() {
@@ -197,6 +270,19 @@ public class UpgradeConfigMenu extends AbstractContainerMenu {
 
         upgradeStack.set(ModDataComponents.ACTIVE_DIRECTIONS, currentActive);
         updateActiveMask();
+        notifyBlockEntityChanged();
+    }
+
+    private void notifyBlockEntityChanged() {
+        if (targetPos == null) return;
+        if (owningPlayer.level().isClientSide()) return;
+
+        BlockEntity be = owningPlayer.level().getBlockEntity(targetPos);
+        if (be instanceof DrawerBlockEntity drawer) {
+            drawer.setUpgradeSlot(targetSlotIndex, upgradeStack);
+        } else if (be instanceof FluidDrawerBlockEntity fluid) {
+            fluid.setUpgradeSlot(targetSlotIndex, upgradeStack);
+        }
     }
 
     private void updateActiveMask() {

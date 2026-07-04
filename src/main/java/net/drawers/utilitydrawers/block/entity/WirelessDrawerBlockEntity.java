@@ -3,6 +3,8 @@ package net.drawers.utilitydrawers.block.entity;
 import net.drawers.utilitydrawers.UtilityDrawersConfig;
 import net.drawers.utilitydrawers.data.WirelessNetworkKey;
 import net.drawers.utilitydrawers.data.WirelessNetworkSavedData;
+import net.drawers.utilitydrawers.item.ExtractUpgradeItem;
+import net.drawers.utilitydrawers.item.InsertUpgradeItem;
 import net.drawers.utilitydrawers.menu.WirelessDrawerMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -15,6 +17,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -51,6 +54,42 @@ public class WirelessDrawerBlockEntity extends DrawerBlockEntity implements Menu
         }
         setChanged();
         syncToClient();
+    }
+
+    public boolean hasInsertUpgrade() {
+        for (ItemStack upgrade : upgradeSlots) {
+            if (upgrade.getItem() instanceof InsertUpgradeItem) return true;
+        }
+        return false;
+    }
+
+    public boolean hasExtractUpgrade() {
+        for (ItemStack upgrade : upgradeSlots) {
+            if (upgrade.getItem() instanceof ExtractUpgradeItem) return true;
+        }
+        return false;
+    }
+
+    public static void serverTick(Level level, BlockPos pos, BlockState state, WirelessDrawerBlockEntity be) {
+        if ((level.getGameTime() + Math.abs(pos.asLong())) % 8 != 0) return;
+
+        ItemStack insertUpgrade = ItemStack.EMPTY;
+        ItemStack extractUpgrade = ItemStack.EMPTY;
+
+        for (ItemStack upgrade : be.upgradeSlots) {
+            if (upgrade.getItem() instanceof InsertUpgradeItem) {
+                insertUpgrade = upgrade;
+            } else if (upgrade.getItem() instanceof ExtractUpgradeItem) {
+                extractUpgrade = upgrade;
+            }
+        }
+
+        if (!insertUpgrade.isEmpty()) {
+            InsertUpgradeItem.tryInsert(level, pos, insertUpgrade, be);
+        }
+        if (!extractUpgrade.isEmpty()) {
+            ExtractUpgradeItem.tryExtract(level, pos, extractUpgrade, be);
+        }
     }
 
     @Override

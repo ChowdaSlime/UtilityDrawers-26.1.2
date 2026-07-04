@@ -53,10 +53,7 @@ public class WirelessDrawerScreen extends DrawerScreen<WirelessDrawerMenu> {
     protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         int titleColor = -12566464;
         graphics.text(this.font,
-                Component.literal("Wireless"), this.titleLabelX, this.titleLabelY, titleColor, false);
-        graphics.text(this.font,
-                Component.literal("Drawer"), this.titleLabelX, this.titleLabelY + this.font.lineHeight, titleColor, false);
-
+                Component.literal("Wireless Drawer"), this.titleLabelX, this.titleLabelY, titleColor, false);
         graphics.text(this.font, this.playerInventoryTitle, this.inventoryLabelX, this.imageHeight - 94, titleColor, false);
     }
 

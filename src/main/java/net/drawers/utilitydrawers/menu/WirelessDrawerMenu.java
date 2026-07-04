@@ -39,7 +39,7 @@ public class WirelessDrawerMenu extends DrawerMenu {
     }
 
     public WirelessDrawerMenu(int containerId, Inventory playerInventory, BlockEntity blockEntity) {
-        super(ModMenuTypes.WIRELESS_DRAWER_MENU.get(), containerId, playerInventory, blockEntity, false);
+        super(ModMenuTypes.WIRELESS_DRAWER_MENU.get(), containerId, playerInventory, blockEntity, true, false);
         this.wirelessEntity = (WirelessDrawerBlockEntity) blockEntity;
         this.playerInv = playerInventory;
 

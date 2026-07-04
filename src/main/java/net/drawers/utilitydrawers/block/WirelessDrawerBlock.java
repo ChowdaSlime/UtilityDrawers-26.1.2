@@ -1,6 +1,8 @@
 package net.drawers.utilitydrawers.block;
 
+import net.drawers.utilitydrawers.block.entity.ModBlockEntities;
 import net.drawers.utilitydrawers.block.entity.WirelessDrawerBlockEntity;
+import net.drawers.utilitydrawers.block.entity.WirelessFluidDrawerBlockEntity;
 import net.drawers.utilitydrawers.data.ModDataComponents;
 import net.drawers.utilitydrawers.data.WirelessNetworkKey;
 import net.drawers.utilitydrawers.item.StorageRemoteItem;
@@ -19,12 +21,15 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.BlockHitResult;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 public class WirelessDrawerBlock extends DrawerBlock {
@@ -153,5 +158,17 @@ public class WirelessDrawerBlock extends DrawerBlock {
             }
             stack.remove(ModDataComponents.HAS_COPIED_SETTINGS);
         }
+    }
+
+    @Nullable
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+        if (level.isClientSide()) return null;
+
+        if (type == ModBlockEntities.WIRELESS_DRAWER_BLOCK_ENTITY.get()) {
+            return (BlockEntityTicker<T>) (lvl, pos, st, be) ->
+                    WirelessDrawerBlockEntity.serverTick(lvl, pos, st, (WirelessDrawerBlockEntity) be);
+        }
+        return null;
     }
 }

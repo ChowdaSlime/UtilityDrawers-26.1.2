@@ -40,7 +40,7 @@ public class ModMenuTypes {
                     () -> IMenuTypeExtension.create(WirelessFluidDrawerMenu::new));
     public static final DeferredHolder<MenuType<?>, MenuType<UpgradeConfigMenu>> UPGRADE_CONFIG_MENU =
             MENU_TYPES.register("upgrade_config_menu",
-                    () -> new MenuType<>(UpgradeConfigMenu::new, FeatureFlags.DEFAULT_FLAGS));
+                    () -> IMenuTypeExtension.create(UpgradeConfigMenu::new));
 
     public static void register(IEventBus eventBus) {
         MENU_TYPES.register(eventBus);

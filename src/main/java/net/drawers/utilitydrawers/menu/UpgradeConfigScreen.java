@@ -133,7 +133,7 @@ public class UpgradeConfigScreen extends AbstractContainerScreen<UpgradeConfigMe
                 if (resource != null) {
                     FluidStack fluidStack = resource.toStack(1);
                     drawFluid(graphics, fluidStack, slot.x, slot.y, 16, 16);
-                    return; // skip vanilla item render entirely — no bucket drawn
+                    return;
                 }
             }
         }

@@ -1,15 +1,23 @@
 package net.drawers.utilitydrawers.menu;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
+import net.drawers.utilitydrawers.client.ModKeybinds;
+import net.drawers.utilitydrawers.item.ExtractUpgradeItem;
+import net.drawers.utilitydrawers.item.InsertUpgradeItem;
+import net.drawers.utilitydrawers.network.OpenUpgradeConfigPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.fluids.FluidStack;
 
 public class FluidDrawerScreen<T extends FluidDrawerMenu> extends AbstractContainerScreen<T> {
@@ -59,10 +67,12 @@ public class FluidDrawerScreen<T extends FluidDrawerMenu> extends AbstractContai
             drawSlotBorder(graphics, bx + 8 + col * 18, by + 142, 16);
         }
 
-        if (this.menu.hasUpgrades()) {
+        if (this.menu.hasUtilitySlots()) {
             for (int i = 0; i < 3; i++) {
                 drawSlotBorder(graphics, bx + UTILITY_SLOT_X, by + UTILITY_SLOT_Y_START + i * UPGRADE_SLOT_SIZE, 16);
             }
+        }
+        if (this.menu.hasTierSlots()) {
             for (int i = 0; i < 4; i++) {
                 drawSlotBorder(graphics, bx + UPGRADE_SLOT_X, by + UPGRADE_SLOT_Y_START + i * UPGRADE_SLOT_SIZE, 16);
             }
@@ -141,5 +151,25 @@ public class FluidDrawerScreen<T extends FluidDrawerMenu> extends AbstractContai
             case 4 -> new int[][]{{69, 23, 16}, {91, 23, 16}, {69, 45, 16}, {91, 45, 16}};
             default -> new int[][]{{80, 34, 16}};
         };
+    }
+
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        if (ModKeybinds.OPEN_UPGRADE_CONFIG.isActiveAndMatches(InputConstants.getKey(event))
+                && this.hoveredSlot != null && this.menu.hasUtilitySlots()) {
+
+            int slotIndex = this.menu.slots.indexOf(this.hoveredSlot);
+            if (slotIndex >= 0 && slotIndex < 3) {
+                ItemStack stack = this.hoveredSlot.getItem();
+
+                if (stack.getItem() instanceof ExtractUpgradeItem || stack.getItem() instanceof InsertUpgradeItem) {
+                    ClientPacketDistributor.sendToServer(
+                            new OpenUpgradeConfigPayload(this.menu.getBlockEntity().getBlockPos(), slotIndex)
+                    );
+                    return true;
+                }
+            }
+        }
+        return super.keyPressed(event);
     }
 }

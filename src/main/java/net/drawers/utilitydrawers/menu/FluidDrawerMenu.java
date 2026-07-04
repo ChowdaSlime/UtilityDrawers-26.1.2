@@ -20,7 +20,8 @@ public class FluidDrawerMenu extends AbstractContainerMenu {
     private final FluidDrawerBlockEntity blockEntity;
     private final int slotCount;
     private final SimpleContainer upgradeContainer;
-    private final boolean hasUpgrades;
+    private final boolean hasUtilitySlots;
+    private final boolean hasTierSlots;
 
     private boolean isInitializing = true;
 
@@ -34,17 +35,21 @@ public class FluidDrawerMenu extends AbstractContainerMenu {
     }
 
     public FluidDrawerMenu(int containerId, Inventory playerInventory, BlockEntity blockEntity) {
-        this(ModMenuTypes.FLUID_DRAWER_MENU.get(), containerId, playerInventory, blockEntity, true);
+        this(ModMenuTypes.FLUID_DRAWER_MENU.get(), containerId, playerInventory, blockEntity, true, true);
     }
 
-    protected FluidDrawerMenu(MenuType<?> type, int containerId, Inventory playerInventory, BlockEntity blockEntity, boolean hasUpgrades) {
+    protected FluidDrawerMenu(MenuType<?> type, int containerId, Inventory playerInventory, BlockEntity blockEntity,
+                              boolean hasUtilitySlots, boolean hasTierSlots) {
         super(type, containerId);
 
         this.blockEntity = (FluidDrawerBlockEntity) blockEntity;
         this.slotCount = this.blockEntity.getSlotCount();
-        this.hasUpgrades = hasUpgrades;
+        this.hasUtilitySlots = hasUtilitySlots;
+        this.hasTierSlots = hasTierSlots;
 
-        if (this.hasUpgrades) {
+        boolean hasAnyUpgradeSlots = hasUtilitySlots || hasTierSlots;
+
+        if (hasAnyUpgradeSlots) {
             this.upgradeContainer = new SimpleContainer(TOTAL_UPGRADE_SLOTS) {
                 @Override
                 public void setChanged() {
@@ -63,12 +68,16 @@ public class FluidDrawerMenu extends AbstractContainerMenu {
 
             this.isInitializing = false;
 
-            for (int i = 0; i < UTILITY_SLOT_COUNT; i++) {
-                this.addSlot(new UtilityUpgradeSlot(this.upgradeContainer, i, 8, 16 + (i * 18), this.blockEntity));
+            if (this.hasUtilitySlots) {
+                for (int i = 0; i < UTILITY_SLOT_COUNT; i++) {
+                    this.addSlot(new UtilityUpgradeSlot(this.upgradeContainer, i, 8, 16 + (i * 18), this.blockEntity));
+                }
             }
 
-            for (int i = 0; i < TIER_SLOT_COUNT; i++) {
-                this.addSlot(new TierUpgradeSlot(this.upgradeContainer, i + UTILITY_SLOT_COUNT, 152, 8 + (i * 18), this.blockEntity));
+            if (this.hasTierSlots) {
+                for (int i = 0; i < TIER_SLOT_COUNT; i++) {
+                    this.addSlot(new TierUpgradeSlot(this.upgradeContainer, i + UTILITY_SLOT_COUNT, 152, 8 + (i * 18), this.blockEntity));
+                }
             }
         } else {
             this.upgradeContainer = null;
@@ -87,7 +96,15 @@ public class FluidDrawerMenu extends AbstractContainerMenu {
     }
 
     public boolean hasUpgrades() {
-        return this.hasUpgrades;
+        return this.hasUtilitySlots || this.hasTierSlots;
+    }
+
+    public boolean hasUtilitySlots() {
+        return this.hasUtilitySlots;
+    }
+
+    public boolean hasTierSlots() {
+        return this.hasTierSlots;
     }
 
     public FluidDrawerBlockEntity getBlockEntity() {
@@ -115,22 +132,24 @@ public class FluidDrawerMenu extends AbstractContainerMenu {
             ItemStack stackInSlot = slot.getItem();
             originalStack = stackInSlot.copy();
 
-            int uCount = this.hasUpgrades ? TOTAL_UPGRADE_SLOTS : 0;
+            int utilityMenuCount = this.hasUtilitySlots ? UTILITY_SLOT_COUNT : 0;
+            int tierMenuCount = this.hasTierSlots ? TIER_SLOT_COUNT : 0;
+            int uCount = utilityMenuCount + tierMenuCount;
             int invStart = uCount;
             int hotbarStart = uCount + 27;
             int invEnd = uCount + 36;
 
-            if (this.hasUpgrades && index < uCount) {
+            if (uCount > 0 && index < uCount) {
                 if (!this.moveItemStackTo(stackInSlot, invStart, invEnd, true)) {
                     return ItemStack.EMPTY;
                 }
             } else {
-                if (this.hasUpgrades && isUtilityUpgrade(stackInSlot)) {
-                    if (!this.moveItemStackTo(stackInSlot, 0, UTILITY_SLOT_COUNT, false)) {
+                if (this.hasUtilitySlots && isUtilityUpgrade(stackInSlot)) {
+                    if (!this.moveItemStackTo(stackInSlot, 0, utilityMenuCount, false)) {
                         return ItemStack.EMPTY;
                     }
-                } else if (this.hasUpgrades && stackInSlot.getItem() instanceof DrawerUpgradeItem) {
-                    if (!this.moveItemStackTo(stackInSlot, UTILITY_SLOT_COUNT, TOTAL_UPGRADE_SLOTS, false)) {
+                } else if (this.hasTierSlots && stackInSlot.getItem() instanceof DrawerUpgradeItem) {
+                    if (!this.moveItemStackTo(stackInSlot, utilityMenuCount, uCount, false)) {
                         return ItemStack.EMPTY;
                     }
                 } else if (index >= invStart && index < hotbarStart) {

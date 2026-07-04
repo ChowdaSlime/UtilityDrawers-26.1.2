@@ -1,11 +1,13 @@
 package net.drawers.utilitydrawers;
 
+import de.maxhenkel.pipez.recipes.ModRecipes;
 import net.drawers.utilitydrawers.attachment.ModAttachments;
 import net.drawers.utilitydrawers.block.ModBlocks;
 import net.drawers.utilitydrawers.block.entity.ModBlockEntities;
 import net.drawers.utilitydrawers.data.ModDataComponents;
 import net.drawers.utilitydrawers.item.ModItems;
 import net.drawers.utilitydrawers.menu.ModMenuTypes;
+import net.drawers.utilitydrawers.recipe.ModRecipeSerializers;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import org.slf4j.Logger;
@@ -32,6 +34,7 @@ public class UtilityDrawers {
         ModCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);
         ModMenuTypes.register(modEventBus);
         ModAttachments.register(modEventBus);
+        ModRecipeSerializers.RECIPE_SERIALIZERS.register(modEventBus);
 
 
 
