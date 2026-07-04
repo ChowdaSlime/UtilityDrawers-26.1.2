@@ -9,15 +9,15 @@ item_ids:
 
 # Storage Interface
 
-The Storage Interface links a group of nearby drawers together into one network, letting you pipe items or fluids into a single block and have it automatically distribute them across every connected drawer.
+The <ItemLink id="storage_interface" /> links a group of nearby drawers together into one network, letting you pipe items or fluids into a single block and have it automatically distribute them across every connected drawer. The storage interface also works with AE2 storage buses and Refined Storage external storages, allowing you to view the contents of your drawer network through a digital display.
 
 ## Linking drawers
 
 Linking is done with the [Storage Remote](storage_remote.md): 
 
-![Lock Mode](link.png)
+![Link Mode](link.png)
 
-bind a remote to the Storage Interface, then right-click drawers (or use Multi-Select to link a whole region at once) to connect them. See the Storage Remote page for the full workflow, including single-drawer and area linking.
+Bind a <ItemLink id="storage_remote" /> to the <ItemLink id="storage_interface" />, then right-click drawers (or use Multi-Select to link a whole region at once) to connect them. See the [Storage Remote](storage_remote.md) page for the full workflow, including single-drawer and area linking.
 
 <GameScene zoom={2.0} interactive={true}>
   <ImportStructure src="storage_interface.snbt" />
@@ -75,7 +75,7 @@ bind a remote to the Storage Interface, then right-click drawers (or use Multi-S
 
 ## Range
 
-The Storage Interface can only link to drawers within its range, which by default is a fixed number of blocks. Placing a capacity upgrade tier (see [Upgrades](upgrades.md)) into the interface's upgrade slot multiplies this range instead of capacity.
+The Storage Interface can only link to drawers within its range, which by default is 16 blocks (can be changed in the config). Placing a tiered upgrade (see [Upgrades](upgrades.md)) into the interface's upgrade slot multiplies its range, up to 512 blocks with a <ItemLink id="drawer_upgrade_t4" />, use responsibly.
 
 ## Inserting items and fluids
 
@@ -86,7 +86,7 @@ When something is inserted into the network:
 
 ## Locking the whole network
 
-The Storage Interface can toggle the locked state of every connected drawer at once — either by right-clicking the interface itself in [Storage Remote](storage_remote.md) Lock mode, or through the interface's own lock toggle. This is handy for keeping automation targeting consistent template slots across your whole storage room.
+The Storage Interface can toggle the locked state of every connected drawer at once. This is done by right-clicking the interface itself with a [Storage Remote](storage_remote.md) set to Lock mode. This is handy for keeping automation targeting consistent template slots across your whole storage room.
 
 <GameScene zoom={3.5} interactive={true}>
   <ImportStructure src="locked.snbt" />

@@ -9,9 +9,13 @@ item_ids:
 
 # Storage Remote
 
-The Storage Remote is the tool used to link drawers and Storage Viewers to a [Storage Interface](storage_interface.md), and to remotely lock or unlock drawers, all without needing to reach the interface itself.
+The <ItemLink id="storage_remote" /> is the tool used to link drawers and Storage Viewers to a [Storage Interface](storage_interface.md), and to lock or unlock drawers.
 
-It has two independent modes: **Link/Unlink** and **Lock/Unlock**. Shift + scroll while holding the remote to switch between them. The current mode is shown in the item's tooltip.
+It has two independent modes: 
+* **Link/Unlink** 
+* **Lock/Unlock**. 
+
+Shift + scroll while holding the remote to switch between them. The current mode is shown in the item's tooltip.
 
 ## Link/Unlink mode
 
@@ -23,13 +27,13 @@ Shift + right-click a [Storage Interface](storage_interface.md) to bind the remo
 
 ### Linking drawers
 
-Once bound, right-click any drawer (item, fluid, compacting, or wireless) to link it to the bound interface, as long as it is within the interface's range.
+Once bound, right-click any drawer (item, fluid, compacting, framed, or wireless) to link it to the bound interface, as long as it is within the interface's range.
 
 **Quick Reference**
 
-- **Unlinked drawer** → Links it.
-- **Drawer linked to the bound interface** → Unlinks it.
-- **Drawer linked to another interface** → Nothing changes, and a warning is displayed.
+* **Unlinked drawer** → Links it.
+* **Drawer linked to the bound interface** → Unlinks it.
+* **Drawer linked to another interface** → Well, can't do that.
 
 ### Linking a Storage Viewer
 
@@ -37,25 +41,23 @@ The same right-click toggle works on a [Storage Viewer](storage_viewer.md). This
 
 ### Single vs. Multi-Select
 
-Shift + left-click while pointing at air toggles between **Single** and **Multi-Select** modes.
+Shift + left-click the air to toggle between **Single** and **Multi-Select** modes.
 
 **Single** mode links or unlinks one drawer at a time.
 
-**Multi-Select** mode lets you link every drawer inside a cuboid region at once:
+**Multi-Select** mode lets you link every drawer inside a given area:
 
 1. Right-click the first corner of the selection.
 2. Right-click the opposite corner.
 3. Every drawer inside the region that is within range and not already linked elsewhere is linked.
 
-Drawers already linked to the bound interface are left unchanged rather than being unlinked.
+Drawers already linked to the bound interface are left unchanged.
 
-## Lock/Unlock mode
+## Locking/Unlocking Mode
 
-![Lock Mode](lock.png)
+In the locking mode, you can either lock individual drawers, or a whole network, depending on which block you lock. On a single drawer, just that drawer will be locked. On a [Storage Interface](storage_interface.md), every connected drawer will change its lock state to match that of the interface.
 
-Right-click any drawer to toggle its lock state directly without needing to sneak-right-click the drawer itself.
-
-Right-clicking a Storage Interface while in this mode toggles the locked state of every drawer connected to its network at once, just like using the interface's own lock button.
+![Locking Mode](lock.png)
 
 **Quick Reference**
 

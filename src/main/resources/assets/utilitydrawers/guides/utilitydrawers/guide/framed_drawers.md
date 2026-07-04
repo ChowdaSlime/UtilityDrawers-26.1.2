@@ -18,11 +18,11 @@ item_ids:
 
 # Framed Drawers
 
-Framed Drawers are functionally identical to regular [Drawers](drawers.md), [Fluid Drawers](fluid_drawers.md), and [Compacting Drawers](compacting_drawers.md) — same capacity, same locking, same upgrades. The difference is their appearance: a Framed Drawer can be textured to look like any other block, letting it blend into whatever build style you're using.
+Framed Drawers are functionally identical to regular [Drawers](drawers.md), [Fluid Drawers](fluid_drawers.md), and [Compacting Drawers](compacting_drawers.md). They have the same capacity, same locking, same upgrades, but they differ in their appearances. A Framed Drawer can be textured to look like any other block, letting it match any build style you want.
 
 ## Which drawers can be framed?
 
-Every drawer type has a framed counterpart:
+Every base drawer type has a framed counterpart:
 
 - Item drawers (all four slot counts)
 - Fluid drawers (all four slot counts)
@@ -30,7 +30,7 @@ Every drawer type has a framed counterpart:
 
 ## Applying Textures: The Drawer Framer
 
-New textures can be applied to the framed drawers using the **Drawer Framer**. The framer lets you pick a separate texture for the drawer's **sides** and its **face** (front), so you can match surrounding walls on the sides while keeping a distinct front face, or use the same block for both.
+New textures can be applied to the framed drawers using the <ItemLink id="drawer_framer" />. The framer lets you pick a separate texture for the drawer's **sides** and its **face**, so you can match surrounding walls on the sides while keeping a distinct front face, or use the same block for both.
 
 <GameScene zoom={3} interactive={true}>
   <ImportStructure src="framed_drawers.snbt" />
@@ -39,14 +39,13 @@ New textures can be applied to the framed drawers using the **Drawer Framer**. T
 
 ### Slots
 
-The Drawer Framer has four working slots:
+The Drawer Framer has five working slots:
 
-- **Sides** — a block item whose texture is applied to the drawer's side faces
-- **Face** — a block item whose texture is applied to the drawer's front face
-- **Input** — the blank Framed (item, fluid, or compacting) Drawer to be textured
-- **Output** — where the finished, textured drawer appears once processing completes
-
-An optional **upgrade slot** accepts a drawer capacity upgrade (see [Upgrades](upgrades.md)) to speed up processing — each tier divides the process time by its multiplier.
+* **Sides** — a block item whose texture is applied to the drawer's side faces
+* **Face** — a block item whose texture is applied to the drawer's front face
+* **Input** — the blank Framed (item, fluid, or compacting) Drawer to be textured
+* **Output** — where the finished, textured drawer appears once processing completes
+* **Upgrade** — An optional **upgrade slot** accepts [Drawer Upgrades](upgrades.md) to speed up processing. Each tier divides the process time by its multiplier.
 
 ### Process
 
@@ -56,4 +55,4 @@ An optional **upgrade slot** accepts a drawer capacity upgrade (see [Upgrades](u
 4. Wait for the progress bar to fill. The base process takes 5 seconds; placing a tier upgrade in the upgrade slot divides that time by the upgrade's multiplier.
 5. Collect the finished drawer from the Output slot — it's the same block, now displaying your chosen side and face textures.
 
-The framer consumes one Sides block, one Face block, and the input drawer per completed job. Framed Drawers can be reframed with new blocks.
+The framer consumes one Sides block, one Face block, and the input drawer per completed job. Framed Drawers can be reframed with new blocks, and they will retain their inventories upon reframing.

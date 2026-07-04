@@ -56,11 +56,11 @@ item_ids:
 
 # Drawers
 
-Drawers are the basic building block of the mod. Each drawer comes in every wood type and in four sizes: 1, 2, 3, or 4 slots. The slot count controls how much capacity each individual slot has — fewer slots means more storage per slot.
+Drawers are the basic building block of the mod. Each drawer comes in every wood type and in four sizes: 1, 2, 3, or 4 slots. The slot count controls how much capacity each individual slot has. Fewer slots means more storage per slot.
 
 ## Filling a drawer
 
-Place any item into an empty drawer slot to set it as that slot's template. Once a slot has a template, only matching items can be added to it — right-click with the same item to insert more, or right-click with an empty hand to take some out.
+Place any item into an empty drawer slot to set it as that slot's template. Once a slot has a template, only matching items can be added to it. Right-click with more items to add, double right-click to insert all matching items from your inventory, and left-click or shift left-click to extract 1 or a stack of an item.
 
 ## Capacity
 
@@ -70,15 +70,15 @@ A drawer's capacity per slot depends on its slot count and the item's own max st
 - **2-slot drawers** hold less per slot, but have two independent slots
 - **3-slot** and **4-slot** drawers trade capacity per slot for more slots
 
-These base multipliers, along with every other capacity value in this guide, can be changed by modpack developers in the mod's config file — the numbers shown here are the defaults.
+These base multipliers, along with every other capacity value in this guide, can be changed in the config file.
 
 ## Locking
 
-Right-click a drawer with an empty hand while sneaking to lock it. A locked drawer keeps its template item even after it's fully emptied, so hoppers and automation won't cause it to "forget" what it's supposed to hold.
+Right-click a drawer with an empty hand while sneaking to lock it. A locked drawer keeps its template item even after it's fully emptied, so automation won't cause it to forget what it's supposed to hold.
 
 ## Upgrades
 
-Drawers have upgrade slots that accept <ItemLink id="drawer_upgrade_t1" /> through <ItemLink id="drawer_upgrade_t4" /> to multiply capacity, and a <ItemLink id="void_upgrade" /> to destroy overflow instead of rejecting it. See the [Upgrades](upgrades.md) page for details.
+Drawers have upgrade slots that accept <ItemLink id="drawer_upgrade_t1" /> through <ItemLink id="drawer_upgrade_t4" /> to multiply capacity. Utility upgrades such as the <ItemLink id="insert_upgrade" />, <ItemLink id="extract_upgrade" />, or <ItemLink id="void_upgrade" /> can provide some extra functionality to the drawers, or destroy overflow instead of rejecting it. See the [Upgrades](upgrades.md) page for details.
 
 ## Framed variant
 

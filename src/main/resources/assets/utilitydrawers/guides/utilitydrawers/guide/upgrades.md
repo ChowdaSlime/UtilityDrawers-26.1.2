@@ -8,25 +8,27 @@ item_ids:
   - utilitydrawers:drawer_upgrade_t2
   - utilitydrawers:drawer_upgrade_t3
   - utilitydrawers:drawer_upgrade_t4
-  - utilitydrawers:void_upgrade
 ---
 
 # Upgrades
 
-Upgrades are placed into a drawer's (or [Storage Interface's](storage_interface.md)) upgrade slots to change how it behaves. Every drawer type has up to four upgrade slots.
+Upgrades are placed into, well, upgrade slots. The upgrades are usable in [Drawers](drawers.md), [Storage Interfaces](storage_interface.md), and [Drawer Framer](framed_drawers.md).
 
-## Capacity Upgrades
+## Capacity
 
 <ItemLink id="drawer_upgrade_t1" />, <ItemLink id="drawer_upgrade_t2" />, <ItemLink id="drawer_upgrade_t3" />, and <ItemLink id="drawer_upgrade_t4" /> each multiply a drawer's capacity by a fixed amount, with higher tiers multiplying by more. Multiple capacity upgrades in the same drawer stack multiplicatively.
 
-These same upgrades, when placed in a [Storage Interface](storage_interface.md), instead multiply its wireless linking range rather than storage capacity.
+## Range
+In the <ItemLink id="storage_interface" />, upgrades will increase range, up to 512 blocks with a max upgrade, which may be *just a little overkill*. Please be mindful on servers.
 
-## Void Upgrade
-
-The <ItemLink id="void_upgrade" /> destroys any overflow instead of rejecting it once a drawer is full. Useful for automatically discarding excess items or fluids from an automated system instead of having it back up.
+## Speed
+With the <ItemLink id="drawer_framer" />, upgrades increase the processing time, up to just a fraction of a second with a <ItemLink id="drawer_upgrade_t4" />. Not super useful but can save time if framing *many* drawers.
 
 ## Removing upgrades
 
-An upgrade can only be removed if doing so wouldn't leave the drawer over-capacity for what it currently holds — if removing a capacity upgrade would shrink the drawer below its current contents, it stays locked in place until you make room.
+In [Drawers](drawers.md), tier upgrades can only be removed if doing so wouldn't leave the drawer over-capacity for what it currently holds. If removing an upgrade would shrink the drawers' capacity below the quantity of its current contents, it stays locked in place until room has been made.
 
-Exact multiplier values for each tier are set by modpack developers in the config file; check with your pack if the numbers you see in-game don't match what's described here.
+The multiplier for each tier can be changed in the config file.
+
+## Related
+[Utility Upgrades](utility_upgrades.md)
