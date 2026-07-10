@@ -180,6 +180,7 @@ public class WirelessDrawerBlockEntity extends DrawerBlockEntity implements Menu
             data.setDirty();
             notifyNetwork();
             syncToClient();
+            notifyComparator();
         }
         int remainder = stack.getCount() - toInsert;
         if (remainder > 0 && hasVoidUpgrade())
@@ -359,6 +360,7 @@ public class WirelessDrawerBlockEntity extends DrawerBlockEntity implements Menu
             WirelessNetworkSavedData.get((ServerLevel) level).setDirty();
             notifyNetwork();
             syncToClient();
+            notifyComparator();
         }
     }
 
@@ -391,5 +393,26 @@ public class WirelessDrawerBlockEntity extends DrawerBlockEntity implements Menu
         WirelessNetworkSavedData.get((ServerLevel) level).setDirty();
         notifyNetwork();
         syncToClient();
+    }
+
+    @Override
+    public int getComparatorOutput() {
+        if (slotCount == 0) return 0;
+
+        float fillSum = 0f;
+        for (int i = 0; i < slotCount; i++) {
+            ItemStack stack = getStoredItem(i);
+            if (!stack.isEmpty()) {
+                long capacity = (long) getBaseStackMultiplier() * stack.getMaxStackSize() * getUpgradeMultiplier();
+                if (capacity > 0) {
+                    fillSum += (float) getStoredCount(i) / (float) capacity;
+                }
+            }
+        }
+
+        float avgFill = fillSum / slotCount;
+        if (avgFill <= 0f) return 0;
+
+        return Math.min(15, (int) Math.floor(avgFill * 14.0f) + 1);
     }
 }

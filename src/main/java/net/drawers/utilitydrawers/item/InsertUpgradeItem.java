@@ -248,8 +248,7 @@ public class InsertUpgradeItem extends Item {
         return false;
     }
 
-    @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag tooltipFlag) {
+    public static void addDynamicTooltip(ItemStack stack, List<Component> tooltip) {
         List<Direction> activeDirs = stack.getOrDefault(ModDataComponents.ACTIVE_DIRECTIONS, List.of());
         ItemContainerContents filter = stack.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY);
 
@@ -257,7 +256,7 @@ public class InsertUpgradeItem extends Item {
             return;
         }
 
-        builder.accept(Component.empty());
+        tooltip.add(Component.empty());
 
         for (Direction dir : activeDirs) {
             int startSlot = dir.get3DDataValue() * SLOTS_PER_DIRECTION;
@@ -286,7 +285,7 @@ public class InsertUpgradeItem extends Item {
                 dirComponent.append(Component.literal(String.join(", ", itemNames)).withStyle(ChatFormatting.WHITE));
             }
 
-            builder.accept(dirComponent);
+            tooltip.add(dirComponent);
         }
     }
 }

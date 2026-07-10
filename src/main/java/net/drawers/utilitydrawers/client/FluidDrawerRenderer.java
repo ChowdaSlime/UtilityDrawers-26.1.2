@@ -13,6 +13,7 @@ import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
 import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -21,8 +22,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -37,9 +40,6 @@ public class FluidDrawerRenderer implements BlockEntityRenderer<FluidDrawerBlock
 
     private static final Identifier LOCK_TEXTURE =
             Identifier.fromNamespaceAndPath(UtilityDrawers.MODID, "textures/gui/lock.png");
-
-    private static final Identifier WATER_STILL =
-            Identifier.withDefaultNamespace("block/water_still");
 
     private static final float EDGE = 1.0f / 16.0f;
     private static final float TRIM = 1.0f / 16.0f;
@@ -127,12 +127,14 @@ public class FluidDrawerRenderer implements BlockEntityRenderer<FluidDrawerBlock
                     .getFluidStateModelSet()
                     .get(stack.getFluid().defaultFluidState());
             return fluidModel.stillMaterial().sprite();
+        } catch (Exception e) {
+            return mc.getAtlasManager().get(
+                    new SpriteId(
+                            Identifier.withDefaultNamespace("textures/atlas/blocks.png"),
+                            MissingTextureAtlasSprite.getLocation()
+                    )
+            );
         }
-        catch (Exception e) {
-        }
-
-        return mc.getAtlasManager().get(
-                new SpriteId(TextureAtlas.LOCATION_BLOCKS, WATER_STILL));
     }
 
     private static int resolveColor(FluidStack stack) {
@@ -142,9 +144,12 @@ public class FluidDrawerRenderer implements BlockEntityRenderer<FluidDrawerBlock
                 .get(stack.getFluid().defaultFluidState());
 
         var tintSource = fluidModel.fluidTintSource();
-
         if (tintSource != null) {
             return tintSource.colorAsStack(stack);
+        }
+
+        if (stack.getFluid() == Fluids.WATER) {
+            return 0xFF3F76E4;
         }
 
         return -1;

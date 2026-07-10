@@ -1,8 +1,11 @@
 package net.drawers.utilitydrawers.client;
 
+import com.mojang.datafixers.util.Either;
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.FluidDrawerBlock;
 import net.drawers.utilitydrawers.block.FramedFluidDrawerBlock;
+import net.drawers.utilitydrawers.data.ModDataComponents;
+import net.drawers.utilitydrawers.data.WirelessNetworkKey;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -14,17 +17,20 @@ import net.minecraft.world.item.component.CustomData;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
+import net.neoforged.neoforge.client.event.RenderTooltipEvent;
 import net.neoforged.neoforge.fluids.FluidStack;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
+
+import static net.drawers.utilitydrawers.client.ClientFluidDrawerTooltipComponent.formatMillibuckets;
 
 @EventBusSubscriber(modid = UtilityDrawers.MODID, value = Dist.CLIENT)
 public class FluidDrawerTooltipEvent {
 
     @SubscribeEvent
-    public static void onTooltip(ItemTooltipEvent event) {
+    public static void onGatherTooltipComponents(RenderTooltipEvent.GatherComponents event) {
         ItemStack stack = event.getItemStack();
 
         if (!(stack.getItem() instanceof BlockItem blockItem)) return;
@@ -35,49 +41,49 @@ public class FluidDrawerTooltipEvent {
         }
     }
 
-    private static void handleFluidDrawerTooltip(ItemTooltipEvent event, ItemStack stack) {
+    private static void handleFluidDrawerTooltip(RenderTooltipEvent.GatherComponents event, ItemStack stack) {
         CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        if (customData == null) return;
+        WirelessNetworkKey networkKey = stack.get(ModDataComponents.WIRELESS_NETWORK_KEY);
 
-        CompoundTag tag = customData.copyTag();
-        AtomicBoolean hasFluids = new AtomicBoolean(false);
+        List<FluidStack> fluids = new ArrayList<>();
+        List<Long> amounts = new ArrayList<>();
 
-        for (int i = 0; i < 4; i++) {
-            String slotKey = "Slot" + i;
-            if (!tag.contains(slotKey)) continue;
+        if (customData != null) {
+            CompoundTag tag = customData.copyTag();
 
-            tag.getCompound(slotKey).ifPresent(slotTag ->
-                    slotTag.getCompound("Fluid").ifPresent(fluidTag -> {
-                        var registries = Minecraft.getInstance().level.registryAccess();
-                        var ops = registries.createSerializationContext(NbtOps.INSTANCE);
-                        Optional<FluidStack> parsedOpt = FluidStack.CODEC.parse(ops, fluidTag).resultOrPartial();
+            for (int i = 0; i < 4; i++) {
+                String slotKey = "Slot" + i;
+                if (!tag.contains(slotKey)) continue;
 
-                        if (parsedOpt.isPresent() && !parsedOpt.get().isEmpty()) {
-                            FluidStack storedFluid = parsedOpt.get();
-                            long amount = slotTag.getLong("Amount").orElse((long) storedFluid.getAmount());
+                tag.getCompound(slotKey).ifPresent(slotTag ->
+                        slotTag.getCompound("Fluid").ifPresent(fluidTag -> {
+                            var registries = Minecraft.getInstance().level.registryAccess();
+                            var ops = registries.createSerializationContext(NbtOps.INSTANCE);
+                            Optional<FluidStack> parsedOpt = FluidStack.CODEC.parse(ops, fluidTag).resultOrPartial();
 
-                            if (amount > 0) {
-                                hasFluids.set(true);
-                                event.getToolTip().add(Component.literal(
-                                        "§7- " + formatMillibuckets(amount) + " §b" + storedFluid.getHoverName().getString()
-                                ));
+                            if (parsedOpt.isPresent() && !parsedOpt.get().isEmpty()) {
+                                FluidStack storedFluid = parsedOpt.get();
+                                long amount = slotTag.getLong("Amount").orElse((long) storedFluid.getAmount());
+
+                                if (amount > 0) {
+                                    fluids.add(storedFluid);
+                                    amounts.add(amount);
+                                }
                             }
-                        }
-                    })
-            );
+                        })
+                );
+            }
         }
 
-        if (!hasFluids.get()) {
-            event.getToolTip().add(Component.literal("§7(Empty)"));
+        if (!fluids.isEmpty() || networkKey != null) {
+            event.getTooltipElements().add(Either.right(new FluidDrawerTooltipComponent(fluids, amounts, networkKey)));
+            for (int i = 0; i < fluids.size(); i++) {
+                event.getTooltipElements().add(Either.left(
+                        Component.literal("§7- " + formatMillibuckets(amounts.get(i)) + " §b" + fluids.get(i).getHoverName().getString())
+                ));
+            }
+        } else {
+            event.getTooltipElements().add(Either.left(Component.literal("§7(Empty)")));
         }
-    }
-
-    private static String formatMillibuckets(long mb) {
-        if (mb >= 1000) {
-            long whole = mb / 1000;
-            long remainder = (mb % 1000) / 100;
-            return remainder == 0 ? whole + " B" : whole + "." + remainder + " B";
-        }
-        return mb + " mB";
     }
 }

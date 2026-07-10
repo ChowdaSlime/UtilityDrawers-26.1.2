@@ -3,6 +3,7 @@ package net.drawers.utilitydrawers.menu;
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.data.WirelessNetworkKey;
 import net.drawers.utilitydrawers.network.UpdateWirelessFluidDrawerPayload;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -12,6 +13,8 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.List;
+
 public class WirelessFluidDrawerScreen extends FluidDrawerScreen<WirelessFluidDrawerMenu> {
 
     private static final Identifier TEXTURE =
@@ -20,7 +23,7 @@ public class WirelessFluidDrawerScreen extends FluidDrawerScreen<WirelessFluidDr
     private static final int SETTINGS_X1 = 157;
     private static final int SETTINGS_Y1 = 4;
     private static final int SETTINGS_X2 = 171;
-    private static final int SETTINGS_Y2 = 18;
+    private static final int SETTINGS_Y2 = 19;
     private static final int SETTINGS_W = SETTINGS_X2 - SETTINGS_X1;
     private static final int SETTINGS_H = SETTINGS_Y2 - SETTINGS_Y1;
 
@@ -159,5 +162,18 @@ public class WirelessFluidDrawerScreen extends FluidDrawerScreen<WirelessFluidDr
 
     private WirelessFluidDrawerMenu getWirelessMenu() {
         return (WirelessFluidDrawerMenu) this.menu;
+    }
+
+    public List<Rect2i> getExtraGuiAreas() {
+        if (!settingsOpen) {
+            return List.of();
+        }
+
+        int startX = this.leftPos + SETTINGS_X1;
+        int startY = this.topPos + SETTINGS_Y1;
+        int width = (PERSONAL_X2 - SETTINGS_X1) + 10;
+        int height = (SWATCH_ROW_Y + SWATCH_SIZE + 15) - SETTINGS_Y1;
+
+        return List.of(new Rect2i(startX, startY, width, height));
     }
 }

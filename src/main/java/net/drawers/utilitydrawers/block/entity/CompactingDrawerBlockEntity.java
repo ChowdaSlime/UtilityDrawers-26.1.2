@@ -389,6 +389,7 @@ public class CompactingDrawerBlockEntity extends BlockEntity implements ItemDraw
             rawCount += (long) toInsert * rawPerUnit;
             setChanged();
             syncToClients();
+            notifyComparator();
         }
 
         if (remainder > 0 && hasVoidUpgrade()) return ItemStack.EMPTY;
@@ -622,10 +623,23 @@ public class CompactingDrawerBlockEntity extends BlockEntity implements ItemDraw
         protected void onRootCommit(Snapshot originalState) {
             setChanged();
             syncToClients();
+            notifyComparator();
         }
     }
 
     public ResourceHandler<ItemResource> createItemHandler() {
         return new ItemHandler();
+    }
+
+    public int getComparatorOutput() {
+        if (maxRawCapacity <= 0 || rawCount <= 0) return 0;
+        float fillRatio = (float) rawCount / (float) maxRawCapacity;
+        return Math.min(15, (int) Math.floor(fillRatio * 14.0f) + 1);
+    }
+
+    private void notifyComparator() {
+        if (this.level != null && !this.level.isClientSide()) {
+            this.level.updateNeighbourForOutputSignal(this.getBlockPos(), this.getBlockState().getBlock());
+        }
     }
 }

@@ -16,6 +16,7 @@ import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 public class StorageRemoteItem extends Item {
@@ -462,23 +463,20 @@ public class StorageRemoteItem extends Item {
         return InteractionResult.PASS;
     }
 
-    @Override
-    public void appendHoverText(ItemStack stack, Item.TooltipContext context,
-                                TooltipDisplay display, Consumer<Component> builder, TooltipFlag flag) {
-
+    public static void addDynamicTooltip(ItemStack stack, List<Component> tooltip) {
         RemoteMode mode = getMode(stack);
-        builder.accept(Component.literal("Mode: " + (mode == RemoteMode.LINK ? "Link/Unlink" : "Lock/Unlock"))
+        tooltip.add(Component.literal("Mode: " + (mode == RemoteMode.LINK ? "Link/Unlink" : "Lock/Unlock"))
                 .withStyle(ChatFormatting.AQUA));
 
         if (mode == RemoteMode.LINK) {
             SelectMode selectMode = getSelectMode(stack);
-            builder.accept(Component.literal("Select: " + (selectMode == SelectMode.MULTI ? "Multi" : "Single"))
+            tooltip.add(Component.literal("Select: " + (selectMode == SelectMode.MULTI ? "Multi" : "Single"))
                     .withStyle(ChatFormatting.AQUA));
 
             if (selectMode == SelectMode.MULTI) {
                 BlockPos corner = getMultiSelectCorner(stack);
                 if (corner != null) {
-                    builder.accept(Component.literal("Corner 1: " + corner.toShortString())
+                    tooltip.add(Component.literal("Corner 1: " + corner.toShortString())
                             .withStyle(ChatFormatting.GRAY));
                 }
             }
@@ -486,16 +484,14 @@ public class StorageRemoteItem extends Item {
 
         BlockPos bound = getBoundInterface(stack);
         if (bound != null) {
-            builder.accept(Component.literal("Bound to: " + bound.toShortString()).withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.literal("Bound to: " + bound.toShortString()).withStyle(ChatFormatting.GRAY));
         } else if (mode == RemoteMode.LINK) {
-            builder.accept(Component.literal("Shift + right-click an interface to bind").withStyle(ChatFormatting.DARK_GRAY));
+            tooltip.add(Component.literal("Shift + right-click an interface to bind").withStyle(ChatFormatting.DARK_GRAY));
         }
 
-        builder.accept(Component.literal("Shift + scroll to change mode").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.add(Component.literal("Shift + scroll to change mode").withStyle(ChatFormatting.DARK_GRAY));
         if (mode == RemoteMode.LINK) {
-            builder.accept(Component.literal("Shift + left-click air to toggle multi-select").withStyle(ChatFormatting.DARK_GRAY));
+            tooltip.add(Component.literal("Shift + left-click air to toggle multi-select").withStyle(ChatFormatting.DARK_GRAY));
         }
-
-        super.appendHoverText(stack, context, display, builder, flag);
     }
 }

@@ -241,6 +241,7 @@ public class DrawerBlockEntity extends BlockEntity implements ItemDrawerAccess{
 
             if (this.level != null && !this.level.isClientSide()) {
                 this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+                notifyComparator();
             }
         }
 
@@ -573,11 +574,35 @@ public class DrawerBlockEntity extends BlockEntity implements ItemDrawerAccess{
             setChanged();
             if (level != null && !level.isClientSide()) {
                 level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
+                notifyComparator();
             }
         }
     }
 
     public ResourceHandler<ItemResource> createItemHandler() {
         return new ItemHandler();
+    }
+
+    // Redstone
+    public int getComparatorOutput() {
+        if (slotCount == 0) return 0;
+
+        float fillSum = 0f;
+        for (int i = 0; i < slotCount; i++) {
+            if (!storedStacks[i].isEmpty() && maxCapacities[i] > 0) {
+                fillSum += (float) storedCounts[i] / (float) maxCapacities[i];
+            }
+        }
+
+        float avgFill = fillSum / slotCount;
+        if (avgFill <= 0f) return 0;
+
+        return Math.min(15, (int) Math.floor(avgFill * 14.0f) + 1);
+    }
+
+    protected void notifyComparator() {
+        if (this.level != null && !this.level.isClientSide()) {
+            this.level.updateNeighbourForOutputSignal(this.getBlockPos(), this.getBlockState().getBlock());
+        }
     }
 }

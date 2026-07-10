@@ -1,8 +1,11 @@
 package net.drawers.utilitydrawers.client;
 
+import com.mojang.datafixers.util.Either;
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.CompactingDrawerBlock;
 import net.drawers.utilitydrawers.block.FramedCompactingDrawerBlock;
+import net.drawers.utilitydrawers.data.ModDataComponents;
+import net.drawers.utilitydrawers.data.WirelessNetworkKey;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -14,15 +17,17 @@ import net.minecraft.world.item.component.CustomData;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
+import net.neoforged.neoforge.client.event.RenderTooltipEvent;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @EventBusSubscriber(modid = UtilityDrawers.MODID, value = Dist.CLIENT)
 public class CompactingDrawerTooltipEvent {
 
     @SubscribeEvent
-    public static void onTooltip(ItemTooltipEvent event) {
+    public static void onGatherTooltipComponents(RenderTooltipEvent.GatherComponents event) {
         ItemStack stack = event.getItemStack();
         if (!(stack.getItem() instanceof BlockItem blockItem)) return;
 
@@ -30,39 +35,47 @@ public class CompactingDrawerTooltipEvent {
                 blockItem.getBlock() instanceof FramedCompactingDrawerBlock)) return;
 
         CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        if (customData == null) return;
+        WirelessNetworkKey networkKey = stack.get(ModDataComponents.WIRELESS_NETWORK_KEY);
 
-        CompoundTag tag = customData.copyTag();
-        var registries = Minecraft.getInstance().level.registryAccess();
-        var ops = registries.createSerializationContext(NbtOps.INSTANCE);
+        List<ItemStack> items = new ArrayList<>();
+        List<Long> counts = new ArrayList<>();
 
-        long rawCount = tag.getLongOr("RawCount", 0L);
-        int ratio0 = tag.getIntOr("Ratio0", 9);
-        int ratio1 = tag.getIntOr("Ratio1", 9);
+        if (customData != null) {
+            CompoundTag tag = customData.copyTag();
+            var registries = Minecraft.getInstance().level.registryAccess();
+            var ops = registries.createSerializationContext(NbtOps.INSTANCE);
 
-        String[] keys  = {"BlockItem", "MidItem", "BaseItem"};
-        long[] counts = {rawCount / ((long) ratio0 * ratio1), rawCount / ratio0, rawCount};
+            long rawCount = tag.getLongOr("RawCount", 0L);
+            int ratio0 = tag.getIntOr("Ratio0", 9);
+            int ratio1 = tag.getIntOr("Ratio1", 9);
 
-        boolean hasItems = false;
+            String[] keys  = {"BlockItem", "MidItem", "BaseItem"};
+            long[] slotCounts = {rawCount / ((long) ratio0 * ratio1), rawCount / ratio0, rawCount};
 
-        for (int i = 0; i < keys.length; i++) {
-            if (!tag.contains(keys[i])) continue;
-            var itemTag = tag.get(keys[i]);
-            if (itemTag == null) continue;
+            for (int i = 0; i < keys.length; i++) {
+                if (!tag.contains(keys[i])) continue;
+                var itemTag = tag.get(keys[i]);
+                if (itemTag == null) continue;
 
-            Optional<ItemStack> parsed = ItemStack.CODEC.parse(ops, itemTag).resultOrPartial();
-            if (parsed.isEmpty() || parsed.get().isEmpty()) continue;
-            if (counts[i] <= 0) continue;
+                Optional<ItemStack> parsed = ItemStack.CODEC.parse(ops, itemTag).resultOrPartial();
+                if (parsed.isEmpty() || parsed.get().isEmpty()) continue;
+                if (slotCounts[i] <= 0) continue;
 
-            hasItems = true;
-            long count = counts[i];
-            event.getToolTip().add(Component.literal(
-                    "§7- " + count + "x §b" + parsed.get().getHoverName().getString()
-            ));
+                items.add(parsed.get());
+                counts.add(slotCounts[i]);
+            }
         }
 
-        if (!hasItems) {
-            event.getToolTip().add(Component.literal("§7(Empty)"));
+        if (!items.isEmpty() || networkKey != null) {
+            event.getTooltipElements().add(Either.right(new CompactingDrawerTooltipComponent(items, counts, networkKey)));
+
+            for (int i = 0; i < items.size(); i++) {
+                event.getTooltipElements().add(Either.left(
+                        Component.literal("§7- " + counts.get(i) + "x §b" + items.get(i).getHoverName().getString())
+                ));
+            }
+        } else {
+            event.getTooltipElements().add(Either.left(Component.literal("§7(Empty)")));
         }
     }
 }

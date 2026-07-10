@@ -11,6 +11,8 @@ import net.drawers.utilitydrawers.client.model.FramedFluidDrawerBlockStateModel;
 import net.drawers.utilitydrawers.client.model.FramedFluidDrawerItemModel;
 import net.drawers.utilitydrawers.client.model.FramedCompactingDrawerBlockStateModel;
 import net.drawers.utilitydrawers.client.model.FramedCompactingDrawerItemModel;
+import net.drawers.utilitydrawers.item.ExtractUpgradeItem;
+import net.drawers.utilitydrawers.item.InsertUpgradeItem;
 import net.drawers.utilitydrawers.item.StorageRemoteItem;
 import net.drawers.utilitydrawers.menu.*;
 import net.drawers.utilitydrawers.network.CycleRemoteModePayload;
@@ -30,6 +32,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.client.event.*;
 import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.neoforge.transfer.ResourceHandler;
 import net.neoforged.neoforge.transfer.access.ItemAccess;
 import net.neoforged.neoforge.transfer.fluid.FluidResource;
@@ -149,5 +152,18 @@ public class ModClientEvents {
         Identifier compactingItemId = BuiltInRegistries.ITEM.getKey(compactingItem);
         event.getBakingResult().itemStackModels().computeIfPresent(compactingItemId,
                 (key, original) -> new FramedCompactingDrawerItemModel(original));
+    }
+
+    @SubscribeEvent
+    public static void onItemTooltip(ItemTooltipEvent event) {
+        Item item = event.getItemStack().getItem();
+
+        if (item instanceof StorageRemoteItem) {
+            StorageRemoteItem.addDynamicTooltip(event.getItemStack(), event.getToolTip());
+        } else if (item instanceof InsertUpgradeItem) {
+            InsertUpgradeItem.addDynamicTooltip(event.getItemStack(), event.getToolTip());
+        } else if (item instanceof ExtractUpgradeItem) {
+            ExtractUpgradeItem.addDynamicTooltip(event.getItemStack(), event.getToolTip());
+        }
     }
 }

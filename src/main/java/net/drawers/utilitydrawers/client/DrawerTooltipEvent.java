@@ -1,8 +1,11 @@
 package net.drawers.utilitydrawers.client;
 
+import com.mojang.datafixers.util.Either;
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.DrawerBlock;
 import net.drawers.utilitydrawers.block.FramedDrawerBlock;
+import net.drawers.utilitydrawers.data.ModDataComponents;
+import net.drawers.utilitydrawers.data.WirelessNetworkKey;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -14,16 +17,17 @@ import net.minecraft.world.item.component.CustomData;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
+import net.neoforged.neoforge.client.event.RenderTooltipEvent;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @EventBusSubscriber(modid = UtilityDrawers.MODID, value = Dist.CLIENT)
 public class DrawerTooltipEvent {
 
     @SubscribeEvent
-    public static void onTooltip(ItemTooltipEvent event) {
+    public static void onGatherTooltipComponents(RenderTooltipEvent.GatherComponents event) {
         ItemStack stack = event.getItemStack();
 
         if (!(stack.getItem() instanceof BlockItem blockItem)) return;
@@ -34,40 +38,50 @@ public class DrawerTooltipEvent {
         }
     }
 
-    private static void handleItemDrawerTooltip(ItemTooltipEvent event, ItemStack stack) {
+    private static void handleItemDrawerTooltip(RenderTooltipEvent.GatherComponents event, ItemStack stack) {
         CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        if (customData == null) return;
+        WirelessNetworkKey networkKey = stack.get(ModDataComponents.WIRELESS_NETWORK_KEY);
 
-        CompoundTag tag = customData.copyTag();
-        AtomicBoolean hasItems = new AtomicBoolean(false);
+        List<ItemStack> items = new ArrayList<>();
+        List<Long> counts = new ArrayList<>();
 
-        for (int i = 0; i < 4; i++) {
-            String slotKey = "Slot" + i;
-            if (!tag.contains(slotKey)) continue;
+        if (customData != null) {
+            CompoundTag tag = customData.copyTag();
 
-            tag.getCompound(slotKey).ifPresent(slotTag ->
-                    slotTag.getCompound("Item").ifPresent(itemTag -> {
-                        var registries = Minecraft.getInstance().level.registryAccess();
-                        var ops = registries.createSerializationContext(NbtOps.INSTANCE);
-                        Optional<ItemStack> parsedStackOpt = ItemStack.CODEC.parse(ops, itemTag).resultOrPartial();
+            for (int i = 0; i < 4; i++) {
+                String slotKey = "Slot" + i;
+                if (!tag.contains(slotKey)) continue;
 
-                        if (parsedStackOpt.isPresent() && !parsedStackOpt.get().isEmpty()) {
-                            ItemStack storedStack = parsedStackOpt.get();
-                            long count = slotTag.getLong("Count").orElse((long) storedStack.getCount());
+                tag.getCompound(slotKey).ifPresent(slotTag ->
+                        slotTag.getCompound("Item").ifPresent(itemTag -> {
+                            var registries = Minecraft.getInstance().level.registryAccess();
+                            var ops = registries.createSerializationContext(NbtOps.INSTANCE);
+                            Optional<ItemStack> parsedStackOpt = ItemStack.CODEC.parse(ops, itemTag).resultOrPartial();
 
-                            if (count > 0) {
-                                hasItems.set(true);
-                                event.getToolTip().add(Component.literal(
-                                        "§7- " + count + "x §b" + storedStack.getHoverName().getString()
-                                ));
+                            if (parsedStackOpt.isPresent() && !parsedStackOpt.get().isEmpty()) {
+                                ItemStack storedStack = parsedStackOpt.get();
+                                long count = slotTag.getLong("Count").orElse((long) storedStack.getCount());
+
+                                if (count > 0) {
+                                    items.add(storedStack);
+                                    counts.add(count);
+                                }
                             }
-                        }
-                    })
-            );
+                        })
+                );
+            }
         }
 
-        if (!hasItems.get()) {
-            event.getToolTip().add(Component.literal("§7(Empty)"));
+        if (!items.isEmpty() || networkKey != null) {
+            event.getTooltipElements().add(Either.right(new DrawerTooltipComponent(items, counts, networkKey)));
+
+            for (int i = 0; i < items.size(); i++) {
+                event.getTooltipElements().add(Either.left(
+                        Component.literal("§7- " + counts.get(i) + "x §b" + items.get(i).getHoverName().getString())
+                ));
+            }
+        } else {
+            event.getTooltipElements().add(Either.left(Component.literal("§7(Empty)")));
         }
     }
 }

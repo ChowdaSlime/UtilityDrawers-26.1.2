@@ -1,24 +1,22 @@
 package net.drawers.utilitydrawers.item;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.component.TooltipDisplay;
+import net.minecraft.world.item.component.ItemLore;
 
-import java.util.function.Consumer;
+import java.util.List;
 
 public class DrawerUpgradeItem extends Item {
 
     private final int tier;
 
-    public DrawerUpgradeItem(Properties properties, int tier) {
-        super(properties);
-        this.tier = tier;
+    public int getMultiplier() {
+        return getMultiplierForTier(this.tier);
     }
 
-    public int getMultiplier() {
+    private static int getMultiplierForTier(int tier) {
         return switch (tier) {
             case 1 -> 4;
             case 2 -> 8;
@@ -28,20 +26,14 @@ public class DrawerUpgradeItem extends Item {
         };
     }
 
-    @Override
-    public void appendHoverText(
-            ItemStack stack,
-            TooltipContext context,
-            TooltipDisplay display,
-            Consumer<Component> builder,
-            TooltipFlag flag) {
-
-        builder.accept(
-                Component.literal("Multiplier: " + getMultiplier() + "x")
-                        .withStyle(ChatFormatting.BLUE)
-        );
-
-        super.appendHoverText(stack, context, display, builder, flag);
+    public DrawerUpgradeItem(Properties properties, int tier) {
+        super(properties.component(
+                DataComponents.LORE,
+                new ItemLore(List.of(
+                        Component.literal("Multiplier: " + getMultiplierForTier(tier) + "x")
+                                .withStyle(ChatFormatting.BLUE)
+                ))
+        ));
+        this.tier = tier;
     }
-
 }

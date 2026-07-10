@@ -2,14 +2,11 @@ package net.drawers.utilitydrawers.client;
 
 import net.drawers.utilitydrawers.data.WirelessNetworkKey;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.color.block.BlockColors;
-import net.minecraft.client.color.block.BlockTintSource;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.fluids.FluidStack;
 
@@ -90,24 +87,23 @@ public class ClientFluidDrawerTooltipComponent implements ClientTooltipComponent
             if (!stack.isEmpty()) {
                 Minecraft mc = Minecraft.getInstance();
 
-                BlockState fluidState = stack.getFluid().defaultFluidState().createLegacyBlock();
+                var fluidModel = mc.getModelManager()
+                        .getFluidStateModelSet()
+                        .get(stack.getFluid().defaultFluidState());
 
-                TextureAtlasSprite sprite = mc.getModelManager()
-                        .getBlockStateModelSet()
-                        .get(fluidState)
-                        .particleMaterial()
-                        .sprite();
+                TextureAtlasSprite sprite = fluidModel.stillMaterial().sprite();
 
-                int tint = -1;
-                BlockColors blockColors = mc.getBlockColors();
-                BlockTintSource source = blockColors.getTintSource(fluidState, 0);
-                if (source != null && mc.level != null && mc.player != null) {
-                    tint = source.colorInWorld(fluidState, mc.level, mc.player.blockPosition());
+                int fluidColor = -1;
+                var tintSource = fluidModel.fluidTintSource();
+
+                if (tintSource != null) {
+                    int tint = tintSource.colorAsStack(stack);
+                    if (tint != -1 && tint != 0) {
+                        fluidColor = 0xFF000000 | tint;
+                    }
+                } else if (stack.getFluid() == Fluids.WATER) {
+                    fluidColor = 0xFF3F76E4 | 0xFF000000;
                 }
-
-                int fluidColor = tint == -1
-                        ? (stack.getFluid() == Fluids.WATER ? 0xFF3F76E4 : 0xFFFFFFFF)
-                        : (0xFF000000 | tint);
 
                 graphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, slotX + 1, slotY + 1, 16, 16, fluidColor);
             }
@@ -117,7 +113,7 @@ public class ClientFluidDrawerTooltipComponent implements ClientTooltipComponent
         }
     }
 
-    private static String formatMillibuckets(long mb) {
+    protected static String formatMillibuckets(long mb) {
         if (mb >= 1000) {
             long whole = mb / 1000;
             long remainder = (mb % 1000) / 100;
