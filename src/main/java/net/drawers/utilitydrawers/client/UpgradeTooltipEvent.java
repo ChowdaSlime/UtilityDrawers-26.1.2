@@ -27,7 +27,7 @@ public class UpgradeTooltipEvent {
             Minecraft mc = Minecraft.getInstance();
             Component instruction;
 
-            if (mc.screen instanceof AbstractContainerScreen<?> screen &&
+            if (mc.gui.screen() instanceof AbstractContainerScreen<?> screen &&
                     (screen.getMenu() instanceof DrawerMenu ||
                             screen.getMenu() instanceof FluidDrawerMenu ||
                             screen.getMenu() instanceof CompactingDrawerMenu)) {

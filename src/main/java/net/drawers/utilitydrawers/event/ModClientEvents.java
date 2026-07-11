@@ -86,7 +86,7 @@ public class ModClientEvents {
     public static void onClientTick(ClientTickEvent.Pre event) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null || mc.gameMode == null) return;
-        if (mc.screen != null) return;
+        if (mc.gui.screen() != null) return;
         if (!mc.options.keyUse.isDown()) return;
 
         ItemStack stack = mc.player.getMainHandItem();

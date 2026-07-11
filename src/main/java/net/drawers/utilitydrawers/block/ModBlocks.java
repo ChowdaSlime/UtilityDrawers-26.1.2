@@ -2,6 +2,8 @@ package net.drawers.utilitydrawers.block;
 
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.item.*;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
@@ -47,6 +49,11 @@ public class ModBlocks {
             properties -> new StorageViewerBlock(
                     properties.strength(2.0F, 4.0F).sound(SoundType.STONE).noOcclusion().requiresCorrectToolForDrops()));
 
+
+
+    public static ResourceKey<Block> getRK(Block block) {
+        return BuiltInRegistries.BLOCK.getResourceKey(block).get();
+    }
 
     public enum WoodType {
         OAK, SPRUCE, BIRCH, ACACIA, JUNGLE, DARK_OAK, MANGROVE, CHERRY, PALE_OAK, BAMBOO, CRIMSON, WARPED

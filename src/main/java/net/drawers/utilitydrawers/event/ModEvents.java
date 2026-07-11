@@ -1,6 +1,5 @@
 package net.drawers.utilitydrawers.event;
 
-import appeng.api.AECapabilities;
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.CompactingDrawerBlock;
 import net.drawers.utilitydrawers.block.DrawerBlock;

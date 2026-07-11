@@ -1,7 +1,6 @@
 package net.drawers.utilitydrawers.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.block.entity.CompactingDrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.DrawerBlockEntity;
@@ -9,9 +8,9 @@ import net.drawers.utilitydrawers.block.entity.FluidDrawerBlockEntity;
 import net.drawers.utilitydrawers.block.entity.StorageInterfaceBlockEntity;
 import net.drawers.utilitydrawers.item.StorageRemoteItem;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.ShapeRenderer;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.ARGB;
 import net.minecraft.world.entity.player.Player;
@@ -23,7 +22,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.neoforged.neoforge.client.event.SubmitCustomGeometryEvent;
 
 @EventBusSubscriber(modid = UtilityDrawers.MODID, value = Dist.CLIENT)
 public class NetworkHighlightRenderer {
@@ -31,7 +30,7 @@ public class NetworkHighlightRenderer {
     private static final double MAX_DISTANCE_SQ = 64 * 64;
 
     @SubscribeEvent
-    public static void renderNetworkHighlights(RenderLevelStageEvent.AfterTranslucentBlocks event) {
+    public static void renderNetworkHighlights(SubmitCustomGeometryEvent event) {
         Minecraft mc = Minecraft.getInstance();
         Player player = mc.player;
         if (player == null || mc.level == null) return;
@@ -51,18 +50,16 @@ public class NetworkHighlightRenderer {
 
         if (!(mc.level.getBlockEntity(boundPos) instanceof StorageInterfaceBlockEntity interfaceEntity)) return;
 
+        LevelRenderState levelRenderState = event.getLevelRenderState();
+        SubmitNodeCollector collector = event.getSubmitNodeCollector();
         PoseStack poseStack = event.getPoseStack();
-        if (poseStack == null) return;
 
-        Vec3 cameraPos = event.getLevelRenderState().cameraRenderState.pos;
-        MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
-        VertexConsumer consumer = bufferSource.getBuffer(RenderTypes.lines());
-
+        Vec3 cameraPos = levelRenderState.cameraRenderState.pos;
         int color = ARGB.colorFromFloat(1.0F, 0.0F, 0.5F, 1.0F);
         VoxelShape blockShape = Shapes.block();
 
         if (Vec3.atCenterOf(boundPos).distanceToSqr(player.position()) <= MAX_DISTANCE_SQ) {
-            renderOutline(poseStack, consumer, blockShape, boundPos, cameraPos, color);
+            renderOutline(poseStack, collector, blockShape, boundPos, cameraPos, color);
         }
 
         for (BlockPos drawerPos : interfaceEntity.getConnectedDrawers()) {
@@ -72,22 +69,16 @@ public class NetworkHighlightRenderer {
             if (be instanceof DrawerBlockEntity ||
                     be instanceof FluidDrawerBlockEntity ||
                     be instanceof CompactingDrawerBlockEntity) {
-                renderOutline(poseStack, consumer, blockShape, drawerPos, cameraPos, color);
+                renderOutline(poseStack, collector, blockShape, drawerPos, cameraPos, color);
             }
         }
     }
 
-    private static void renderOutline(PoseStack poseStack, VertexConsumer consumer, VoxelShape shape,
+    private static void renderOutline(PoseStack poseStack, SubmitNodeCollector collector, VoxelShape shape,
                                       BlockPos pos, Vec3 cameraPos, int color) {
-        ShapeRenderer.renderShape(
-                poseStack,
-                consumer,
-                shape,
-                pos.getX() - cameraPos.x,
-                pos.getY() - cameraPos.y,
-                pos.getZ() - cameraPos.z,
-                color,
-                4.0F
-        );
+        poseStack.pushPose();
+        poseStack.translate(pos.getX() - cameraPos.x, pos.getY() - cameraPos.y, pos.getZ() - cameraPos.z);
+        collector.submitShapeOutline(poseStack, shape, RenderTypes.lines(), color, 4.0F, false);
+        poseStack.popPose();
     }
 }

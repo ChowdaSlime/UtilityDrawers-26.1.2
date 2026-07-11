@@ -157,7 +157,7 @@ public class ModNetworking {
                 (payload, context) -> {
                     context.enqueueWork(() -> {
                         Minecraft mc = Minecraft.getInstance();
-                        if (mc.screen instanceof StorageViewerScreen screen) {
+                        if (mc.gui.screen() instanceof StorageViewerScreen screen) {
                             StorageViewerMenu menu = screen.getMenu();
                             menu.sortByCount = payload.sortByCount();
                             menu.sortAscending = payload.sortAscending();

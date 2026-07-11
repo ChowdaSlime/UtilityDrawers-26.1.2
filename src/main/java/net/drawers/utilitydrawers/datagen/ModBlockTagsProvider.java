@@ -18,28 +18,28 @@ public class ModBlockTagsProvider extends BlockTagsProvider {
     @Override
     protected void addTags(HolderLookup.Provider provider) {
         for (Block drawer : ModBlocks.getAllDrawerBlocks()) {
-            this.tag(BlockTags.MINEABLE_WITH_AXE).add(drawer);
-            this.tag(BlockTags.MINEABLE_WITH_AXE).add(ModBlocks.DRAWER_FRAMER.get());
+            this.tag(BlockTags.MINEABLE_WITH_AXE).add(ModBlocks.getRK(drawer));
+            this.tag(BlockTags.MINEABLE_WITH_AXE).add(ModBlocks.getRK(ModBlocks.DRAWER_FRAMER.get()));
         }
         for (Block fluidDrawer : ModBlocks.getAllFluidDrawerBlocks()) {
-            this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(fluidDrawer);
-            this.tag(BlockTags.NEEDS_STONE_TOOL).add(fluidDrawer);
+            this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ModBlocks.getRK(fluidDrawer));
+            this.tag(BlockTags.NEEDS_STONE_TOOL).add(ModBlocks.getRK(fluidDrawer));
         }
         for (Block wirelessDrawer : ModBlocks.getAllWirelessDrawerBlocks()) {
-            this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(wirelessDrawer);
-            this.tag(BlockTags.NEEDS_STONE_TOOL).add(wirelessDrawer);
+            this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ModBlocks.getRK(wirelessDrawer));
+            this.tag(BlockTags.NEEDS_STONE_TOOL).add(ModBlocks.getRK(wirelessDrawer));
         }
         for (Block wirelessFluidDrawer : ModBlocks.getAllWirelessFluidDrawerBlocks()) {
-            this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(wirelessFluidDrawer);
-            this.tag(BlockTags.NEEDS_STONE_TOOL).add(wirelessFluidDrawer);
+            this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ModBlocks.getRK(wirelessFluidDrawer));
+            this.tag(BlockTags.NEEDS_STONE_TOOL).add(ModBlocks.getRK(wirelessFluidDrawer));
         }
 
-        this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ModBlocks.STORAGE_INTERFACE.get());
-        this.tag(BlockTags.NEEDS_STONE_TOOL).add(ModBlocks.STORAGE_INTERFACE.get());
-        this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ModBlocks.COMPACTING_DRAWER.get());
-        this.tag(BlockTags.NEEDS_STONE_TOOL).add(ModBlocks.COMPACTING_DRAWER.get());
-        this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ModBlocks.STORAGE_VIEWER.get());
-        this.tag(BlockTags.NEEDS_STONE_TOOL).add(ModBlocks.STORAGE_VIEWER.get());
+        this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ModBlocks.getRK(ModBlocks.STORAGE_INTERFACE.get()));
+        this.tag(BlockTags.NEEDS_STONE_TOOL).add(ModBlocks.getRK(ModBlocks.STORAGE_INTERFACE.get()));
+        this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ModBlocks.getRK(ModBlocks.COMPACTING_DRAWER.get()));
+        this.tag(BlockTags.NEEDS_STONE_TOOL).add(ModBlocks.getRK(ModBlocks.COMPACTING_DRAWER.get()));
+        this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ModBlocks.getRK(ModBlocks.STORAGE_VIEWER.get()));
+        this.tag(BlockTags.NEEDS_STONE_TOOL).add(ModBlocks.getRK(ModBlocks.STORAGE_VIEWER.get()));
     }
 }
 
