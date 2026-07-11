@@ -87,7 +87,9 @@ No additional dependencies required.
 
 ## Compatibility
 
-*   **Minecraft:** _26.1.2_
+*   **Minecraft:**
+* _26.1.2_
+* _26.2_
 *   **Mod Loader:** NeoForge
 
 ***
