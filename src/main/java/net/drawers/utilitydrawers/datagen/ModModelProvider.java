@@ -221,6 +221,24 @@ public class ModModelProvider extends ModelProvider {
             );
             generateDrawerItemModel(blockModels, wirelessFluidDrawer);
         }
+
+        Block filingCabinet = ModBlocks.FILING_CABINET.get();
+        var filingCabinetClosedModelLoc = ModelLocationUtils.getModelLocation(filingCabinet);
+        var filingCabinetOpenModelLoc = Identifier.fromNamespaceAndPath(UtilityDrawers.MODID, "block/filing_cabinet_open");
+
+        blockModels.blockStateOutput.accept(
+                MultiVariantGenerator.dispatch(filingCabinet, BlockModelGenerators.plainVariant(filingCabinetClosedModelLoc))
+                        .with(PropertyDispatch.modify(net.minecraft.world.level.block.state.properties.BlockStateProperties.OPEN)
+                                .select(true, v -> v.withModel(filingCabinetOpenModelLoc))
+                                .select(false, v -> v))
+                        .with(PropertyDispatch.modify(FilingCabinetBlock.FACING)
+                                .select(Direction.NORTH, v -> v)
+                                .select(Direction.EAST,  BlockModelGenerators.Y_ROT_90)
+                                .select(Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
+                                .select(Direction.WEST,  BlockModelGenerators.Y_ROT_270))
+        );
+
+        blockModels.registerSimpleItemModel(filingCabinet.asItem(), filingCabinetClosedModelLoc);
     }
 
     private void generateDrawerItemModel(BlockModelGenerators blockModels, Block block) {

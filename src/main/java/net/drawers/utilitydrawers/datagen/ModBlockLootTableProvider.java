@@ -49,6 +49,7 @@ public class ModBlockLootTableProvider extends BlockLootSubProvider {
         for (Block wirelessFluidDrawer : ModBlocks.getAllWirelessFluidDrawerBlocks()) {
             this.add(wirelessFluidDrawer, createDrawerDrop(wirelessFluidDrawer));
         }
+        this.add(ModBlocks.FILING_CABINET.get(), createDrawerDrop(ModBlocks.FILING_CABINET.get()));
     }
 
     protected LootTable.Builder createDrawerDrop(Block block) {

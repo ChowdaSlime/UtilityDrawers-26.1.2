@@ -42,6 +42,7 @@ public class ModCreativeTabs {
                         ModBlocks.getAllWirelessFluidDrawerBlocks().forEach(output::accept);
                         output.accept(ModBlocks.STORAGE_INTERFACE.get());
                         output.accept(ModBlocks.DRAWER_FRAMER.get());
+                        output.accept(ModBlocks.FILING_CABINET.get());
                     })
                     .build());
 }

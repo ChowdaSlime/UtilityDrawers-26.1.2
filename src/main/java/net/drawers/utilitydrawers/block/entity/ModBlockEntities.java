@@ -31,6 +31,8 @@ public class ModBlockEntities {
             BLOCK_ENTITIES.register("framed_drawer_block_entity", () ->
                     new BlockEntityType<>(FramedDrawerBlockEntity::new, Set.copyOf(ModBlocks.getAllFramedDrawerBlocks())));
 
+
+
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FramedFluidDrawerBlockEntity>> FRAMED_FLUID_DRAWER_BLOCK_ENTITY =
             BLOCK_ENTITIES.register("framed_fluid_drawer_block_entity", () ->
                     new BlockEntityType<>(FramedFluidDrawerBlockEntity::new, Set.copyOf(ModBlocks.getAllFramedFluidDrawerBlocks())));
@@ -48,6 +50,7 @@ public class ModBlockEntities {
                             Set.copyOf(ModBlocks.getAllWirelessFluidDrawerBlocks())));
 
 
+
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StorageInterfaceBlockEntity>> STORAGE_INTERFACE_BLOCK_ENTITY =
             BLOCK_ENTITIES.register("storage_interface_block_entity", () ->
                     new BlockEntityType<>(StorageInterfaceBlockEntity::new, Set.of(ModBlocks.STORAGE_INTERFACE.get())));
@@ -57,6 +60,12 @@ public class ModBlockEntities {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StorageViewerBlockEntity>> STORAGE_VIEWER_BLOCK_ENTITY =
             BLOCK_ENTITIES.register("storage_viewer_block_entity", () ->
                     new BlockEntityType<>(StorageViewerBlockEntity::new, Set.of(ModBlocks.STORAGE_VIEWER.get())));
+
+
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FilingCabinetBlockEntity>> FILING_CABINET_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("filing_cabinet_block_entity", () ->
+                    new BlockEntityType<>(FilingCabinetBlockEntity::new, Set.of(ModBlocks.FILING_CABINET.get())));
 
 
 

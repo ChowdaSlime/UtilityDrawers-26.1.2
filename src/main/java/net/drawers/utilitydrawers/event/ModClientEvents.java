@@ -70,6 +70,7 @@ public class ModClientEvents {
         event.register(ModMenuTypes.WIRELESS_DRAWER_MENU.get(), WirelessDrawerScreen::new);
         event.register(ModMenuTypes.WIRELESS_FLUID_DRAWER_MENU.get(), WirelessFluidDrawerScreen::new);
         event.register(ModMenuTypes.UPGRADE_CONFIG_MENU.get(), UpgradeConfigScreen::new);
+        event.register(ModMenuTypes.FILING_CABINET_MENU.get(), FilingCabinetScreen::new);
     }
 
     @SubscribeEvent

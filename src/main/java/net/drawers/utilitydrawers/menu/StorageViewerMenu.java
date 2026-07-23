@@ -1,6 +1,5 @@
 package net.drawers.utilitydrawers.menu;
 
-import net.drawers.utilitydrawers.UtilityDrawers;
 import net.drawers.utilitydrawers.attachment.ModAttachments;
 import net.drawers.utilitydrawers.attachment.PlayerPreferences;
 import net.drawers.utilitydrawers.block.ModBlocks;

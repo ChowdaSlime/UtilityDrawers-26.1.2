@@ -47,6 +47,10 @@ public class ModBlocks {
             properties -> new StorageViewerBlock(
                     properties.strength(2.0F, 4.0F).sound(SoundType.STONE).noOcclusion().requiresCorrectToolForDrops()));
 
+    public static final DeferredBlock<Block> FILING_CABINET = registerBlock(
+            "filing_cabinet",
+            properties -> new FilingCabinetBlock(
+                    properties.strength(3.0F, 6.0F).sound(SoundType.WOOD).noOcclusion().requiresCorrectToolForDrops()));
 
     public enum WoodType {
         OAK, SPRUCE, BIRCH, ACACIA, JUNGLE, DARK_OAK, MANGROVE, CHERRY, PALE_OAK, BAMBOO, CRIMSON, WARPED

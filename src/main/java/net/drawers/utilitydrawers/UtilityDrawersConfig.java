@@ -34,6 +34,9 @@ public class UtilityDrawersConfig {
     public static final ModConfigSpec.IntValue UPGRADE_TRANSFER_ITEM_AMOUNT;
     public static final ModConfigSpec.IntValue UPGRADE_TRANSFER_FLUID_AMOUNT;
 
+    // Filing Cabinet capacity
+    public static final ModConfigSpec.IntValue FILING_CABINET_CAPACITY;
+
     static {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
 
@@ -124,6 +127,12 @@ public class UtilityDrawersConfig {
                 .defineInRange("upgradeTransferFluidAmount", 4000, 1, Integer.MAX_VALUE);
 
         builder.pop();
+
+        builder.comment("Filing Cabinet Capacity").push("filing_cabinet");
+
+        FILING_CABINET_CAPACITY = builder
+                .comment("Base capavity for the filing cabinet")
+                .defineInRange("filingCabinetCapacity", 4096, 1, Integer.MAX_VALUE);
 
         SPEC = builder.build();
     }

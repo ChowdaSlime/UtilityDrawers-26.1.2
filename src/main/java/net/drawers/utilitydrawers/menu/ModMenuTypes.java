@@ -41,6 +41,9 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<UpgradeConfigMenu>> UPGRADE_CONFIG_MENU =
             MENU_TYPES.register("upgrade_config_menu",
                     () -> IMenuTypeExtension.create(UpgradeConfigMenu::new));
+    public static final DeferredHolder<MenuType<?>, MenuType<FilingCabinetMenu>> FILING_CABINET_MENU =
+            MENU_TYPES.register("filing_cabinet_menu",
+                    () -> IMenuTypeExtension.create(FilingCabinetMenu::new));
 
     public static void register(IEventBus eventBus) {
         MENU_TYPES.register(eventBus);
