@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "A": "minecraft:iron_ingot",
+    "B": "minecraft:book",
+    "C": "minecraft:chest",
+    "D": "utilitydrawers:drawer_base"
+  },
+  "pattern": [
+    "ABA",
+    "CDC",
+    "ABA"
+  ],
+  "result": {
+    "id": "utilitydrawers:filing_cabinet"
+  }
+}

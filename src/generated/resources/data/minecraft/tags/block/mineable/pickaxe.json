@@ -14,6 +14,7 @@
     "utilitydrawers:wireless_fluid_drawer_4",
     "utilitydrawers:storage_interface",
     "utilitydrawers:compacting_drawer",
-    "utilitydrawers:storage_viewer"
+    "utilitydrawers:storage_viewer",
+    "utilitydrawers:filing_cabinet"
   ]
 }

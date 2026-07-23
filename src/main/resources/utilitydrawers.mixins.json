@@ -1,6 +1,6 @@
 {
   "required": true,
-  "package": "net.drawers.utilitydrawers.mixin",
+  "package": "net.chowdaslime.utilitydrawers.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [],
   "injectors": {

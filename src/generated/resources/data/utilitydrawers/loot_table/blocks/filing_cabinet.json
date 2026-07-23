@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "functions": [
+            {
+              "function": "minecraft:copy_components",
+              "include": [
+                "minecraft:custom_data"
+              ],
+              "source": "block_entity"
+            }
+          ],
+          "name": "utilitydrawers:filing_cabinet"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "utilitydrawers:blocks/filing_cabinet"
+}
