@@ -1,0 +1,564 @@
+package net.chowdaslime.utilitydrawers.block.entity;
+
+import net.chowdaslime.utilitydrawers.UtilityDrawersConfig;
+import net.chowdaslime.utilitydrawers.item.*;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.fluid.FluidResource;
+import net.neoforged.neoforge.transfer.transaction.SnapshotJournal;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
+
+public class FluidDrawerBlockEntity extends BlockEntity implements FluidDrawerAccess {
+
+    protected final int slotCount;
+    FluidStack[] storedFluids;
+    long[] storedAmounts;
+    protected final long[] maxCapacities;
+    protected boolean locked = false;
+    protected BlockPos connectedInterface;
+
+    protected final ItemStack[] upgradeSlots = new ItemStack[]{
+            ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY,
+            ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY
+    };
+
+    public static int getBaseFluidCapacity() {
+        return UtilityDrawersConfig.FLUID_DRAWER_BASE_CAPACITY.get();
+    }
+    public long getMaxCapacity(int slot) {
+        return maxCapacities[slot];
+    }
+
+    public FluidDrawerBlockEntity(BlockPos pos, BlockState state) {
+        super(ModBlockEntities.FLUID_DRAWER_BLOCK_ENTITY.get(), pos, state);
+
+        this.slotCount = (state.getBlock() instanceof SlotCountProvider provider) ? provider.getSlotCount() : 1;
+
+        this.storedFluids = new FluidStack[slotCount];
+        this.storedAmounts = new long[slotCount];
+        this.maxCapacities = new long[slotCount];
+
+        for (int i = 0; i < slotCount; i++) {
+            storedFluids[i] = FluidStack.EMPTY;
+            storedAmounts[i] = 0L;
+            maxCapacities[i] = (long) getBaseStackMultiplier() * getBaseFluidCapacity();
+        }
+    }
+
+    protected FluidDrawerBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
+        this.slotCount = (state.getBlock() instanceof SlotCountProvider provider) ? provider.getSlotCount() : 1;
+        this.storedFluids = new FluidStack[slotCount];
+        this.storedAmounts = new long[slotCount];
+        this.maxCapacities = new long[slotCount];
+        for (int i = 0; i < slotCount; i++) {
+            storedFluids[i] = FluidStack.EMPTY;
+            storedAmounts[i] = 0L;
+            maxCapacities[i] = (long) getBaseStackMultiplier() * getBaseFluidCapacity();
+        }
+    }
+
+    public boolean hasInterface() {
+        return connectedInterface != null;
+    }
+
+    public BlockPos getConnectedInterface() {
+        return connectedInterface;
+    }
+
+    public void setConnectedInterface(BlockPos pos) {
+        connectedInterface = pos;
+        setChanged();
+    }
+
+    public void clearConnectedInterface() {
+        connectedInterface = null;
+        setChanged();
+    }
+
+    public int getBaseStackMultiplier() {
+        return switch (this.slotCount) {
+            case 1 -> UtilityDrawersConfig.DRAWER_MULT_1_SLOT.get();
+            case 2 -> UtilityDrawersConfig.DRAWER_MULT_2_SLOT.get();
+            case 3 -> UtilityDrawersConfig.DRAWER_MULT_3_SLOT.get();
+            case 4 -> UtilityDrawersConfig.DRAWER_MULT_4_SLOT.get();
+            default -> UtilityDrawersConfig.DRAWER_MULT_1_SLOT.get();
+        };
+    }
+
+    public int getSlotCount() {
+        return slotCount;
+    }
+
+    public FluidStack getStoredFluid(int slot) {
+        return storedFluids[slot];
+    }
+
+    public long getStoredAmount(int slot) {
+        return storedAmounts[slot];
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
+
+        if (!locked) {
+            for (int i = 0; i < slotCount; i++) {
+                if (storedAmounts[i] <= 0) {
+                    storedFluids[i] = FluidStack.EMPTY;
+                    maxCapacities[i] = (long) getBaseStackMultiplier() * getBaseFluidCapacity() * getUpgradeMultiplier();
+                }
+            }
+        }
+
+        setChanged();
+
+        if (this.level != null && !this.level.isClientSide()) {
+            this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+        }
+    }
+
+    public boolean isSlotEmpty(int slot) {
+        return storedFluids[slot].isEmpty() || storedAmounts[slot] <= 0;
+    }
+
+    public boolean hasTemplate(int slot) {
+        return !storedFluids[slot].isEmpty();
+    }
+
+    public void setTemplate(int slot, FluidStack stack) {
+        storedFluids[slot] = stack.copyWithAmount(1);
+        storedAmounts[slot] = 0;
+
+        maxCapacities[slot] = (long) getBaseStackMultiplier() * getBaseFluidCapacity() * getUpgradeMultiplier();
+
+        setChanged();
+
+        if (this.level != null && !this.level.isClientSide()) {
+            this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+        }
+    }
+
+    public boolean hasVoidUpgrade() {
+        for (ItemStack upgrade : upgradeSlots) {
+            if (upgrade.getItem() instanceof VoidUpgradeItem) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasInsertUpgrade() {
+        for (ItemStack upgrade : upgradeSlots) {
+            if (upgrade.getItem() instanceof InsertUpgradeItem) return true;
+        }
+        return false;
+    }
+
+    public boolean hasExtractUpgrade() {
+        for (ItemStack upgrade : upgradeSlots) {
+            if (upgrade.getItem() instanceof ExtractUpgradeItem) return true;
+        }
+        return false;
+    }
+
+    public static void serverTick(Level level, BlockPos pos, BlockState state, FluidDrawerBlockEntity be) {
+        if ((level.getGameTime() + Math.abs(pos.asLong())) % 8 != 0) return;
+
+        ItemStack insertUpgrade = ItemStack.EMPTY;
+        ItemStack extractUpgrade = ItemStack.EMPTY;
+
+        for (ItemStack upgrade : be.upgradeSlots) {
+            if (upgrade.getItem() instanceof InsertUpgradeItem) {
+                insertUpgrade = upgrade;
+            } else if (upgrade.getItem() instanceof ExtractUpgradeItem) {
+                extractUpgrade = upgrade;
+            }
+        }
+
+        if (!insertUpgrade.isEmpty()) {
+            InsertUpgradeItem.tryInsert(level, pos, insertUpgrade, be);
+        }
+        if (!extractUpgrade.isEmpty()) {
+            ExtractUpgradeItem.tryExtract(level, pos, extractUpgrade, be);
+        }
+    }
+
+    public boolean isFramed() {
+        return this instanceof IFramedBlockEntity;
+    }
+
+    public IFramedBlockEntity getFramedData() {
+        return this instanceof IFramedBlockEntity framed ? framed : null;
+    }
+
+    private FluidStack insertIntoSlot(int slot, FluidStack stack, boolean simulate) {
+        if (storedFluids[slot].isEmpty()) {
+            maxCapacities[slot] = (long) getBaseStackMultiplier() * getBaseFluidCapacity() * getUpgradeMultiplier();
+        }
+
+        if (locked && storedFluids[slot].isEmpty()) {
+            return stack;
+        }
+
+        long space = maxCapacities[slot] - storedAmounts[slot];
+        if (space <= 0) return hasVoidUpgrade() ? FluidStack.EMPTY : stack;
+
+        int toInsert = (int) Math.min(stack.getAmount(), space);
+
+        if (!simulate) {
+            if (storedFluids[slot].isEmpty()) {
+                storedFluids[slot] = stack.copyWithAmount(1);
+            }
+            storedAmounts[slot] += toInsert;
+            setChanged();
+
+            if (this.level != null && !this.level.isClientSide()) {
+                this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+            }
+        }
+
+        int remainder = stack.getAmount() - toInsert;
+
+        if (remainder > 0 && hasVoidUpgrade()) {
+            return FluidStack.EMPTY;
+        }
+        return remainder <= 0 ? FluidStack.EMPTY : stack.copyWithAmount(remainder);
+    }
+
+    public FluidStack insertFluidIntoSlot(int slot, FluidStack stack, boolean simulate) {
+        if (slot < 0 || slot >= slotCount)
+            return stack;
+
+        if (stack.isEmpty())
+            return FluidStack.EMPTY;
+
+        if (!storedFluids[slot].isEmpty() && !FluidStack.isSameFluidSameComponents(storedFluids[slot], stack)) {
+            return stack;
+        }
+        return insertIntoSlot(slot, stack, simulate);
+    }
+
+    public FluidStack extractFluid(int slot, int amount, boolean simulate) {
+        if (slot < 0 || slot >= slotCount)
+            return FluidStack.EMPTY;
+
+        if (storedFluids[slot].isEmpty() || storedAmounts[slot] <= 0)
+            return FluidStack.EMPTY;
+
+        int toExtract = (int) Math.min(amount, storedAmounts[slot]);
+
+        if (toExtract <= 0)
+            return FluidStack.EMPTY;
+
+        FluidStack result = storedFluids[slot].copyWithAmount(toExtract);
+
+        if (!simulate) {
+            storedAmounts[slot] -= toExtract;
+            if (storedAmounts[slot] <= 0) {
+                storedAmounts[slot] = 0;
+
+                if (!locked) {
+                    storedFluids[slot] = FluidStack.EMPTY;
+                    maxCapacities[slot] = (long) getBaseStackMultiplier() * getBaseFluidCapacity() * getUpgradeMultiplier();
+                }
+            }
+            setChanged();
+            if (this.level != null && !this.level.isClientSide()) {
+                this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+            }
+        }
+        return result;
+    }
+
+    // Upgrades
+    public ItemStack getUpgradeSlot(int slot) {
+        return upgradeSlots[slot];
+    }
+
+    public boolean insertUpgrade(ItemStack upgrade) {
+        for (int i = 0; i < 7; i++) {
+            if (upgradeSlots[i].isEmpty()) {
+                upgradeSlots[i] = upgrade.copyWithCount(1);
+                recalculateCapacities();
+                setChanged();
+                if (this.level != null && !this.level.isClientSide()) {
+                    this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean canRemoveUpgrade(int upgradeSlot) {
+        if (upgradeSlots[upgradeSlot].isEmpty())
+            return false;
+        int newMultiplier = 1;
+        for (int i = 0; i < 7; i++) {
+            if (i == upgradeSlot) continue;
+
+            if (!upgradeSlots[i].isEmpty() && upgradeSlots[i].getItem() instanceof DrawerUpgradeItem upgrade) {
+                newMultiplier *= upgrade.getMultiplier();
+            }
+        }
+        for (int i = 0; i < slotCount; i++) {
+            if (!storedFluids[i].isEmpty()) {
+                long newCapacity = (long) getBaseStackMultiplier() * getBaseFluidCapacity() * newMultiplier;
+
+                if (storedAmounts[i] > newCapacity)
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    public int getUpgradeMultiplier() {
+        int multiplier = 1;
+        for (ItemStack upgrade : upgradeSlots) {
+            if (!upgrade.isEmpty() && upgrade.getItem() instanceof DrawerUpgradeItem upgradeItem) {
+                multiplier *= upgradeItem.getMultiplier();
+            }
+        }
+        return multiplier;
+    }
+
+    private void recalculateCapacities() {
+        for (int i = 0; i < slotCount; i++) {
+            maxCapacities[i] = (long) getBaseStackMultiplier() * getBaseFluidCapacity() * getUpgradeMultiplier();
+        }
+    }
+
+    public void setUpgradeSlot(int slot, ItemStack stack) {
+        this.upgradeSlots[slot] = stack;
+        recalculateCapacities();
+        setChanged();
+        if (this.level != null && !this.level.isClientSide()) {
+            this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+        }
+    }
+
+    public void unlinkFromInterfaces() {
+        if (level == null || level.isClientSide()) {
+            return;
+        }
+
+        if (connectedInterface == null) {
+            return;
+        }
+
+        if (level.getBlockEntity(connectedInterface) instanceof StorageInterfaceBlockEntity storage) {
+            storage.tryUnlinkDrawer(worldPosition);
+        }
+        connectedInterface = null;
+    }
+
+    // Save and Load
+    @Override
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        output.putBoolean("Locked", locked);
+        if (connectedInterface != null) {
+            output.putLong("ConnectedInterface", connectedInterface.asLong());
+        }
+        for (int i = 0; i < slotCount; i++) {
+            ValueOutput slotOutput = output.child("Slot" + i);
+            if (!storedFluids[i].isEmpty()) {
+                slotOutput.store("Fluid", FluidStack.CODEC, storedFluids[i]);
+                slotOutput.putLong("Amount", storedAmounts[i]);
+            }
+        }
+        for (int i = 0; i < 7; i++) {
+            ValueOutput upgradeOutput = output.child("Upgrade" + i);
+            if (!upgradeSlots[i].isEmpty()) {
+                upgradeOutput.store("Item", ItemStack.CODEC, upgradeSlots[i]);
+            }
+        }
+    }
+
+    @Override
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        locked = input.getBooleanOr("Locked", false);
+        long ifacePos = input.getLongOr("ConnectedInterface", Long.MIN_VALUE);
+        connectedInterface = (ifacePos != Long.MIN_VALUE) ? BlockPos.of(ifacePos) : null;
+        for (int i = 0; i < slotCount; i++) {
+            final int slot = i;
+            storedFluids[slot] = FluidStack.EMPTY;
+            storedAmounts[slot] = 0;
+            input.child("Slot" + slot).ifPresent(slotInput -> {
+                storedFluids[slot] = slotInput.read("Fluid", FluidStack.CODEC).orElse(FluidStack.EMPTY);
+                storedAmounts[slot] = slotInput.getLongOr("Amount", 0L);
+            });
+        }
+        for (int i = 0; i < 7; i++) {
+            final int upgradeIndex = i;
+            upgradeSlots[upgradeIndex] = ItemStack.EMPTY;
+            input.child("Upgrade" + upgradeIndex).ifPresent(upgradeInput -> {
+                upgradeSlots[upgradeIndex] = upgradeInput.read("Item", ItemStack.CODEC).orElse(ItemStack.EMPTY);
+            });
+        }
+        recalculateCapacities();
+    }
+
+    public void loadContentsFromTag(CompoundTag tag) {
+        locked = tag.getBooleanOr("Locked", false);
+        for (int i = 0; i < slotCount; i++) {
+            storedFluids[i] = FluidStack.EMPTY;
+            storedAmounts[i] = 0L;
+            if (tag.getCompound("Slot" + i).isPresent()) {
+                CompoundTag slotTag = tag.getCompound("Slot" + i).orElseThrow();
+                storedFluids[i] = slotTag.read("Fluid", FluidStack.CODEC).orElse(FluidStack.EMPTY);
+                storedAmounts[i] = slotTag.getLongOr("Amount", 0L);
+            }
+        }
+        for (int i = 0; i < 7; i++) {
+            upgradeSlots[i] = ItemStack.EMPTY;
+            if (tag.getCompound("Upgrade" + i).isPresent()) {
+                CompoundTag upgradeTag = tag.getCompound("Upgrade" + i).orElseThrow();
+                upgradeSlots[i] = upgradeTag.read("Item", ItemStack.CODEC).orElse(ItemStack.EMPTY);
+            }
+        }
+        recalculateCapacities();
+        setChanged();
+    }
+
+    public CompoundTag saveDrawerData(HolderLookup.Provider provider) {
+        CompoundTag tag = new CompoundTag();
+        tag.putBoolean("Locked", locked);
+        if (connectedInterface != null) {
+            tag.putLong("ConnectedInterface", connectedInterface.asLong());
+        }
+        for (int i = 0; i < slotCount; i++) {
+            if (!storedFluids[i].isEmpty()) {
+                CompoundTag slotTag = new CompoundTag();
+                slotTag.put("Fluid", FluidStack.CODEC.encodeStart(provider.createSerializationContext(NbtOps.INSTANCE), storedFluids[i]).getOrThrow().copy());
+                slotTag.putLong("Amount", storedAmounts[i]);
+                tag.put("Slot" + i, slotTag);
+            }
+        }
+        for (int i = 0; i < 7; i++) {
+            if (!upgradeSlots[i].isEmpty()) {
+                CompoundTag upgradeTag = new CompoundTag();
+                upgradeTag.put("Item", ItemStack.CODEC.encodeStart(provider.createSerializationContext(NbtOps.INSTANCE), upgradeSlots[i]).getOrThrow().copy());
+                tag.put("Upgrade" + i, upgradeTag);
+            }
+        }
+        return tag;
+    }
+
+    // Renderer
+    @Override
+    public CompoundTag getUpdateTag(HolderLookup.Provider provider) {
+        return this.saveDrawerData(provider);
+    }
+
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public void onDataPacket(Connection connection, ValueInput input) {
+        BlockPos savedInterface = this.connectedInterface;
+        super.onDataPacket(connection, input);
+        if (this.level != null && this.level.isClientSide()) {
+            this.connectedInterface = savedInterface;
+            this.level.sendBlockUpdated(this.getBlockPos(), this.getBlockState(), this.getBlockState(), 3);
+        }
+    }
+
+    // New Fluid Handler
+    private final class FluidHandler extends SnapshotJournal<FluidHandler.Snapshot> implements ResourceHandler<FluidResource> {
+        record Snapshot(FluidStack[] fluids, long[] amounts) {}
+
+        @Override
+        public int size() { return slotCount; }
+
+        @Override
+        public FluidResource getResource(int slot) {
+            return FluidResource.of(storedFluids[slot]);
+        }
+
+        @Override
+        public long getAmountAsLong(int slot) {
+            return storedAmounts[slot];
+        }
+
+        @Override
+        public long getCapacityAsLong(int slot, FluidResource resource) {
+            return maxCapacities[slot];
+        }
+
+        @Override
+        public boolean isValid(int slot, FluidResource resource) {
+            if (resource.isEmpty()) return false;
+            if (storedFluids[slot].isEmpty()) return !locked;
+            return FluidResource.of(storedFluids[slot]).equals(resource);
+        }
+
+        @Override
+        public int insert(int slot, FluidResource resource, int amount, TransactionContext tx) {
+            if (resource.isEmpty() || amount <= 0) return 0;
+            updateSnapshots(tx);
+            FluidStack remainder = insertFluidIntoSlot(slot, resource.toStack(amount), false);
+            return amount - remainder.getAmount();
+        }
+
+        @Override
+        public int extract(int slot, FluidResource resource, int amount, TransactionContext tx) {
+            if (resource.isEmpty() || amount <= 0) return 0;
+            if (!FluidResource.of(storedFluids[slot]).equals(resource)) return 0;
+            updateSnapshots(tx);
+            return extractFluid(slot, amount, false).getAmount();
+        }
+
+        @Override
+        protected Snapshot createSnapshot() {
+            FluidStack[] fluidsCopy = new FluidStack[slotCount];
+            for (int i = 0; i < slotCount; i++) {
+                fluidsCopy[i] = storedFluids[i].copy();
+            }
+            return new Snapshot(fluidsCopy, storedAmounts.clone());
+        }
+
+        @Override
+        protected void revertToSnapshot(Snapshot snapshot) {
+            System.arraycopy(snapshot.amounts(), 0, storedAmounts, 0, slotCount);
+            for (int i = 0; i < slotCount; i++) {
+                storedFluids[i] = snapshot.fluids()[i].copy();
+            }
+        }
+
+        @Override
+        protected void onRootCommit(Snapshot originalState) {
+            setChanged();
+            if (level != null && !level.isClientSide()) {
+                level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
+            }
+        }
+    }
+
+
+    public ResourceHandler<FluidResource> createFluidHandler() {
+        return new FluidHandler();
+    }
+}
