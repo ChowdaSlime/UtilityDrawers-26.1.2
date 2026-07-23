@@ -447,6 +447,17 @@ public class ModRecipeProvider extends RecipeProvider {
                 .requires(ModItems.INSERT_UPGRADE.get())
                 .unlockedBy("has_insert_upgrade", has(ModItems.INSERT_UPGRADE.get()))
                 .save(output, "utilitydrawers:reset_insert_upgrade");
+
+        shaped(RecipeCategory.MISC, ModBlocks.FILING_CABINET.get())
+                .pattern("ABA")
+                .pattern("CDC")
+                .pattern("ABA")
+                .define('A', Items.IRON_INGOT)
+                .define('B', Items.BOOK)
+                .define('C', Items.CHEST)
+                .define('D', ModBlocks.DRAWER_BASE.get())
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
     }
 
     private Ingredient ingredient(Item item) {
