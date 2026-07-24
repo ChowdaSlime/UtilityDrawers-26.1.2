@@ -17,8 +17,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -114,14 +113,14 @@ public class FilingCabinetBlockEntity extends BlockEntity implements Container {
 
     @Override
     public ItemStack removeItem(int slot, int amount) {
-        ItemStack result = ContainerHelper.removeItem(items, slot, amount);
+        ItemStack result = net.minecraft.world.ContainerHelper.removeItem(items, slot, amount);
         if (!result.isEmpty()) setChanged();
         return result;
     }
 
     @Override
     public ItemStack removeItemNoUpdate(int slot) {
-        return ContainerHelper.takeItem(items, slot);
+        return net.minecraft.world.ContainerHelper.takeItem(items, slot);
     }
 
     @Override
