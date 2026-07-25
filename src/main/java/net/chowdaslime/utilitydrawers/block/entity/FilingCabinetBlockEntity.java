@@ -27,6 +27,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.transaction.SnapshotJournal;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 
 import java.util.Locale;
 
@@ -283,5 +287,132 @@ public class FilingCabinetBlockEntity extends BlockEntity implements Container {
     @Override
     public Packet<ClientGamePacketListener> getUpdatePacket() {
         return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    private final class ItemHandler extends SnapshotJournal<ItemHandler.Snapshot> implements ResourceHandler<ItemResource> {
+
+        record Snapshot(ItemStack[] items) {}
+
+        @Override
+        public int size() {
+            return items.size();
+        }
+
+        @Override
+        public ItemResource getResource(int slot) {
+            return ItemResource.of(items.get(slot));
+        }
+
+        @Override
+        public long getAmountAsLong(int slot) {
+            return items.get(slot).getCount();
+        }
+
+        @Override
+        public long getCapacityAsLong(int slot, ItemResource resource) {
+            ItemStack stack = items.get(slot);
+            return stack.isEmpty() ? getMaxStackSize() : stack.getMaxStackSize();
+        }
+
+        @Override
+        public boolean isValid(int slot, ItemResource resource) {
+            return !resource.isEmpty();
+        }
+
+        @Override
+        public int insert(int slot, ItemResource resource, int amount, TransactionContext tx) {
+            if (resource.isEmpty() || amount <= 0) {
+                return 0;
+            }
+
+            updateSnapshots(tx);
+
+            ItemStack incoming = resource.toStack(amount);
+
+            for (int i = 0; i < items.size(); i++) {
+                ItemStack existing = items.get(i);
+
+                if (!existing.isEmpty() &&
+                        ItemStack.isSameItemSameComponents(existing, incoming)) {
+
+                    int space = existing.getMaxStackSize() - existing.getCount();
+
+                    if (space > 0) {
+                        int inserted = Math.min(space, amount);
+                        existing.grow(inserted);
+                        return inserted;
+                    }
+                }
+            }
+
+            for (int i = 0; i < items.size(); i++) {
+                if (items.get(i).isEmpty()) {
+                    int inserted = Math.min(amount, incoming.getMaxStackSize());
+                    items.set(i, incoming.copyWithCount(inserted));
+                    return inserted;
+                }
+            }
+
+            return 0;
+        }
+
+        @Override
+        public int extract(int slot, ItemResource resource, int amount, TransactionContext tx) {
+            if (resource.isEmpty() || amount <= 0) {
+                return 0;
+            }
+
+            ItemStack existing = items.get(slot);
+
+            if (existing.isEmpty()) {
+                return 0;
+            }
+
+            if (!ItemStack.isSameItemSameComponents(existing, resource.toStack(1))) {
+                return 0;
+            }
+
+            updateSnapshots(tx);
+
+            int extracted = Math.min(existing.getCount(), amount);
+            existing.shrink(extracted);
+
+            if (existing.isEmpty()) {
+                items.set(slot, ItemStack.EMPTY);
+            }
+
+            return extracted;
+        }
+
+        @Override
+        protected Snapshot createSnapshot() {
+            ItemStack[] copy = new ItemStack[items.size()];
+
+            for (int i = 0; i < items.size(); i++) {
+                copy[i] = items.get(i).copy();
+            }
+
+            return new Snapshot(copy);
+        }
+
+        @Override
+        protected void revertToSnapshot(Snapshot snapshot) {
+            for (int i = 0; i < items.size(); i++) {
+                items.set(i, snapshot.items()[i].copy());
+            }
+        }
+
+        @Override
+        protected void onRootCommit(Snapshot snapshot) {
+            setChanged();
+
+            if (level != null && !level.isClientSide()) {
+                level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
+            }
+        }
+    }
+
+    public ResourceHandler<ItemResource> createItemHandler() {
+        return new ItemHandler();
     }
 }

@@ -221,6 +221,11 @@ public class ModEvents {
                 ModBlockEntities.WIRELESS_FLUID_DRAWER_BLOCK_ENTITY.get(),
                 (drawer, side) -> drawer.createFluidHandler()
         );
+        event.registerBlockEntity(
+                Capabilities.Item.BLOCK,
+                ModBlockEntities.FILING_CABINET_BLOCK_ENTITY.get(),
+                (be, side) -> be.createItemHandler()
+        );
 
     }
 
