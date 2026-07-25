@@ -45,7 +45,7 @@ public class CraftingStorageViewerMenu extends StorageViewerMenu {
 
         int yOffset = (this.viewerRows - 3) * 18;
 
-        this.addSlot(new AutoRefillResultSlot(this, this.player, this.craftSlots, this.resultSlots, 0, 135, 110 + yOffset));
+        this.addSlot(new AutoRefillResultSlot(this, this.player, this.craftSlots, this.resultSlots, 0, 135, 111 + yOffset));
 
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
@@ -163,7 +163,7 @@ public class CraftingStorageViewerMenu extends StorageViewerMenu {
     @Override
     public void updateSlotPositions(int newRows) {
         this.viewerRows = newRows;
-        int yOffset = (newRows - 3) * 18; 
+        int yOffset = (newRows - 3) * 18;
 
         for (int i = 0; i < 36; i++) {
             Slot oldSlot = this.slots.get(i);
@@ -187,7 +187,7 @@ public class CraftingStorageViewerMenu extends StorageViewerMenu {
 
         if (this.slots.size() > 36) {
             Slot oldResult = this.slots.get(36);
-            AutoRefillResultSlot newResultSlot = new AutoRefillResultSlot(this, this.player, this.craftSlots, this.resultSlots, 0, 135, 110 + yOffset);
+            AutoRefillResultSlot newResultSlot = new AutoRefillResultSlot(this, this.player, this.craftSlots, this.resultSlots, 0, 135, 111 + yOffset);
             newResultSlot.index = 36;
             this.slots.set(36, newResultSlot);
 
