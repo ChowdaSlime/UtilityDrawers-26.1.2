@@ -26,7 +26,7 @@ public class CraftingStorageViewerScreen extends StorageViewerScreen {
     private static final int TEX_BUTTON_SIZE_V = 153;
 
     private static final int TEX_BUTTON_JEI_U = 180;
-    private static final int TEX_BUTTON_JEI_V = 176;
+    private static final int TEX_BUTTON_JEI_V = 177;
     private static final int BUTTON_SIZE = 20;
 
     public CraftingStorageViewerScreen(StorageViewerMenu menu, Inventory playerInventory, Component title) {
@@ -53,7 +53,13 @@ public class CraftingStorageViewerScreen extends StorageViewerScreen {
             graphics.blit(RenderPipelines.GUI_TEXTURED, CRAFTING_TEXTURE, bx, by + topHeight + (r * 18), 0, 17, 195, 18, 256, 256);
         }
 
-        graphics.blit(RenderPipelines.GUI_TEXTURED, CRAFTING_TEXTURE, bx, by + topHeight + (getMenu().viewerRows * 18), 0, bottomV, 176, bottomHeight, 256, 256);
+        int bottomY = by + topHeight + (getMenu().viewerRows * 18);
+
+        int upperBottomHeight = 107 - bottomV;
+        graphics.blit(RenderPipelines.GUI_TEXTURED, CRAFTING_TEXTURE, bx, bottomY, 0, bottomV, 195, upperBottomHeight, 256, 256);
+
+        int lowerBottomHeight = bottomHeight - upperBottomHeight;
+        graphics.blit(RenderPipelines.GUI_TEXTURED, CRAFTING_TEXTURE, bx, bottomY + upperBottomHeight, 0, bottomV + upperBottomHeight, 179, lowerBottomHeight, 256, 256);
     }
 
     @Override
@@ -82,13 +88,14 @@ public class CraftingStorageViewerScreen extends StorageViewerScreen {
                 btnX, sizeY, sizeU, TEX_BUTTON_SIZE_V,
                 BUTTON_SIZE, BUTTON_SIZE, 256, 256);
 
-        int jeiY = by + 69;
+        int jeiY = by + 70;
+
         graphics.blit(RenderPipelines.GUI_TEXTURED, CRAFTING_TEXTURE,
                 btnX, jeiY, TEX_BUTTON_JEI_U, TEX_BUTTON_JEI_V,
-                BUTTON_SIZE, BUTTON_SIZE, 256, 256);
+                BUTTON_SIZE, 22, 256, 256);
 
         if (getMenu().syncJei) {
-            graphics.outline(btnX, jeiY, BUTTON_SIZE, BUTTON_SIZE, 0xFFE0E0E0);
+            graphics.outline(btnX, jeiY, BUTTON_SIZE, 22, 0xFFE0E0E0);
         }
     }
 
