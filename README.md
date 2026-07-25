@@ -48,6 +48,14 @@ An all-in-one tool for managing your drawer network:
 
 If you want an early game way to view your entire system, place a Storage Viewer either directly on the Storage Interface (automatically links) or link one to the network with the Storage Remote. The Storage Viewer will allow you to insert and extract items and fluids, and search for specific names, mods (@…), tags (#…), or tooltips ($…).
 
+### Crafting Storage Viewer
+
+The same thing but with crafting capabilities. Will pull items directly from the storage network to craft with, and then from the inventory if there are no more items in the network, but matching items in the inventory to work with.
+
+### Filing Cabinet
+
+A large scale storage block for non-stackable items, such as tools, armor, weapons, enchanted books, etc. Has a GUI to search for and interact with the items that are in it. Separate from the storage network. (Although this may change in the future!)
+
 ### Upgrades
 
 Slot upgrades directly into your drawers, Storage Interface, or Drawer Framer to enhance them:
@@ -100,7 +108,7 @@ _MIT License_
 
 ***
 
-## Credist
+## Credits
 
 *   **Huge Thanks To:**
     *   WoXayZ helping with block item model continuity with the base Minecraft block item models
