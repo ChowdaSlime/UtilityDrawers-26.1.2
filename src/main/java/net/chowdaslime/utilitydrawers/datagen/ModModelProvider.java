@@ -152,10 +152,10 @@ public class ModModelProvider extends ModelProvider {
         generateDrawerItemModel(blockModels, framedCompactingDrawer);
 
         Block storageViewer = ModBlocks.STORAGE_VIEWER.get();
-        var viewerModelLoc = ModelLocationUtils.getModelLocation(storageViewer);
+        var storageViewerModelLoc = ModelLocationUtils.getModelLocation(storageViewer);
 
         blockModels.blockStateOutput.accept(
-                MultiVariantGenerator.dispatch(storageViewer, BlockModelGenerators.plainVariant(viewerModelLoc))
+                MultiVariantGenerator.dispatch(storageViewer, BlockModelGenerators.plainVariant(storageViewerModelLoc))
                         .with(PropertyDispatch.modify(StorageViewerBlock.FACING, StorageViewerBlock.HORIZONTAL_FACING)
                                 .generate((facing, hFacing) -> {
                                     int xRot = 0;
@@ -239,6 +239,49 @@ public class ModModelProvider extends ModelProvider {
         );
 
         blockModels.registerSimpleItemModel(filingCabinet.asItem(), filingCabinetClosedModelLoc);
+
+        Block craftingStorageViewer = ModBlocks.CRAFTING_STORAGE_VIEWER.get();
+        var craftingStorageViewerModelLoc = ModelLocationUtils.getModelLocation(craftingStorageViewer);
+
+        blockModels.blockStateOutput.accept(
+                MultiVariantGenerator.dispatch(craftingStorageViewer, BlockModelGenerators.plainVariant(craftingStorageViewerModelLoc))
+                        .with(PropertyDispatch.modify(CraftingStorageViewerBlock.FACING, CraftingStorageViewerBlock.HORIZONTAL_FACING)
+                                .generate((facing, hFacing) -> {
+                                    int xRot = 0;
+                                    int yRot = 0;
+
+                                    switch (facing) {
+                                        case NORTH -> { xRot = 0;   yRot = 0;   }
+                                        case SOUTH -> { xRot = 0;   yRot = 180; }
+                                        case EAST  -> { xRot = 0;   yRot = 90;  }
+                                        case WEST  -> { xRot = 0;   yRot = 270; }
+                                        case UP    -> {
+                                            xRot = 270;
+                                            yRot = switch (hFacing) {
+                                                case NORTH -> 0;
+                                                case EAST  -> 90;
+                                                case SOUTH -> 180;
+                                                case WEST  -> 270;
+                                                default    -> 0;
+                                            };
+                                        }
+                                        case DOWN  -> {
+                                            xRot = 90;
+                                            yRot = switch (hFacing) {
+                                                case SOUTH -> 180;
+                                                case WEST  -> 270;
+                                                case NORTH -> 0;
+                                                case EAST  -> 90;
+                                                default    -> 0;
+                                            };
+                                        }
+                                    }
+
+                                    return VariantMutator.X_ROT.withValue(Quadrant.values()[xRot / 90])
+                                            .then(VariantMutator.Y_ROT.withValue(Quadrant.values()[yRot / 90]));
+                                })
+                        )
+        );
     }
 
     private void generateDrawerItemModel(BlockModelGenerators blockModels, Block block) {

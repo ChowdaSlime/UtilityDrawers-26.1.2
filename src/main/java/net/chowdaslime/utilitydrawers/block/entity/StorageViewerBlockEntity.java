@@ -14,6 +14,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -22,6 +23,9 @@ import org.jetbrains.annotations.Nullable;
 
 public class StorageViewerBlockEntity extends BlockEntity implements MenuProvider {
 
+    protected StorageViewerBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
+    }
 
     @Override
     public Component getDisplayName() {
@@ -35,9 +39,6 @@ public class StorageViewerBlockEntity extends BlockEntity implements MenuProvide
                 getStorageInterface(),
                 this.getBlockPos());
     }
-
-
-
 
     private @Nullable BlockPos storageInterfacePos = null;
 

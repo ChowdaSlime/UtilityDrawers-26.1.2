@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "minecraft:crafting_table",
+    "B": "utilitydrawers:storage_viewer",
+    "C": "minecraft:diamond"
+  },
+  "pattern": [
+    "CCC",
+    "ABA",
+    "CCC"
+  ],
+  "result": {
+    "id": "utilitydrawers:crafting_storage_viewer"
+  }
+}

@@ -6,6 +6,7 @@ import net.chowdaslime.utilitydrawers.menu.FilingCabinetMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
@@ -13,6 +14,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
@@ -26,6 +28,15 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.entity.LivingEntity;
+import java.util.List;
+import java.util.function.BiConsumer;
 
 import javax.annotation.Nullable;
 
@@ -101,5 +112,58 @@ public class FilingCabinetBlock extends Block implements EntityBlock {
             cabinet.triggerEvent(id, param);
         }
         return false;
+    }
+
+    @Override
+    public BlockState playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
+        BlockEntity blockEntity = level.getBlockEntity(pos);
+        if (blockEntity instanceof FilingCabinetBlockEntity cabinet) {
+            cabinet.prepareForDrop(level.registryAccess());
+        }
+        return super.playerWillDestroy(level, pos, state, player);
+    }
+
+    @Override
+    protected void onExplosionHit(BlockState state, ServerLevel level, BlockPos pos, Explosion explosion, BiConsumer<ItemStack, BlockPos> onHit) {
+        BlockEntity blockEntity = level.getBlockEntity(pos);
+        if (blockEntity instanceof FilingCabinetBlockEntity cabinet) {
+            cabinet.prepareForDrop(level.registryAccess());
+        }
+        super.onExplosionHit(state, level, pos, explosion, onHit);
+    }
+
+    @Override
+    public List<ItemStack> getDrops(BlockState state, LootParams.Builder builder) {
+        ItemStack dropStack = new ItemStack(this);
+        BlockEntity blockEntity = builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
+
+        if (blockEntity instanceof FilingCabinetBlockEntity cabinet) {
+            // Fetch the safe memory buffer that we saved right before destruction
+            CompoundTag tag = cabinet.getDropBuffer();
+
+            // Fallback just in case a mod machine broke the block and bypassed the destroy hooks
+            if (tag.isEmpty()) {
+                tag = cabinet.saveToItem(builder.getLevel().registryAccess());
+                cabinet.clearContent();
+            }
+
+            if (!tag.isEmpty()) {
+                dropStack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+            }
+        }
+        return List.of(dropStack);
+    }
+
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, placer, stack);
+
+        var customData = stack.get(DataComponents.CUSTOM_DATA);
+        if (customData != null) {
+            BlockEntity blockEntity = level.getBlockEntity(pos);
+            if (blockEntity instanceof FilingCabinetBlockEntity cabinet) {
+                cabinet.loadFromItem(customData.copyTag(), level.registryAccess());
+            }
+        }
     }
 }

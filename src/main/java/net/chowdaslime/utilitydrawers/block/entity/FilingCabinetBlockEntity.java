@@ -7,6 +7,8 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -37,6 +39,8 @@ public class FilingCabinetBlockEntity extends BlockEntity implements Container {
     private int openCount = 0;
     public float openProgress = 0f;
     public float previousOpenProgress = 0f;
+
+    private CompoundTag dropBuffer = null;
 
     public FilingCabinetBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.FILING_CABINET_BLOCK_ENTITY.get(), pos, state);
@@ -227,11 +231,53 @@ public class FilingCabinetBlockEntity extends BlockEntity implements Container {
     @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider provider) {
         CompoundTag tag = new CompoundTag();
-        TagValueOutput output =
-                TagValueOutput.createWithContext(
-                        ProblemReporter.DISCARDING, provider);
+        TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, provider);
         ContainerHelper.saveAllItems(output, items);
         return output.buildResult();
+    }
+
+    public void loadFromItem(CompoundTag tag, HolderLookup.Provider provider) {
+        this.items.clear();
+        tag.getList("Items").ifPresent(listTag -> {
+            for (int i = 0; i < listTag.size(); i++) {
+                listTag.getCompound(i).ifPresent(itemTag -> {
+                    int slot = itemTag.getShort("Slot").orElse((short) -1) & 0xFFFF;
+                    if (slot >= 0 && slot < this.items.size()) {
+                        ItemStack stack = itemTag.read("Item", ItemStack.CODEC).orElse(ItemStack.EMPTY);
+                        this.items.set(slot, stack);
+                    }
+                });
+            }
+        });
+        this.setChanged();
+    }
+
+    public CompoundTag saveToItem(HolderLookup.Provider provider) {
+        CompoundTag tag = new CompoundTag();
+        ListTag listTag = new ListTag();
+
+        for (int i = 0; i < this.items.size(); i++) {
+            ItemStack stack = this.items.get(i);
+            if (!stack.isEmpty()) {
+                CompoundTag itemTag = new CompoundTag();
+                itemTag.putShort("Slot", (short) i);
+                itemTag.put("Item", ItemStack.CODEC.encodeStart(provider.createSerializationContext(NbtOps.INSTANCE), stack).getOrThrow().copy());
+                listTag.add(itemTag);
+            }
+        }
+        if (!listTag.isEmpty()) {
+            tag.put("Items", listTag);
+        }
+        return tag;
+    }
+
+    public void prepareForDrop(HolderLookup.Provider provider) {
+        this.dropBuffer = this.saveToItem(provider);
+        this.items.clear();
+    }
+
+    public CompoundTag getDropBuffer() {
+        return this.dropBuffer != null ? this.dropBuffer : new CompoundTag();
     }
 
     @Override

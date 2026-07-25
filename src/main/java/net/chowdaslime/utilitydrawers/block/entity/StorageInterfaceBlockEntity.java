@@ -11,6 +11,7 @@ import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -30,6 +31,10 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
 
     public StorageInterfaceBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.STORAGE_INTERFACE_BLOCK_ENTITY.get(), pos, state);
+    }
+
+    protected StorageInterfaceBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
     }
 
     public void toggleNetworkLock(boolean lockState) {
@@ -242,6 +247,47 @@ public class StorageInterfaceBlockEntity extends BlockEntity {
         }
 
         return remainder;
+    }
+
+    public ItemStack extractItemFromNetwork(ItemStack target, int amount) {
+        if (target.isEmpty() || amount <= 0 || level == null) return ItemStack.EMPTY;
+
+        ItemStack result = target.copyWithCount(0);
+        int needed = amount;
+
+        for (BlockPos pos : connectedDrawers) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof DrawerBlockEntity drawer) {
+                for (int i = 0; i < drawer.getSlotCount(); i++) {
+                    ItemStack stored = drawer.getStoredItem(i);
+                    if (!stored.isEmpty() && ItemStack.isSameItemSameComponents(stored, target)) {
+
+                        ItemStack pulled = drawer.extractItem(i, needed, false);
+
+                        if (!pulled.isEmpty()) {
+                            result.grow(pulled.getCount());
+                            needed -= pulled.getCount();
+                            if (needed <= 0) return result;
+                        }
+                    }
+                }
+            } else if (be instanceof CompactingDrawerBlockEntity compactingDrawer) {
+                for (int i = 0; i < compactingDrawer.getSlotCount(); i++) {
+                    ItemStack stored = compactingDrawer.getStoredItem(i);
+                    if (!stored.isEmpty() && ItemStack.isSameItemSameComponents(stored, target)) {
+
+                        ItemStack pulled = compactingDrawer.extractItem(i, needed, false);
+
+                        if (!pulled.isEmpty()) {
+                            result.grow(pulled.getCount());
+                            needed -= pulled.getCount();
+                            if (needed <= 0) return result;
+                        }
+                    }
+                }
+            }
+        }
+        return result.getCount() > 0 ? result : ItemStack.EMPTY;
     }
 
     public ItemStack getUpgradeSlot() {

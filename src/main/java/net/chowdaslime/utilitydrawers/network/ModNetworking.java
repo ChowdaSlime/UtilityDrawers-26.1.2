@@ -80,6 +80,19 @@ public class ModNetworking {
         );
 
         registrar.playToServer(
+                CycleViewerSizePayload.TYPE,
+                CycleViewerSizePayload.STREAM_CODEC,
+                (payload, context) -> {
+                    context.enqueueWork(() -> {
+                        if (context.player().containerMenu instanceof StorageViewerMenu menu) {
+                            menu.updateSlotPositions(payload.newRows());
+                            menu.saveSizePreference(payload.newRows());
+                        }
+                    });
+                }
+        );
+
+        registrar.playToServer(
                 ToggleSelectModePacket.TYPE,
                 ToggleSelectModePacket.STREAM_CODEC,
                 ToggleSelectModePacket::handle
@@ -149,7 +162,28 @@ public class ModNetworking {
         registrar.playToServer(
                 OpenUpgradeConfigPayload.TYPE,
                 OpenUpgradeConfigPayload.STREAM_CODEC,
-                OpenUpgradeConfigPayloadHandler::handle);
+                OpenUpgradeConfigPayloadHandler::handle
+        );
+
+        registrar.playToServer(
+                ToggleJeiSyncPayload.TYPE,
+                ToggleJeiSyncPayload.STREAM_CODEC,
+                (payload, context) -> {
+                    context.enqueueWork(() -> {
+                        ServerPlayer player = (ServerPlayer) context.player();
+                        if (player.containerMenu instanceof StorageViewerMenu menu) {
+                            menu.syncJei = payload.syncJei();
+                            menu.saveJeiPreference(payload.syncJei());
+                        }
+                    });
+                }
+        );
+
+        registrar.playToServer(
+                JeiRecipeTransferPayload.TYPE,
+                JeiRecipeTransferPayload.STREAM_CODEC,
+                JeiRecipeTransferPayload::handle
+        );
 
         registrar.playToClient(
                 SyncPreferencesPayload.TYPE,
@@ -161,6 +195,13 @@ public class ModNetworking {
                             StorageViewerMenu menu = screen.getMenu();
                             menu.sortByCount = payload.sortByCount();
                             menu.sortAscending = payload.sortAscending();
+                            menu.syncJei = payload.syncJei(); // Apply synced boolean
+
+                            if (menu.viewerRows != payload.viewerRows() && payload.viewerRows() > 0) {
+                                menu.updateSlotPositions(payload.viewerRows());
+                                screen.resize(screen.width, screen.height);
+                            }
+
                             screen.rebuildFilteredSlots();
                         }
                     });

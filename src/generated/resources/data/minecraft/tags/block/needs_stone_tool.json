@@ -15,6 +15,7 @@
     "utilitydrawers:storage_interface",
     "utilitydrawers:compacting_drawer",
     "utilitydrawers:storage_viewer",
-    "utilitydrawers:filing_cabinet"
+    "utilitydrawers:filing_cabinet",
+    "utilitydrawers:crafting_storage_viewer"
   ]
 }
