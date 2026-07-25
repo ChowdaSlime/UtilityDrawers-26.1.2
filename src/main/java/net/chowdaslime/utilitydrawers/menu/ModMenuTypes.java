@@ -43,6 +43,9 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<FilingCabinetMenu>> FILING_CABINET_MENU =
             MENU_TYPES.register("filing_cabinet_menu",
                     () -> IMenuTypeExtension.create(FilingCabinetMenu::new));
+    public static final DeferredHolder<MenuType<?>, MenuType<CraftingStorageViewerMenu>> CRAFTING_STORAGE_VIEWER_MENU =
+            MENU_TYPES.register("crafting_storage_viewer_menu",
+                    () -> IMenuTypeExtension.create(CraftingStorageViewerMenu::new));
 
     public static void register(IEventBus eventBus) {
         MENU_TYPES.register(eventBus);

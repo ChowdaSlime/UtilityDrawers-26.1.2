@@ -7,7 +7,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
-public record SyncPreferencesPayload(boolean sortByCount, boolean sortAscending) implements CustomPacketPayload {
+public record SyncPreferencesPayload(boolean sortByCount, boolean sortAscending, int viewerRows, boolean syncJei) implements CustomPacketPayload {
 
     public static final Type<SyncPreferencesPayload> TYPE =
             new Type<>(Identifier.fromNamespaceAndPath(UtilityDrawers.MODID, "sync_preferences"));
@@ -16,9 +16,13 @@ public record SyncPreferencesPayload(boolean sortByCount, boolean sortAscending)
             StreamCodec.composite(
                     ByteBufCodecs.BOOL, SyncPreferencesPayload::sortByCount,
                     ByteBufCodecs.BOOL, SyncPreferencesPayload::sortAscending,
+                    ByteBufCodecs.INT, SyncPreferencesPayload::viewerRows,
+                    ByteBufCodecs.BOOL, SyncPreferencesPayload::syncJei,
                     SyncPreferencesPayload::new
             );
 
     @Override
-    public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
 }

@@ -1,9 +1,7 @@
 package net.chowdaslime.utilitydrawers.menu;
 
 import net.chowdaslime.utilitydrawers.UtilityDrawers;
-import net.chowdaslime.utilitydrawers.network.StorageViewerExtractPayload;
-import net.chowdaslime.utilitydrawers.network.StorageViewerInsertPayload;
-import net.chowdaslime.utilitydrawers.network.ToggleSortPayload;
+import net.chowdaslime.utilitydrawers.network.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
@@ -39,64 +37,74 @@ public class StorageViewerScreen extends AbstractContainerScreen<StorageViewerMe
             Identifier.fromNamespaceAndPath(UtilityDrawers.MODID, "textures/gui/storage_viewer_gui.png");
 
     private static final int GUI_WIDTH = 195;
-    private static final int GUI_HEIGHT = 171;
 
     private static final int GRID_COLS = 9;
-    private static final int GRID_ROWS = 3;
     private static final int GRID_CELL_SIZE = 18;
     private static final int GRID_LEFT = 8;
-    private static final int GRID_TOP = 18;
+    private static final int GRID_TOP = 17;
 
     private static final int SCROLLBAR_X = 178;
-    private static final int SCROLLBAR_Y = 19;
-    private static final int SCROLLBAR_HEIGHT = 52;
+    private static final int SCROLLBAR_Y = 18;
     private static final int SCROLLBAR_WIDTH = 5;
     private static final int THUMB_HEIGHT = 15;
 
     private static final int SEARCH_X = 41;
-    private static final int SEARCH_Y = 5;
+    private static final int SEARCH_Y = 3;
     private static final int SEARCH_WIDTH = 102;
     private static final int SEARCH_HEIGHT = 12;
 
     private static final int SORT_BUTTON_X = -20;
-    private static final int SORT_BUTTON_Y = 10;
-    private static final int SORT_BUTTON_SIZE = 16;
+    private static final int SORT_BUTTON_Y = 9;
 
     private static final int SORT_DIR_BUTTON_X = -20;
-    private static final int SORT_DIR_BUTTON_Y = 30;
+    private static final int SORT_DIR_BUTTON_Y = 29;
 
-    private static final int TEX_SORT_COUNT_U  = 14;
-    private static final int TEX_SORT_NAME_U   = 37;
-    private static final int TEX_SORT_ASC_U    = 60;
-    private static final int TEX_SORT_DESC_U   = 83;
-    private static final int TEX_SORT_V        = 174;
-    private static final int TEX_SORT_SIZE     = 20;
+    private static final int SIZE_BUTTON_X = -20;
+    private static final int SIZE_BUTTON_Y = 49;
+
+    private static final int JEI_BUTTON_Y = 69;
+
+    private static final int TEX_SORT_COUNT_U = 14;
+    private static final int TEX_SORT_NAME_U = 37;
+    private static final int TEX_SORT_ASC_U = 60;
+    private static final int TEX_SORT_DESC_U = 83;
+    private static final int TEX_SORT_V = 174;
+    private static final int TEX_SORT_SIZE = 20;
+    private static final int TEX_BUTTON_JEI_U    = 175;
+    private static final int TEX_BUTTON_SIZE_1_U = 106;
+    private static final int TEX_BUTTON_SIZE_2_U = 129;
+    private static final int TEX_BUTTON_SIZE_3_U = 152;
+    private static final int TEX_BUTTON_V = 174;
+    private static final int BUTTON_SIZE = 20;
 
     private EditBox searchBox;
-    private int scrollOffset = 0;
+    protected int scrollOffset = 0;
     private boolean isDraggingScroll = false;
     private int dragStartY = 0;
     private int dragStartOffset = 0;
     private int hoveredCell = -1;
     private boolean wasShiftDown = false;
 
-    private List<StorageViewerMenu.NetworkSlot> filteredSlots = new ArrayList<>();
+    public List<StorageViewerMenu.NetworkSlot> filteredSlots = new ArrayList<>();
 
     public StorageViewerScreen(StorageViewerMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
     }
 
     @Override
-    public int getImageWidth() { return GUI_WIDTH; }
+    public int getImageHeight() {
+        return 171 + (menu.viewerRows - 3) * 18;
+    }
 
-    @Override
-    public int getImageHeight() { return GUI_HEIGHT; }
+    private int getScrollbarHeight() {
+        return 52 + (menu.viewerRows - 3) * 18;
+    }
 
     @Override
     protected void init() {
         super.init();
         this.leftPos = (this.width - GUI_WIDTH) / 2;
-        this.topPos = (this.height - GUI_HEIGHT) / 2;
+        this.topPos = (this.height - getImageHeight()) / 2;
 
         searchBox = new EditBox(this.font,
                 this.leftPos + SEARCH_X, this.topPos + SEARCH_Y,
@@ -111,6 +119,9 @@ public class StorageViewerScreen extends AbstractContainerScreen<StorageViewerMe
         searchBox.setResponder(text -> {
             scrollOffset = 0;
             rebuildFilteredSlots();
+            if (menu.syncJei) {
+                net.chowdaslime.utilitydrawers.jei.JeiWrapper.setFilterText(text);
+            }
         });
         this.addRenderableWidget(this.searchBox);
 
@@ -203,8 +214,8 @@ public class StorageViewerScreen extends AbstractContainerScreen<StorageViewerMe
         return (int) Math.ceil((double) filteredSlots.size() / GRID_COLS);
     }
 
-    private int maxScrollOffset() {
-        return Math.max(0, totalRows() - GRID_ROWS);
+    protected int maxScrollOffset() {
+        return Math.max(0, totalRows() - menu.viewerRows);
     }
 
     @Override
@@ -223,12 +234,47 @@ public class StorageViewerScreen extends AbstractContainerScreen<StorageViewerMe
         double mouseY = event.y();
         int button = event.button();
 
+        int btnX = this.leftPos + SIZE_BUTTON_X;
+        int jeiY = this.topPos + JEI_BUTTON_Y;
+
+        if (mouseX >= btnX && mouseX <= btnX + BUTTON_SIZE && mouseY >= jeiY && mouseY <= jeiY + BUTTON_SIZE) {
+            menu.syncJei = !menu.syncJei;
+            ClientPacketDistributor.sendToServer(new ToggleJeiSyncPayload(menu.syncJei));
+            return true;
+        }
+
         if (isMouseOverSearchBox(mouseX, mouseY)) {
             searchBox.setFocused(true);
             return true;
         }
         if (!isMouseOverSearchBox(mouseX, mouseY)) {
             searchBox.setFocused(false);
+        }
+
+        int sizeX = this.leftPos + SIZE_BUTTON_X;
+        int sizeY = this.topPos + SIZE_BUTTON_Y;
+        if (mouseX >= sizeX && mouseX <= sizeX + BUTTON_SIZE && mouseY >= sizeY && mouseY <= sizeY + BUTTON_SIZE) {
+            int newRows = menu.viewerRows == 3 ? 6 : menu.viewerRows == 6 ? 9 : 3;
+            changeViewerSize(newRows);
+            return true;
+        }
+
+        int sortX = this.leftPos + SORT_BUTTON_X;
+        int sortY = this.topPos + SORT_BUTTON_Y;
+        if (mouseX >= sortX && mouseX <= sortX + TEX_SORT_SIZE && mouseY >= sortY && mouseY <= sortY + TEX_SORT_SIZE) {
+            menu.sortByCount = !menu.sortByCount;
+            rebuildFilteredSlots();
+            ClientPacketDistributor.sendToServer(new ToggleSortPayload(menu.sortByCount, menu.sortAscending));
+            return true;
+        }
+
+        int dirX = this.leftPos + SORT_DIR_BUTTON_X;
+        int dirY = this.topPos + SORT_DIR_BUTTON_Y;
+        if (mouseX >= dirX && mouseX <= dirX + TEX_SORT_SIZE && mouseY >= dirY && mouseY <= dirY + TEX_SORT_SIZE) {
+            menu.sortAscending = !menu.sortAscending;
+            rebuildFilteredSlots();
+            ClientPacketDistributor.sendToServer(new ToggleSortPayload(menu.sortByCount, menu.sortAscending));
+            return true;
         }
 
         int sbX = this.leftPos + SCROLLBAR_X;
@@ -238,26 +284,6 @@ public class StorageViewerScreen extends AbstractContainerScreen<StorageViewerMe
             isDraggingScroll = true;
             dragStartY = (int) mouseY;
             dragStartOffset = scrollOffset;
-            return true;
-        }
-
-        int sortX = this.leftPos + SORT_BUTTON_X;
-        int sortY = this.topPos + SORT_BUTTON_Y;
-        if (mouseX >= sortX && mouseX <= sortX + TEX_SORT_SIZE
-                && mouseY >= sortY && mouseY <= sortY + TEX_SORT_SIZE) {
-            menu.sortByCount = !menu.sortByCount;
-            rebuildFilteredSlots();
-            ClientPacketDistributor.sendToServer(new ToggleSortPayload(menu.sortByCount, menu.sortAscending));
-            return true;
-        }
-
-        int dirX = this.leftPos + SORT_DIR_BUTTON_X;
-        int dirY = this.topPos + SORT_DIR_BUTTON_Y;
-        if (mouseX >= dirX && mouseX <= dirX + TEX_SORT_SIZE
-                && mouseY >= dirY && mouseY <= dirY + TEX_SORT_SIZE) {
-            menu.sortAscending = !menu.sortAscending;
-            rebuildFilteredSlots();
-            ClientPacketDistributor.sendToServer(new ToggleSortPayload(menu.sortByCount, menu.sortAscending));
             return true;
         }
 
@@ -356,15 +382,22 @@ public class StorageViewerScreen extends AbstractContainerScreen<StorageViewerMe
             }
             return true;
         }
-
         return super.mouseClicked(event, doubleClick);
+    }
+
+    private void changeViewerSize(int targetRows) {
+        if (menu.viewerRows != targetRows) {
+            menu.updateSlotPositions(targetRows);
+            ClientPacketDistributor.sendToServer(new CycleViewerSizePayload(targetRows));
+            this.rebuildWidgets();
+        }
     }
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
         if (isDraggingScroll && maxScrollOffset() > 0) {
             int delta = (int) event.y() - dragStartY;
-            int trackHeight = SCROLLBAR_HEIGHT - THUMB_HEIGHT;
+            int trackHeight = getScrollbarHeight() - THUMB_HEIGHT;
             int newOffset = dragStartOffset
                     + (int) Math.round((double) delta / trackHeight * maxScrollOffset());
             scrollOffset = Math.max(0, Math.min(maxScrollOffset(), newOffset));
@@ -396,18 +429,18 @@ public class StorageViewerScreen extends AbstractContainerScreen<StorageViewerMe
         return super.charTyped(event);
     }
 
-    private int getThumbY() {
+    protected int getThumbY() {
         int max = maxScrollOffset();
-        int trackHeight = SCROLLBAR_HEIGHT - THUMB_HEIGHT;
+        int trackHeight = getScrollbarHeight() - THUMB_HEIGHT;
         int thumbOffset = max > 0 ? (int) Math.round((double) scrollOffset / max * trackHeight) : 0;
         return this.topPos + SCROLLBAR_Y + thumbOffset;
     }
 
-    private int getCellAt(int mouseX, int mouseY) {
+    public int getCellAt(int mouseX, int mouseY) {
         int gx = this.leftPos + GRID_LEFT;
         int gy = this.topPos + GRID_TOP;
         if (mouseX < gx || mouseX >= gx + GRID_COLS * GRID_CELL_SIZE) return -1;
-        if (mouseY < gy || mouseY >= gy + GRID_ROWS * GRID_CELL_SIZE) return -1;
+        if (mouseY < gy || mouseY >= gy + menu.viewerRows * GRID_CELL_SIZE) return -1;
         int col = (mouseX - gx) / GRID_CELL_SIZE;
         int row = (mouseY - gy) / GRID_CELL_SIZE;
         return (scrollOffset + row) * GRID_COLS + col;
@@ -415,9 +448,19 @@ public class StorageViewerScreen extends AbstractContainerScreen<StorageViewerMe
 
     @Override
     public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE,
-                this.leftPos, this.topPos, 0, 0,
-                GUI_WIDTH, GUI_HEIGHT, 256, 256);
+        int bx = this.leftPos;
+        int by = this.topPos;
+        int topHeight = 17;
+        int bottomV = 71;
+        int bottomHeight = 99;
+
+        graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, bx, by, 0, 0, GUI_WIDTH, topHeight, 256, 256);
+
+        for (int r = 0; r < menu.viewerRows; r++) {
+            graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, bx, by + topHeight + (r * 18), 0, 17, GUI_WIDTH, 18, 256, 256);
+        }
+
+        graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, bx, by + topHeight + (menu.viewerRows * 18), 0, bottomV, GUI_WIDTH, bottomHeight, 256, 256);
     }
 
     @Override
@@ -540,16 +583,16 @@ public class StorageViewerScreen extends AbstractContainerScreen<StorageViewerMe
                 }
             } else if (cursorIsFilledBucket) {
                 tooltip.add(Component.literal("Left - click: Insert")
-                            .withStyle(s -> s.withColor(0xFF888888)));
+                        .withStyle(s -> s.withColor(0xFF888888)));
                 Fluid cursorFluid = getFluidFromItem(cursor);
                 String cursorName = cursorFluid != Fluids.EMPTY
                         ? Component.translatable(cursorFluid.getFluidType().getDescriptionId()).getString()
                         : cursor.getHoverName().getString();
                 tooltip.add(Component.literal("Right - click: Empty " + cursorName + " Into Network")
-                            .withStyle(s -> s.withColor(0xFF888888)));
+                        .withStyle(s -> s.withColor(0xFF888888)));
             } else if (!cursor.isEmpty() && !cursorIsEmptyBucket) {
                 tooltip.add(Component.literal("Left - click/Right - click: Insert All/Insert")
-                            .withStyle(s -> s.withColor(0xFF888888)));
+                        .withStyle(s -> s.withColor(0xFF888888)));
             }
 
             if (!tooltip.isEmpty()) {
@@ -587,11 +630,27 @@ public class StorageViewerScreen extends AbstractContainerScreen<StorageViewerMe
                 dirX, dirY, sortDirU, TEX_SORT_V,
                 TEX_SORT_SIZE, TEX_SORT_SIZE, 256, 256);
 
+        int sizeX = bx + SIZE_BUTTON_X;
+        int sizeY = by + SIZE_BUTTON_Y;
+        int sizeU = menu.viewerRows == 3 ? TEX_BUTTON_SIZE_1_U : menu.viewerRows == 6 ? TEX_BUTTON_SIZE_2_U : TEX_BUTTON_SIZE_3_U;
+        graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE,
+                sizeX, sizeY, sizeU, TEX_BUTTON_V,
+                BUTTON_SIZE, BUTTON_SIZE, 256, 256);
+
+        int jeiY = by + JEI_BUTTON_Y;
+        graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE,
+                sizeX, jeiY, TEX_BUTTON_JEI_U, TEX_BUTTON_V,
+                BUTTON_SIZE, BUTTON_SIZE, 256, 256);
+
+        if (menu.syncJei) {
+            graphics.outline(sizeX, jeiY, BUTTON_SIZE, BUTTON_SIZE, 0xFFE0E0E0);
+        }
+
         int gx = bx + GRID_LEFT;
         int gy = by + GRID_TOP;
         hoveredCell = getCellAt(mouseX, mouseY);
 
-        for (int row = 0; row < GRID_ROWS; row++) {
+        for (int row = 0; row < menu.viewerRows; row++) {
             for (int col = 0; col < GRID_COLS; col++) {
                 int cellIndex = (scrollOffset + row) * GRID_COLS + col;
                 int cx = gx + col * GRID_CELL_SIZE;
@@ -646,11 +705,13 @@ public class StorageViewerScreen extends AbstractContainerScreen<StorageViewerMe
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+        int dynamicInventoryY = 16 + (menu.viewerRows * 18) + 3;
+
         graphics.text(this.font, this.playerInventoryTitle,
-                this.inventoryLabelX, this.inventoryLabelY + 2, 0xFFF2F3E5, false);
+                this.inventoryLabelX, dynamicInventoryY + 2, 0xFFF2F3E5, false);
     }
 
-    private String formatCount(long count, boolean isFluid) {
+    protected String formatCount(long count, boolean isFluid) {
         if (isFluid) {
             if (count == 0) return "0";
             if (count >= 1000) {
@@ -672,14 +733,14 @@ public class StorageViewerScreen extends AbstractContainerScreen<StorageViewerMe
                 && mouseY >= searchBox.getY() && mouseY <= searchBox.getY() + searchBox.getHeight();
     }
 
-    private Fluid getFluidFromItem(ItemStack stack) {
+    protected Fluid getFluidFromItem(ItemStack stack) {
         if (stack.getItem() instanceof BucketItem bucketItem) {
             return bucketItem.getContent();
         }
         return Fluids.EMPTY;
     }
 
-    private void drawFluid(GuiGraphicsExtractor graphics, FluidStack stack, int x, int y, int width, int height) {
+    protected void drawFluid(GuiGraphicsExtractor graphics, FluidStack stack, int x, int y, int width, int height) {
         if (stack.isEmpty()) return;
         Minecraft mc = Minecraft.getInstance();
         TextureAtlasSprite sprite;

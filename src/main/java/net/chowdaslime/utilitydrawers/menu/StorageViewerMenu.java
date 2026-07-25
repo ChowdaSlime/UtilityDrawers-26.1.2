@@ -18,6 +18,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -34,11 +35,13 @@ public class StorageViewerMenu extends AbstractContainerMenu {
 
     private final StorageInterfaceBlockEntity storageInterface;
     private final BlockPos viewerPos;
-    private final Player player;
+    protected final Player player;
     private int syncTimer = 0;
     public boolean clientNeedsRebuild = false;
     public boolean sortByCount = false;
     public boolean sortAscending = true;
+    public int viewerRows = 3;
+    public boolean syncJei = false;
 
     public record DrawerSlotRef(BlockPos pos, int slotIndex) {
         public static final StreamCodec<RegistryFriendlyByteBuf, DrawerSlotRef> STREAM_CODEC =
@@ -63,27 +66,36 @@ public class StorageViewerMenu extends AbstractContainerMenu {
     public List<NetworkSlot> networkSlots = new ArrayList<>();
 
     public StorageViewerMenu(int containerId, Inventory playerInventory, RegistryFriendlyByteBuf buf) {
-        this(containerId, playerInventory,
+        this(ModMenuTypes.STORAGE_VIEWER_MENU.get(), containerId, playerInventory,
                 buf.readBoolean() ? (StorageInterfaceBlockEntity) playerInventory.player.level().getBlockEntity(buf.readBlockPos()) : null,
                 buf.readBlockPos());
     }
 
     public StorageViewerMenu(int containerId, Inventory playerInventory,
                              StorageInterfaceBlockEntity storageInterface, BlockPos viewerPos) {
-        super(ModMenuTypes.STORAGE_VIEWER_MENU.get(), containerId);
+        this(ModMenuTypes.STORAGE_VIEWER_MENU.get(), containerId, playerInventory, storageInterface, viewerPos);
+    }
+
+    protected StorageViewerMenu(MenuType<?> type, int containerId, Inventory playerInventory,
+                                StorageInterfaceBlockEntity storageInterface, BlockPos viewerPos) {
+        super(type, containerId);
         this.storageInterface = storageInterface;
         this.viewerPos = viewerPos;
         this.player = playerInventory.player;
 
-        for (int row = 0; row < 3; row++) {
-            for (int col = 0; col < 9; col++) {
-                this.addSlot(new Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 87 + row * 18));
-            }
+        if (player instanceof ServerPlayer serverPlayer) {
+            PlayerPreferences prefs = serverPlayer.getData(ModAttachments.PLAYER_PREFERENCES.get());
+            this.sortByCount = prefs.isSortByCount();
+            this.sortAscending = prefs.isSortAscending();
+            this.viewerRows = prefs.getViewerRows() > 0 ? prefs.getViewerRows() : 3;
+            this.syncJei = prefs.isSyncJei();
         }
 
-        for (int col = 0; col < 9; col++) {
-            this.addSlot(new Slot(playerInventory, col, 8 + col * 18, 146));
+        for (int i = 0; i < 36; i++) {
+            this.addSlot(new Slot(playerInventory, i, 0, 0));
         }
+
+        updateSlotPositions(this.viewerRows);
 
         if (this.storageInterface != null && this.storageInterface.getLevel() != null
                 && !this.storageInterface.getLevel().isClientSide()) {
@@ -266,7 +278,7 @@ public class StorageViewerMenu extends AbstractContainerMenu {
                 loadPreferences();
                 refreshNetworkSlots();
                 PacketDistributor.sendToPlayer(serverPlayer, new SyncNetworkSlotsPayload(this.networkSlots));
-                PacketDistributor.sendToPlayer(serverPlayer, new SyncPreferencesPayload(this.sortByCount, this.sortAscending));
+                PacketDistributor.sendToPlayer(serverPlayer, new SyncPreferencesPayload(this.sortByCount, this.sortAscending, this.viewerRows, this.syncJei));
             } else if (syncTimer % 10 == 0) {
                 refreshNetworkSlots();
                 PacketDistributor.sendToPlayer(serverPlayer, new SyncNetworkSlotsPayload(this.networkSlots));
@@ -279,7 +291,9 @@ public class StorageViewerMenu extends AbstractContainerMenu {
             PlayerPreferences prefs = serverPlayer.getData(ModAttachments.PLAYER_PREFERENCES.get());
             this.sortByCount = prefs.isSortByCount();
             this.sortAscending = prefs.isSortAscending();
-            PacketDistributor.sendToPlayer(serverPlayer, new SyncPreferencesPayload(this.sortByCount, this.sortAscending));
+            this.viewerRows = prefs.getViewerRows() > 0 ? prefs.getViewerRows() : 3;
+            this.syncJei = prefs.isSyncJei();
+            PacketDistributor.sendToPlayer(serverPlayer, new SyncPreferencesPayload(this.sortByCount, this.sortAscending, this.viewerRows, this.syncJei));
         }
     }
 
@@ -289,6 +303,46 @@ public class StorageViewerMenu extends AbstractContainerMenu {
             PlayerPreferences prefs = serverPlayer.getData(ModAttachments.PLAYER_PREFERENCES.get());
             prefs.setSortByCount(value);
             prefs.setSortAscending(this.sortAscending);
+            serverPlayer.setData(ModAttachments.PLAYER_PREFERENCES.get(), prefs);
+        }
+    }
+
+    public void updateSlotPositions(int newRows) {
+        this.viewerRows = newRows;
+        int yOffset = (newRows - 3) * 18;
+        Inventory inv = this.player.getInventory();
+
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 9; col++) {
+                int index = col + row * 9;
+                Slot newSlot = new Slot(inv, index + 9, 9 + col * 18, 87 + row * 18 + yOffset);
+                newSlot.index = index;
+                this.slots.set(index, newSlot);
+            }
+        }
+
+        for (int col = 0; col < 9; col++) {
+            int index = 27 + col;
+            Slot newSlot = new Slot(inv, col, 9 + col * 18, 146 + yOffset);
+            newSlot.index = index;
+            this.slots.set(index, newSlot);
+        }
+    }
+
+    public void saveSizePreference(int rows) {
+        this.viewerRows = rows;
+        if (player instanceof ServerPlayer serverPlayer) {
+            PlayerPreferences prefs = serverPlayer.getData(ModAttachments.PLAYER_PREFERENCES.get());
+            prefs.setViewerRows(rows);
+            serverPlayer.setData(ModAttachments.PLAYER_PREFERENCES.get(), prefs);
+        }
+    }
+
+    public void saveJeiPreference(boolean value) {
+        this.syncJei = value;
+        if (player instanceof ServerPlayer serverPlayer) {
+            PlayerPreferences prefs = serverPlayer.getData(ModAttachments.PLAYER_PREFERENCES.get());
+            prefs.setSyncJei(value);
             serverPlayer.setData(ModAttachments.PLAYER_PREFERENCES.get(), prefs);
         }
     }

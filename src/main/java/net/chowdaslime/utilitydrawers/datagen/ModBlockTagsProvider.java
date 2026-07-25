@@ -42,6 +42,8 @@ public class ModBlockTagsProvider extends BlockTagsProvider {
         this.tag(BlockTags.NEEDS_STONE_TOOL).add(ModBlocks.getRK(ModBlocks.STORAGE_VIEWER.get()));
         this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ModBlocks.getRK(ModBlocks.FILING_CABINET.get()));
         this.tag(BlockTags.NEEDS_STONE_TOOL).add(ModBlocks.getRK(ModBlocks.FILING_CABINET.get()));
+        this.tag(BlockTags.MINEABLE_WITH_PICKAXE).add(ModBlocks.getRK(ModBlocks.CRAFTING_STORAGE_VIEWER.get()));
+        this.tag(BlockTags.NEEDS_STONE_TOOL).add(ModBlocks.getRK(ModBlocks.CRAFTING_STORAGE_VIEWER.get()));
     }
 }
 

@@ -458,6 +458,16 @@ public class ModRecipeProvider extends RecipeProvider {
                 .define('D', ModBlocks.DRAWER_BASE.get())
                 .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
                 .save(output);
+
+        shaped(RecipeCategory.MISC, ModBlocks.CRAFTING_STORAGE_VIEWER.get())
+                .pattern("CCC")
+                .pattern("ABA")
+                .pattern("CCC")
+                .define('A', Items.CRAFTING_TABLE)
+                .define('B', ModBlocks.STORAGE_VIEWER.get())
+                .define('C', Items.DIAMOND)
+                .unlockedBy("has_drawer_base", has(ModBlocks.DRAWER_BASE.get()))
+                .save(output);
     }
 
     private Ingredient ingredient(Item item) {

@@ -54,6 +54,11 @@ public class ModBlocks {
             properties -> new FilingCabinetBlock(
                     properties.strength(3.0F, 6.0F).sound(SoundType.WOOD).noOcclusion().requiresCorrectToolForDrops()));
 
+    public static final DeferredBlock<Block> CRAFTING_STORAGE_VIEWER = registerBlock(
+            "crafting_storage_viewer",
+            properties -> new CraftingStorageViewerBlock(
+                    properties.strength(2.0F, 4.0F).sound(SoundType.STONE).noOcclusion().requiresCorrectToolForDrops()));
+
 
     public static ResourceKey<Block> getRK(Block block) {
         return BuiltInRegistries.BLOCK.getResourceKey(block).get();

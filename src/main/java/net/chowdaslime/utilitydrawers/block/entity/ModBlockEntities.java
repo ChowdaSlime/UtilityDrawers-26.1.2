@@ -60,6 +60,9 @@ public class ModBlockEntities {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StorageViewerBlockEntity>> STORAGE_VIEWER_BLOCK_ENTITY =
             BLOCK_ENTITIES.register("storage_viewer_block_entity", () ->
                     new BlockEntityType<>(StorageViewerBlockEntity::new, Set.of(ModBlocks.STORAGE_VIEWER.get())));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CraftingStorageViewerBlockEntity>> CRAFTING_STORAGE_VIEWER_BLOCK_ENTITY =
+            BLOCK_ENTITIES.register("crafting_storage_viewer_block_entity", () ->
+                    new BlockEntityType<>(CraftingStorageViewerBlockEntity::new, Set.of(ModBlocks.CRAFTING_STORAGE_VIEWER.get())));
 
 
 
