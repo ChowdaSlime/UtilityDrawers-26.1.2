@@ -54,7 +54,7 @@ The same thing but with crafting capabilities. Will pull items directly from the
 
 ### Filing Cabinet
 
-A large scale storage block for non-stackable items, such as tools, armor, weapons, enchanted books, etc. Has a GUI to search for and interact with the items that are in it. Separate from the storage network. (Although this may change in the future!)
+A large scale storage block for non-stackable items, such as tools, armor, weapons, enchanted books, etc. Has a GUI to search for and interact with the items that are in it. It stores 4096 items by default. However, this can be changed in the configs. Separate from the storage network. (Although this may change in the future!)
 
 ### Upgrades
 
